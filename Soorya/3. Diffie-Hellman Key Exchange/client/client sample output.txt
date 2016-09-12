@@ -1,0 +1,48 @@
+root@Blu:~/Desktop/Networks Lab Project/Soorya/3. Diffie-Hellman Key Exchange/client# g++ client.cpp -o client.out && ./client.out 172.16.0.5 8083
+Port number: 8083
+Server IP address: 172.16.0.5
+Successfully created socket: 3
+Successfully connected to socket: 3
+-> hello_exchangeDH
+Sent 16 bytes.
+Received 1 bytes for p.
+<- 3
+Diffie-Hellman parameter, p: 3
+Received 1 bytes for q.
+<- 3
+Diffie-Hellman parameter, q: 3
+Generated client private key: 1
+Calculated client public key: 0
+-> 0
+Sent 1 bytes.
+The client public key was too low! Restarting the exchange.
+
+Received 1 bytes for p.
+<- 7
+Diffie-Hellman parameter, p: 7
+Received 1 bytes for q.
+<- 4
+Diffie-Hellman parameter, q: 4
+Generated client private key: 12
+Calculated client public key: 1
+-> 1
+Sent 1 bytes.
+The client public key was too low! Restarting the exchange.
+
+Received 2 bytes for p.
+<- 19
+Diffie-Hellman parameter, p: 19
+Received 1 bytes for q.
+<- 8
+Diffie-Hellman parameter, q: 8
+Generated client private key: 25
+Calculated client public key: 8
+-> 8
+Sent 1 bytes.
+Received 1 bytes.
+<- 7
+Server public key: 7
+Diffie-Hellman secret: 7
+
+root@Blu:~/Desktop/Networks Lab Project/Soorya/3. Diffie-Hellman Key Exchange/client# 
+
