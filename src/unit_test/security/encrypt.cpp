@@ -12,7 +12,6 @@ int main()
 		cout << (int)encrypted[i] << " ";
 	}
 
-	cout << "The decrypted message is \"" << testEncryptModule.encrypt(encrypted, key) << "\"" << endl;
-	cout << endl;
+	cout << endl << "The decrypted message is \"" << testEncryptModule.encrypt(encrypted, key) << "\"" << endl;
 	return 0;
 }
