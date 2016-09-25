@@ -1,11 +1,9 @@
-#include <iostream>
 #include <bitset>
-using namespace std;
 
 class EncryptModule
 {
 public:
-	string encrypt(string message, char key)
+	std::string encrypt(std::string message, char key)
 	{
 		//cout << endl << "Beginning encryption." << endl;
 		for(int i = 0; i < message.length(); i++)

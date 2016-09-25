@@ -13,5 +13,5 @@ Setup
 1. Clone the repository as a folder called 'src/'.
 2. Create another folder in the same level called 'bin/'.
 3. Open a terminal and change directory to the 'bin/' folder.
-4. Execute the cmake command: `cmake ../src` (where 'src/' contains the CMakeLists.txt). This will create a MakeFile in the 'bin/' folder.
+4. Execute the cmake command: `cmake ../` (where '../' contains the CMakeLists.txt). This will create a MakeFile in the 'bin/' folder. (If cmake was directly installed, execute the command: `/opt/cmake/bin/cmake ../`)
 5. Execute the make command: `make`. This will generate the executables into the 'bin/' folder.

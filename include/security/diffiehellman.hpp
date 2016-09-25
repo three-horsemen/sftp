@@ -5,15 +5,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <arpa/inet.h>
-
 #include <time.h>
-#include <math.h>
-
-#include <iostream>
-#include <string>
-using namespace std;
 
 int custom_rand()
 {
@@ -353,7 +346,6 @@ public:
     	char dh_q[256];
     	char dh_secret[256];
 
-    	//int server_private;
     	int listenSocketDescriptor, s;
     	socklen_t clientAddrLen;
     	char buffer[256];
@@ -372,6 +364,8 @@ public:
     	{
     		//printf("Successfully created socket: %d\n",listenSocketDescriptor);
     	}
+
+        ///These lines were added to ensure a port can be reused, if the server is restarted.
         int force_reuse_socket_port__yes = 1;
         if (setsockopt(listenSocketDescriptor, SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
         {
@@ -380,9 +374,8 @@ public:
         }
 
     	memset(&servAddr,0,sizeof(servAddr));
-        // server_port = atoi(argv[2]);
-    //printf("Port number: %d\n", server_port);
-    //printf("Server IP address: %s\n", server_ip_address);
+        //printf("Port number: %d\n", server_port);
+        //printf("Server IP address: %s\n", server_ip_address);
         servAddr.sin_family = AF_INET;
         servAddr.sin_addr.s_addr = inet_addr(server_ip_address);
         servAddr.sin_port = htons(server_port);
@@ -410,9 +403,7 @@ public:
     	while(number_of_exchanges > 0)
     	{
     		//printf("Waiting for connection\n");
-
-    		s = accept(listenSocketDescriptor,(struct sockaddr *) &clientAddr,&clientAddrLen);
-    		if(s<0)
+    		if((s = accept(listenSocketDescriptor,(struct sockaddr *) &clientAddr,&clientAddrLen))<0)
     		{
     			printf("Error: Connection was not accepted: %d!\n",s);
     			return 1;
@@ -422,10 +413,9 @@ public:
     			//printf("Successfully accepted socket\n");
     		}
 
-    //Try to read a HELLO request from a client.
+            ///Try to read a HELLO request from a client.
     		bzero(buffer,256);
-    		n = read(s,buffer,255);
-    		if(n>=0)
+    		if((n = read(s,buffer,255))>=0)
     			buffer[n] = '\0';
     		if(strcmp(buffer, "hello_exchangeDH") != 0)
     		{
@@ -435,23 +425,19 @@ public:
     		}
     		//printf("HELLO request from client recognized.\n");
     		//printf("Read %d bytes: %s\n",n,buffer);
-    	begin:
-        ///Try to send p.
+    	    begin:
+            ///Try to send p.
     		sprintf(dh_p, "%d", next_pr(custom_rand()));
-    		//server_private = custom_rand();
     		//printf("Generated random number p: %d\n", server_private);
     		//printf("Generated random number p: %s\n", dh_p);
             sprintf(buffer,"%s",dh_p);
             //printf("-> %s\n",buffer);
     		n = write(s,buffer,strlen(buffer));
     		//printf("Wrote %d bytes\n",n);
+            sleep(1);
 
-    sleep(1);
-
-    //Try to send q.
+            ///Try to send q.
     		sprintf(dh_q, "%d", (custom_rand()%atoi(dh_p))+1);
-    		//sprintf(dh_q, "%d", (custom_rand()%atoi("10"))+1);
-    		//server_private = custom_rand();
     		//printf("Generated random number q: %s\n", dh_q);
     		//printf("Generated random number q: %d\n", server_private);
             sprintf(buffer,"%s",dh_q);
@@ -459,24 +445,22 @@ public:
     		n = write(s,buffer,strlen(buffer));
     		//printf("Wrote %d bytes\n",n);
 
-    //Try to receive client "public" key.
+            ///Try to receive client "public" key.
     		bzero(buffer,256);
-    		n = read(s,buffer,255);
-    		if(n>=0)
+    		if((n = read(s,buffer,255))>=0)
                 buffer[n] = '\0';
     		//printf("Read %d bytes: %s\n",n,buffer);
     		strcpy(client_public, buffer);
     		//printf("Client public key: %s\n", client_public);
 
-    //If the client public key was found to be zero, then restart the process.
-    //if(strcmp(client_public, "0") == 0)
-    if(atoi(client_public) <= 1)
-    {
-    	//printf("The client public key was too low! Restarting the exchange.\n\n");
-    	goto begin;
-    }
+            ///If the client public key was found to be zero or one, then restart the process.
+            if(atoi(client_public) <= 1)
+            {
+            	//printf("The client public key was too low! Restarting the exchange.\n\n");
+            	goto begin;
+            }
 
-    //Try to send server "public" key.
+            ///Try to send server "public" key.
     		server_private_int = custom_rand();
     		sprintf(server_private, "%d", server_private_int);
     		//printf("Generated server private key: %s\n", server_private);
@@ -487,17 +471,15 @@ public:
     		n = write(s,buffer,strlen(buffer));
     		//printf("Wrote %d bytes\n",n);
 
-    //If the server public key was found to be zero, then restart the process.
-    //if(strcmp(server_public, "0") == 0)
-    if(atoi(server_public) <= 1)
-    {
-    	//printf("The server public key was too low! Restarting the exchange.\n\n");
-    	goto begin;
-    }
+            ///If the server public key was found to be zero, then restart the process.
+            //if(strcmp(server_public, "0") == 0)
+            if(atoi(server_public) <= 1)
+            {
+            	//printf("The server public key was too low! Restarting the exchange.\n\n");
+            	goto begin;
+            }
 
-
-    //Calculate the shared secret.
-    		//sprintf(dh_secret, "%d", (int)fmod((powl((double)(atoi(client_public)%15),(double)(server_private_int%5))), (double)atoi(dh_p)));
+            ///Calculate the shared secret.
     		sprintf(dh_secret, "%d", mpmod(atoi(client_public), server_private_int, atoi(dh_p)));
     		//printf("Diffie-Hellman secret: %s\n", dh_secret);
     		close(s);
@@ -505,15 +487,15 @@ public:
             number_of_exchanges--;
     	}
 
-         close(listenSocketDescriptor);
+        close(listenSocketDescriptor);
 
-         server_keys_container.set_validity(true);
-         server_keys_container.set_server_private(server_private_int);
-         server_keys_container.set_client_public(atoi(client_public));
-         server_keys_container.set_server_public(atoi(server_public));
-         server_keys_container.set_shared_secret(atoi(dh_secret));
+        server_keys_container.set_validity(true);
+        server_keys_container.set_server_private(server_private_int);
+        server_keys_container.set_client_public(atoi(client_public));
+        server_keys_container.set_server_public(atoi(server_public));
+        server_keys_container.set_shared_secret(atoi(dh_secret));
 
-         return 0;
+        return 0;
     }
 
     DHExchange_serverContainer get_key_container()
