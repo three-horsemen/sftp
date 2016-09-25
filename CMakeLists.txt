@@ -1,6 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
 project (sftp)
-
 include_directories(include)
 
 ###Samples:
@@ -11,6 +10,14 @@ include_directories(include)
 #add_library(include src/security/encrypt.cpp)
 
 
-#Security module.
+###Security module.
+add_library(securityLibraryCollection
+				src/security/encrypt.cpp
+				src/security/diffiehellman.cpp
+			)
+
 add_executable(unit_test_encrypt src/unit_test/security/encrypt.cpp)
+target_link_libraries(unit_test_encrypt securityLibraryCollection)
+
 add_executable(unit_test_diffiehellman src/unit_test/security/diffiehellman.cpp)
+target_link_libraries(unit_test_diffiehellman securityLibraryCollection)

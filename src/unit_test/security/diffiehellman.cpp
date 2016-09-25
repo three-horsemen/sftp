@@ -1,4 +1,6 @@
 #include <iostream>
+#include <unistd.h>
+#include <stdlib.h>
 #include "security/diffiehellman.hpp"
 
 using namespace std;
