@@ -91,8 +91,10 @@ void DHExchange_serverContainer::set_shared_secret(int new_shared_secret)
 }
 
 
-int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_port)
+//int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_port)
+int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port)
 {
+    char* server_ip_address = string_to_charArray(server_ip_address__str);
     client_keys_container.set_validity(false);
 	int client_private_int;
 	char server_public[256];
@@ -245,8 +247,10 @@ DHExchange_clientContainer Client_DHExchange::get_key_container()
 }
 
 
-int Server_DHExchange::perform_key_exchange(char *server_ip_address, int server_port, int number_of_exchanges)
+int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port, int number_of_exchanges)
 {
+    char* server_ip_address = string_to_charArray(server_ip_address__str);
+
     server_keys_container.set_validity(false);
 
     int queueSize = 16;

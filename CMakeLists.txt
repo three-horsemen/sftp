@@ -22,6 +22,7 @@ target_link_libraries(unit_test_logger shared)
 ###Security module
 add_library(securityLibraryCollection
 	src/security/cryptmath.cpp
+	src/security/cryptstr.cpp
 	src/security/encrypt.cpp
 	src/security/diffiehellman.cpp
 	src/security/rsa.cpp

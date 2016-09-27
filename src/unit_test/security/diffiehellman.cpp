@@ -2,14 +2,14 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "security/diffiehellman.hpp"
-
+#include "security/cryptstr.hpp"
 using namespace std;
 
 int main()
 {
     ///We can use either the loopback address, or the IP address assigned to the system's interface (for debugging purposes).
     //char* server_ip_address = "172.16.0.2";
-    char* server_ip_address = "127.0.0.1";
+    string server_ip_address = "127.0.0.1";
     int server_port = 8082;
 
     int child_pid;
@@ -17,7 +17,7 @@ int main()
     {
         cout << "The server (parent process) is beginning." << endl;
         Server_DHExchange server_dhexchange;
-        server_dhexchange.perform_key_exchange(server_ip_address, server_port, 1);
+        server_dhexchange.perform_key_exchange(string_to_charArray(server_ip_address), server_port, 1);
         wait();
         if(server_dhexchange.get_key_container().get_validity())
             cout << "Unit tester: The shared secret with the server is " << server_dhexchange.get_key_container().get_shared_secret() << endl;
