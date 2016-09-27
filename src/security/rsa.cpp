@@ -1,6 +1,4 @@
-#include "security/cryptmath.hpp"
 #include "security/rsa.hpp"
-
 Extended_Euclidean_Algorithm_container eea(int a, int b)
 {
     Extended_Euclidean_Algorithm_container eea_container;
@@ -24,9 +22,7 @@ int find_inverse(int x, int y)
 {
     int inv = eea(x, y).var1;
     if(inv < 1)
-    {
         inv += y;
-    }
     return inv;
 }
 
@@ -97,11 +93,11 @@ void RSA_key_container::set_modulus(int new_modulus)
     modulus = new_modulus;
 }
 
-int encrypt_RSA(RSA_key_container container, int plaintext)
+int RSA_key_container::encrypt_RSA(int plaintext)
 {
-    return mpmod(plaintext, container.get_public_key(), container.get_modulus());
+    return mpmod(plaintext, get_public_key(), get_modulus());
 }
-int decrypt_RSA(RSA_key_container container, int ciphertext)
+int RSA_key_container::decrypt_RSA(int ciphertext)
 {
-    return mpmod(ciphertext, container.get_private_key(), container.get_modulus());
+    return mpmod(ciphertext, get_private_key(), get_modulus());
 }

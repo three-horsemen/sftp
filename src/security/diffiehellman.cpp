@@ -1,13 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include "security/diffiehellman.hpp"
-#include "security/cryptmath.hpp"
 
 DHExchange_clientContainer::DHExchange_clientContainer()
 {
@@ -109,6 +100,8 @@ int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_
 	char client_public[256];
 	char dh_p[256];
 	char dh_q[256];
+    int dh_p_int;
+    int dh_q_int;
 	char dh_secret[256];
 
     int socket_descriptor, len;
@@ -131,6 +124,15 @@ int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_
 	{
         //printf("Successfully created socket: %d\n", socket_descriptor);
     }
+
+    ///These lines were added to ensure a port can be reused, if the server is restarted.
+    int force_reuse_socket_port__yes = 1;
+    if (setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
+    {
+        perror("setsockopt");
+        return 1;
+    }
+
 	if(connect(socket_descriptor,(struct sockaddr*)&server_address,sizeof(server_address)) < 0)
 	{
         perror("Error: Connection failed! >>connect()");
@@ -162,41 +164,35 @@ int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_
 	    //printf("<- ");
 	    //fputs(buffer,stdout);
 		//printf("\n");
-
-		strcpy(dh_p, buffer);
-		//printf("Diffie-Hellman parameter, p: %s\n", dh_p);
+        bool hash_seen_flag = false;
+        dh_p_int = 0;
+        dh_q_int = 0;
+        for(int index = 0; index < len; index++)
+        {
+            if(buffer[index] != '#')
+            {
+                if(hash_seen_flag == false)
+                {
+                    dh_p_int *= 10;
+                    dh_p_int += buffer[index]-48;
+                }
+                else
+                {
+                    dh_q_int *= 10;
+                    dh_q_int += buffer[index]-48;
+                }
+            }
+            else
+            {
+                hash_seen_flag = true;
+            }
+        }
 	}
-
-    ///Try to receive q.
-    len = read(socket_descriptor, buffer, sizeof(buffer));
-    if(len < 0)
-	{
-        printf("Error: Received: %d bytes!\n",len);
-        return 1;
-    }
-	else
-	{
-	    //printf("Received %d bytes for q.\n",len);
-	    buffer[len] = '\0';
-	    //printf("<- ");
-	    //fputs(buffer,stdout);
-		//printf("\n");
-
-		strcpy(dh_q, buffer);
-		//printf("Diffie-Hellman parameter, q: %s\n", dh_q);
-	}
-
-	client_private_int = custom_rand();
+	client_private_int = custom_rand(100);
 	sprintf(client_private, "%d", client_private_int);
-	//printf("Generated client private key: %s\n", client_private);
-	sprintf(client_public, "%d", mpmod(atoi(dh_q), client_private_int, atoi(dh_p)));
-	//printf("Calculated client public key: %s\n", client_public);
+	sprintf(client_public, "%d", mpmod(dh_q_int, client_private_int, dh_p_int));
 	sprintf(buffer, "%s", client_public);
-
-    //printf("-> %s\n", buffer);
     len = write(socket_descriptor, buffer, strlen(buffer));
-    //printf("Sent %d bytes.\n",len);
-
     ///If the client public key was found to be zero or one, then restart the process.
     if(atoi(client_public) <= 1)
     {
@@ -212,13 +208,8 @@ int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_
     }
 	else
 	{
-	    //printf("Received %d bytes.\n",len);
 	    buffer[len] = '\0';
-	    //printf("<- ");
-		//fputs(buffer, stdout);
-		//printf("\n");
 		strcpy(server_public, buffer);
-		//printf("Server public key: %s\n", server_public);
 
         ///If the server public key was found to be zero or one, then restart the process.
         if(atoi(server_public) <= 1)
@@ -228,7 +219,15 @@ int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_
         }
 	}
 
-	sprintf(dh_secret, "%d", mpmod(atoi(server_public), client_private_int, atoi(dh_p)));
+    int dh_secret_int = mpmod(atoi(server_public), client_private_int, dh_p_int);
+    ///If the shared secret was found to be less than 10, then restart the process.
+    if(dh_secret_int < 10)
+    {
+        //printf("The shared secret was too low! Restarting the process.\n\n");
+        goto begin;
+    }
+
+	sprintf(dh_secret, "%d", dh_secret_int);
 	//printf("Diffie-Hellman secret: %s\n\n", dh_secret);
 
     close(socket_descriptor);
@@ -257,10 +256,9 @@ int Server_DHExchange::perform_key_exchange(char *server_ip_address, int server_
 	char server_private[256];
 	char server_public[256];
 	char client_public[256];
-	char dh_p[256];
-	char dh_q[256];
-	char dh_secret[256];
-
+    int dh_p_int;
+    int dh_q_int;
+    int dh_secret_int;
 	int listenSocketDescriptor, s;
 	socklen_t clientAddrLen;
 	char buffer[256];
@@ -341,74 +339,62 @@ int Server_DHExchange::perform_key_exchange(char *server_ip_address, int server_
 		//printf("HELLO request from client recognized.\n");
 		//printf("Read %d bytes: %s\n",n,buffer);
 	    begin:
-        ///Try to send p.
-		sprintf(dh_p, "%d", next_pr(custom_rand()));
-		//printf("Generated random number p: %d\n", server_private);
-		//printf("Generated random number p: %s\n", dh_p);
-        sprintf(buffer,"%s",dh_p);
-        //printf("-> %s\n",buffer);
+        ///Try to send p and q.
+        dh_p_int = next_pr(custom_rand(100));
+		//sprintf(dh_p, "%d", next_pr(custom_rand(100)));
+        sprintf(buffer,"%d",dh_p_int);
+        dh_q_int = custom_rand(dh_p_int);
+        //sprintf(dh_q, "%d", custom_rand(atoi(dh_p)));
+        sprintf(buffer,"%d#%d", dh_p_int, dh_q_int);
 		n = write(s,buffer,strlen(buffer));
-		//printf("Wrote %d bytes\n",n);
-        sleep(1);
-
-        ///Try to send q.
-		sprintf(dh_q, "%d", (custom_rand()%atoi(dh_p))+1);
-		//printf("Generated random number q: %s\n", dh_q);
-		//printf("Generated random number q: %d\n", server_private);
-        sprintf(buffer,"%s",dh_q);
-        //printf("-> %s\n",buffer);
-		n = write(s,buffer,strlen(buffer));
-		//printf("Wrote %d bytes\n",n);
-
         ///Try to receive client "public" key.
 		bzero(buffer,256);
 		if((n = read(s,buffer,255))>=0)
             buffer[n] = '\0';
-		//printf("Read %d bytes: %s\n",n,buffer);
 		strcpy(client_public, buffer);
-		//printf("Client public key: %s\n", client_public);
 
         ///If the client public key was found to be zero or one, then restart the process.
         if(atoi(client_public) <= 1)
         {
-        	//printf("The client public key was too low! Restarting the exchange.\n\n");
+        	//printf("Server: The client public key was too low! Restarting the exchange.\n\n");
         	goto begin;
         }
 
         ///Try to send server "public" key.
-		server_private_int = custom_rand();
+		server_private_int = custom_rand(100);
 		sprintf(server_private, "%d", server_private_int);
-		//printf("Generated server private key: %s\n", server_private);
-		sprintf(server_public, "%d", mpmod(atoi(dh_q), server_private_int, atoi(dh_p)));
-		//printf("Calculated server public key: %s\n", server_public);
+		sprintf(server_public, "%d", mpmod(dh_q_int, server_private_int, dh_p_int));
 		sprintf(buffer, "%s", server_public);
-		//printf("-> %s\n",buffer);
 		n = write(s,buffer,strlen(buffer));
-		//printf("Wrote %d bytes\n",n);
 
         ///If the server public key was found to be zero, then restart the process.
-        //if(strcmp(server_public, "0") == 0)
         if(atoi(server_public) <= 1)
         {
         	//printf("The server public key was too low! Restarting the exchange.\n\n");
         	goto begin;
         }
 
+        dh_secret_int = mpmod(atoi(client_public), server_private_int, dh_p_int);
+
+        ///If the shared secret was found to be less than 10, then restart the process.
+        if(dh_secret_int < 10)
+        {
+            //printf("The shared secret was too low! Restarting the process.\n\n");
+            goto begin;
+        }
+
         ///Calculate the shared secret.
-		sprintf(dh_secret, "%d", mpmod(atoi(client_public), server_private_int, atoi(dh_p)));
-		//printf("Diffie-Hellman secret: %s\n", dh_secret);
 		close(s);
 
         number_of_exchanges--;
 	}
-
     close(listenSocketDescriptor);
 
     server_keys_container.set_validity(true);
     server_keys_container.set_server_private(server_private_int);
     server_keys_container.set_client_public(atoi(client_public));
     server_keys_container.set_server_public(atoi(server_public));
-    server_keys_container.set_shared_secret(atoi(dh_secret));
+    server_keys_container.set_shared_secret(dh_secret_int);
 
     return 0;
 }

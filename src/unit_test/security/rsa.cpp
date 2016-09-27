@@ -15,9 +15,9 @@ int main()
         cout << endl;
         int data = 1234;
         cout << "Original: " << data << endl;
-        int encrypted_RSA = encrypt_RSA(rsa_key_container, data);
+        int encrypted_RSA = rsa_key_container.encrypt_RSA(data);
         cout << "Encrypted: " << encrypted_RSA << endl;
-        int decrypted_RSA = decrypt_RSA(rsa_key_container, encrypted_RSA);
+        int decrypted_RSA = rsa_key_container.decrypt_RSA(encrypted_RSA);
         cout << "Decrypted: " << decrypted_RSA << endl;
     }
 }

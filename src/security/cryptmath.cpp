@@ -1,9 +1,13 @@
-#include <stdio.h>
-#include <time.h>
-int custom_rand()
+#include "security/cryptmath.hpp"
+
+int custom_rand(int lim = 100)
 {
-	return (((time(NULL)%10)*(time(NULL)%100))%80)+1;
+	clock_t t = clock();
+	static long a = 1; // could be made the seed value
+	a = (a * t * 32719 + 3) % 32749;
+	return ((a % lim) + 1);
 }
+
 int mpmod(int base, int exponent, int modulus)
 {
     if ((base < 1) || (exponent < 0) || (modulus < 1))
@@ -52,27 +56,16 @@ int next_pr(int num)
         c = next_pr(num-1);
     return c;
 }
-int rand_prime()
-{
-    int a = custom_rand()+2;
-    do
-    {
-        a++;
-        if(is_prime(a))
-            break;
-    }while(true);
-    return a;
-}
-
 int rand_prime(int upper_limit)
 {
     if(upper_limit <= 2)
         return 2;
+	int temp = custom_rand(upper_limit);
     do
     {
-        if(is_prime(upper_limit))
+        if(is_prime(temp))
             break;
-        upper_limit--;
-    }while(true);
-    return upper_limit;
+        temp--;
+    }while(temp > 2);
+    return temp;
 }
