@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "security/cryptmath.hpp"
+#include "security/cryptstr.hpp"
 #include "security/encrypt.hpp"
 
 class SecureSocket
@@ -32,7 +33,7 @@ public:
     void setBuffer(string newBuffer);
 
     int initSecureSocket();
-    int connectSecureSocket();
+    void connectSecureSocket();
     int destroySecureSocket();
     int readSecureSocket();
     int writeSecureSocket();

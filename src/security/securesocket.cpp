@@ -1,11 +1,11 @@
 #include "security/securesocket.hpp"
 
-int SecureSocket::getValidity()
+bool SecureSocket::getValidity()
 {
     return valid;
 }
 
-void SecureSocket::setValidity(int newValidity)
+void SecureSocket::setValidity(bool newValidity)
 {
     valid = newValidity;
 }
@@ -47,46 +47,72 @@ string SecureSocket::getBuffer()
 
 int SecureSocket::initSecureSocket()
 {
-    socketDescriptor = socket(PF_INET,SOCK_STREAM,0);
-    if(socketDescriptor < 0)
+    setSocketDescriptor(socket(PF_INET,SOCK_STREAM,0));
+    if(getSocketDescriptor() < 0)
     {
-        valid = false;
+        setValidity(false);
     }
     else
     {
-        valid = true;
+        setValidity(true);
     }
     int force_reuse_socket_port__yes = 1;
-    if (setsockopt(socketDescriptor, SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
+    if (setsockopt(getSocketDescriptor(), SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
     {
-        valid = false;
+        setValidity(false);
     }
     else
     {
-        valid = true;
+        setValidity(true);
     }
+    return getSocketDescriptor();
 }
 
-int SecureSocket::connectSecureSocket()
+void SecureSocket::connectSecureSocket()
 {
-    if(valid == true)
+    if(getValidity() == true)
     {
-        if(connect(socket_descriptor,(struct sockaddr*)&server_address,sizeof(server_address)) < 0)
+        struct sockaddr_in server_address;
+        memset(&server_address,0,sizeof(server_address));
+    	server_address.sin_family = AF_INET;
+        char* targetPortNumber_charArray = string_to_charArray(getTargetPortNumber());
+    	server_address.sin_port = htons(atoi(targetPortNumber_charArray));
+        free(targetPortNumber_charArray);
+        char* targetIPAddress_charArray = string_to_charArray(getTargetIPAddress());
+        server_address.sin_addr.s_addr = inet_addr(targetIPAddress_charArray);
+        free(targetIPAddress_charArray);
+        //server_address.sin_addr.s_addr = inet_addr(server_ip_address);
+        if(connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address)) < 0)
         {
-            valid = false;
+            setValidity(false);
         }
         else
         {
-            valid = true;
+            setValidity(true);
         }
     }
 }
 
 int SecureSocket::readSecureSocket()
 {
-    if(valid == true)
+    int len = -2;
+    if(getValidity() == true)
     {
         char buffer_char[256];
-        len = read(socket_descriptor, buffer_char, sizeof(buffer_char));
+        len = read(getSocketDescriptor(), buffer_char, sizeof(buffer_char));
+        setBuffer(charArray_to_string(buffer_char, strlen(buffer_char)));
     }
+    return len;
+}
+
+int SecureSocket::writeSecureSocket()
+{
+    int len = -2;
+    if(getValidity() == true)
+    {
+        char* buffer_char = string_to_charArray(getBuffer());
+        len = write(getSocketDescriptor(), buffer_char, strlen(buffer_char));
+        free(buffer_char);
+    }
+    return len;
 }

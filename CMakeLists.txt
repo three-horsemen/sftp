@@ -26,6 +26,7 @@ add_library(securityLibraryCollection
 	src/security/encrypt.cpp
 	src/security/diffiehellman.cpp
 	src/security/rsa.cpp
+	src/security/securesocket.cpp
 	)
 
 add_executable(unit_test_encrypt src/unit_test/security/encrypt.cpp)
