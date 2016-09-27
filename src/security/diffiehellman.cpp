@@ -109,8 +109,6 @@ int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_
 
     char buffer[256];
 
-    //printf("Port number: %d\n", server_port);
-    //printf("Server IP address: %s\n", server_ip_address);
 	memset(&server_address,0,sizeof(server_address));
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(server_port);
