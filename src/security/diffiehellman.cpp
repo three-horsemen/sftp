@@ -1,5 +1,8 @@
 #include "security/diffiehellman.hpp"
 
+#include <iostream>
+using namespace std;
+
 DHExchange_clientContainer::DHExchange_clientContainer()
 {
     valid = false;
@@ -91,9 +94,16 @@ void DHExchange_serverContainer::set_shared_secret(int new_shared_secret)
 }
 
 
-//int Client_DHExchange::perform_key_exchange(char *server_ip_address, int server_port)
-int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port)
+
+//int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port)
+int Client_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port)
 {
+
+    SecureSocket secureClientSocket;
+    secureClientSocket.setTargetIPAddress(server_ip_address__str);
+    secureClientSocket.setTargetPortNumber(server_port);
+    secureClientSocket.initSecureSocket();
+
     char* server_ip_address = string_to_charArray(server_ip_address__str);
     client_keys_container.set_validity(false);
 	int client_private_int;
@@ -106,6 +116,8 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
     int dh_q_int;
 	char dh_secret[256];
 
+    int len;
+/*
     int socket_descriptor, len;
     struct sockaddr_in server_address;
 
@@ -124,7 +136,14 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 	{
         //printf("Successfully created socket: %d\n", socket_descriptor);
     }
+*/
 
+    if(secureClientSocket.getValidity() == false)
+    {
+        perror("Error: Socket failed! >>socket()");
+        return -1;
+    }
+/*
     ///These lines were added to ensure a port can be reused, if the server is restarted.
     int force_reuse_socket_port__yes = 1;
     if (setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
@@ -132,7 +151,8 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
         perror("setsockopt");
         return 1;
     }
-
+*/
+/*
 	if(connect(socket_descriptor,(struct sockaddr*)&server_address,sizeof(server_address)) < 0)
 	{
         perror("Error: Connection failed! >>connect()");
@@ -142,16 +162,33 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 	{
         //printf("Successfully connected to socket: %d\n", socket_descriptor);
     }
+*/
+    if(secureClientSocket.connectSecureSocket() < 0)
+    {
+        perror("Error: Client Connection failed! >>connect()");
+        return 1;
+    }
+    else
+    {
+        //printf("Successfully connected to socket: %d\n", socket_descriptor);
+    }
 
     ///Hello to server.
-	strcpy(buffer, "hello_exchangeDH");
+	//strcpy(buffer, "hello_exchangeDH");
+    secureClientSocket.setBuffer("hello_exchangeDH");
+    cout << endl << secureClientSocket.getBuffer() << endl << endl;
     //printf("-> %s\n", buffer);
-    len = write(socket_descriptor, buffer, strlen(buffer));
+    //len = write(socket_descriptor, buffer, strlen(buffer));
+cout << "ClientMark1" << endl;
+    secureClientSocket.writeSecureSocket();
     //printf("Sent %d bytes.\n", len);
-
+cout << "ClientMark2" << endl;
 	begin:
+cout << "ClientMark2.1" << endl;
     ///Try to receive p.
-    len = read(socket_descriptor, buffer, sizeof(buffer));
+    //len = read(socket_descriptor, buffer, sizeof(buffer));
+    len = secureClientSocket.readSecureSocket();
+cout << "ClientMark3" << endl;
     if(len < 0)
 	{
         printf("Error: Received: %d bytes!\n",len);
@@ -160,7 +197,9 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 	else
 	{
 	    //printf("Received %d bytes for p.\n",len);
-	    buffer[len] = '\0';
+	    //buffer[len] = '\0';
+
+        string buffer = secureClientSocket.getBuffer();
 	    //printf("<- ");
 	    //fputs(buffer,stdout);
 		//printf("\n");
@@ -188,11 +227,15 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
             }
         }
 	}
+    char buffer_charArray[256];
 	client_private_int = custom_rand(100);
 	sprintf(client_private, "%d", client_private_int);
 	sprintf(client_public, "%d", mpmod(dh_q_int, client_private_int, dh_p_int));
-	sprintf(buffer, "%s", client_public);
-    len = write(socket_descriptor, buffer, strlen(buffer));
+	//sprintf(buffer, "%s", client_public);
+    //len = write(socket_descriptor, buffer, strlen(buffer));
+    secureClientSocket.setBuffer(charArray_to_string(buffer_charArray, strlen(buffer_charArray)));
+    len = secureClientSocket.writeSecureSocket();
+cout << "ClientMark4" << endl;
     ///If the client public key was found to be zero or one, then restart the process.
     if(atoi(client_public) <= 1)
     {
@@ -200,22 +243,30 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
     	goto begin;
     }
 
-    len = read(socket_descriptor, buffer, sizeof(buffer));
+    //len = read(socket_descriptor, buffer, sizeof(buffer));
+    len = secureClientSocket.readSecureSocket();
+cout << "ClientMark5" << endl;
     if(len < 0)
 	{
+        cout << "ClientMark5.1" << endl;
         //printf("Error: Received: %d bytes!\n",len);
         return 1;
     }
 	else
 	{
-	    buffer[len] = '\0';
-		strcpy(server_public, buffer);
-
+        cout << "ClientMark5.2" << endl;
+	    //buffer[len] = '\0';
+        char* temp = string_to_charArray(secureClientSocket.getBuffer());
+		strcpy(server_public, temp);
+        free(temp);
+cout << "ClientMark5.3" << endl;
         ///If the server public key was found to be zero or one, then restart the process.
         if(atoi(server_public) <= 1)
         {
+            cout << "ClientMark5.4" << endl;
         	//printf("The server public key was too low! Restarting the exchange.\n\n");
         	goto begin;
+            cout << "ClientMark5.5" << endl;
         }
 	}
 
@@ -223,15 +274,19 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int s
     ///If the shared secret was found to be less than 10, then restart the process.
     if(dh_secret_int < 10)
     {
+        cout << "ClientMark5.6" << endl;
         //printf("The shared secret was too low! Restarting the process.\n\n");
         goto begin;
+        cout << "ClientMark5.7" << endl;
     }
 
 	sprintf(dh_secret, "%d", dh_secret_int);
 	//printf("Diffie-Hellman secret: %s\n\n", dh_secret);
 
-    close(socket_descriptor);
-
+    //close(socket_descriptor);
+cout << "ClientMark6" << endl;
+    secureClientSocket.destroySecureSocket();
+cout << "ClientMark7" << endl;
     client_keys_container.set_validity(true);
     client_keys_container.set_client_private(client_private_int);
     client_keys_container.set_client_public(atoi(client_public));

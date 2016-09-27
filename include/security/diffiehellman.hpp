@@ -1,13 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include "security/cryptmath.hpp"
 #include "security/cryptstr.hpp"
+#include "security/securesocket.hpp"
 class DHExchange_clientContainer
 {
 private:
@@ -56,7 +49,7 @@ class Client_DHExchange
 private:
     DHExchange_clientContainer client_keys_container;
 public:
-    int perform_key_exchange(string server_ip_address, int server_port);
+    int perform_key_exchange(string server_ip_address, string server_port);
     DHExchange_clientContainer get_key_container();
 };
 

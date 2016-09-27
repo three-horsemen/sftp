@@ -11,7 +11,7 @@ int main()
     //char* server_ip_address = "172.16.0.2";
     string server_ip_address = "127.0.0.1";
     int server_port = 8082;
-
+    string server_port_str = "8082";
     int child_pid;
     if(child_pid = fork()) ///The parent.
     {
@@ -26,9 +26,10 @@ int main()
     }
     else ///The child.
     {
+        sleep(1);
         cout << "The client (child process) is beginning." << endl;
         Client_DHExchange client_dhexchange;
-        client_dhexchange.perform_key_exchange(server_ip_address, server_port);
+        client_dhexchange.perform_key_exchange(server_ip_address, server_port_str);
 
         if(client_dhexchange.get_key_container().get_validity())
             cout << "Unit tester: The shared secret with the client is " << client_dhexchange.get_key_container().get_shared_secret() << endl;

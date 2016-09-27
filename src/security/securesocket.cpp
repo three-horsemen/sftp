@@ -1,5 +1,7 @@
 #include "security/securesocket.hpp"
-
+#include "shared/logger.hpp"
+#include <iostream>
+using namespace std;
 bool SecureSocket::getValidity()
 {
     return valid;
@@ -35,9 +37,9 @@ string SecureSocket::getTargetPortNumber()
     return targetPortNumber;
 }
 
-void SecureSocket::setBuffer(string newBuffer)
+void SecureSocket::setTargetPortNumber(string newTargetPortNumber)
 {
-    buffer = newBuffer;
+    targetPortNumber = newTargetPortNumber;
 }
 
 string SecureSocket::getBuffer()
@@ -45,31 +47,41 @@ string SecureSocket::getBuffer()
     return buffer;
 }
 
+void SecureSocket::setBuffer(string newBuffer)
+{
+    buffer = newBuffer;
+}
+
 int SecureSocket::initSecureSocket()
 {
     setSocketDescriptor(socket(PF_INET,SOCK_STREAM,0));
     if(getSocketDescriptor() < 0)
     {
+        cout << "The socket failed to create." << endl;
         setValidity(false);
     }
     else
     {
+        cout << "The socket was successfully created." << endl;
         setValidity(true);
     }
     int force_reuse_socket_port__yes = 1;
     if (setsockopt(getSocketDescriptor(), SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
     {
+        cout << "The socket couldn't be reused." << endl;
         setValidity(false);
     }
     else
     {
+        cout << "The socket is being used successfully." << endl;
         setValidity(true);
     }
     return getSocketDescriptor();
 }
 
-void SecureSocket::connectSecureSocket()
+int SecureSocket::connectSecureSocket()
 {
+    int result = -2;
     if(getValidity() == true)
     {
         struct sockaddr_in server_address;
@@ -82,7 +94,8 @@ void SecureSocket::connectSecureSocket()
         server_address.sin_addr.s_addr = inet_addr(targetIPAddress_charArray);
         free(targetIPAddress_charArray);
         //server_address.sin_addr.s_addr = inet_addr(server_ip_address);
-        if(connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address)) < 0)
+        result = connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address));
+        if(result < 0)
         {
             setValidity(false);
         }
@@ -91,6 +104,7 @@ void SecureSocket::connectSecureSocket()
             setValidity(true);
         }
     }
+    return result;
 }
 
 int SecureSocket::readSecureSocket()
@@ -115,4 +129,9 @@ int SecureSocket::writeSecureSocket()
         free(buffer_char);
     }
     return len;
+}
+
+int SecureSocket::destroySecureSocket()
+{
+    return close(getSocketDescriptor());
 }

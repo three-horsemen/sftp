@@ -19,9 +19,9 @@ private:
     string targetPortNumber;
 
     string buffer;
+    void setValidity(bool newValidity);
 public:
     bool getValidity();
-    void setValidity(bool newValidity);
     int getSocketDescriptor();
     void setSocketDescriptor(int newSocketDescriptor);
     string getTargetIPAddress();
@@ -33,7 +33,7 @@ public:
     void setBuffer(string newBuffer);
 
     int initSecureSocket();
-    void connectSecureSocket();
+    int connectSecureSocket();
     int destroySecureSocket();
     int readSecureSocket();
     int writeSecureSocket();
