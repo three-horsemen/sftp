@@ -76,6 +76,8 @@ int SecureSocket::initSecureSocket()
         cout << "The socket is being used successfully." << endl;
         setValidity(true);
     }
+
+
     return getSocketDescriptor();
 }
 
@@ -94,15 +96,34 @@ int SecureSocket::connectSecureSocket()
         server_address.sin_addr.s_addr = inet_addr(targetIPAddress_charArray);
         free(targetIPAddress_charArray);
         //server_address.sin_addr.s_addr = inet_addr(server_ip_address);
+        char* s = inet_ntoa(((struct sockaddr_in*)&server_address)->sin_addr);
+        cout << "Before the connect:" << endl;
+        cout << "connectSecureSocket: The IP address is " << charArray_to_string(s, strlen(s)) << endl;
+        cout << "connectSecureSocket: The port number is " << ntohs(((struct sockaddr_in*)&server_address)->sin_port) << endl;
         result = connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address));
         if(result < 0)
         {
             setValidity(false);
+            cout << "Something went wrong with connect()." << endl;
         }
         else
         {
+            cout << "Connect was successful!" << endl;
             setValidity(true);
         }
+
+        struct sockaddr tempSockAddr;
+        socklen_t tempLen = sizeof(tempSockAddr);
+        getsockname(getSocketDescriptor(), &tempSockAddr, &tempLen);
+        //getpeername(getSocketDescriptor(), &tempSockAddr, &tempLen);
+        s = inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr);
+        cout << "connectSecureSocket: The getsockname IP address is " << charArray_to_string(s, strlen(s)) << endl;
+        cout << "connectSecureSocket: The getsockname port number is " << ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port) << endl;
+        getpeername(getSocketDescriptor(), &tempSockAddr, &tempLen);
+        s = inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr);
+        cout << "connectSecureSocket: The getpeername IP address is " << charArray_to_string(s, strlen(s)) << endl;
+        cout << "connectSecureSocket: The getpeername port number is " << ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port) << endl;
+
     }
     return result;
 }

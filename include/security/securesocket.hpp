@@ -39,3 +39,32 @@ public:
     int writeSecureSocket();
 
 };
+/*
+class SecureListenSocket
+{
+private:
+    bool valid;
+    int listenSocketDescriptor;
+    string targetIPAddress;
+    string targetPortNumber;
+
+    string buffer;
+    void setValidity(bool newValidity);
+public:
+    bool getValidity();
+    int getSocketDescriptor();
+    void setSocketDescriptor(int newSocketDescriptor);
+    string getTargetIPAddress();
+    void setTargetIPAddress(string newTargetIPAddress);
+    string getTargetPortNumber();
+    void setTargetPortNumber(string newTargetPortNumber);
+
+    string getBuffer();
+    void setBuffer(string newBuffer);
+
+    int initSecureListenSocket();
+    int bindSecureListenSocket();
+    int listenSecureListenSocket();
+
+}
+*/

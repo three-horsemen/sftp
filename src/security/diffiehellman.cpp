@@ -163,6 +163,7 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, strin
         //printf("Successfully connected to socket: %d\n", socket_descriptor);
     }
 */
+    cout << "The client is attempting to connect." << endl;
     if(secureClientSocket.connectSecureSocket() < 0)
     {
         perror("Error: Client Connection failed! >>connect()");
@@ -303,7 +304,14 @@ DHExchange_clientContainer Client_DHExchange::get_key_container()
 
 
 int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port, int number_of_exchanges)
+// int Server_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port, int number_of_exchanges)
 {
+    /*
+    SecureSocket secureServerSocket;
+    secureServerSocket.setTargetIPAddress(server_ip_address__str);
+    secureServerSocket.setTargetPortNumber(server_port);
+    secureServerSocket.initSecureSocket();
+*/
     char* server_ip_address = string_to_charArray(server_ip_address__str);
 
     server_keys_container.set_validity(false);
@@ -318,7 +326,9 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
     int dh_secret_int;
 	int listenSocketDescriptor, s;
 	socklen_t clientAddrLen;
-	char buffer[256];
+	char buffer_charArray[256];
+    //string buffer;
+    char buffer[256];
 
 	struct sockaddr_in servAddr, clientAddr;
 	int n;
@@ -446,13 +456,13 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
         number_of_exchanges--;
 	}
     close(listenSocketDescriptor);
-
+/*
     server_keys_container.set_validity(true);
     server_keys_container.set_server_private(server_private_int);
     server_keys_container.set_client_public(atoi(client_public));
     server_keys_container.set_server_public(atoi(server_public));
     server_keys_container.set_shared_secret(dh_secret_int);
-
+*/
     return 0;
 }
 

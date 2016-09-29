@@ -18,11 +18,12 @@ int main()
         cout << "The server (parent process) is beginning." << endl;
         Server_DHExchange server_dhexchange;
         server_dhexchange.perform_key_exchange(string_to_charArray(server_ip_address), server_port, 1);
-        wait();
+        cout << "Server's job is done." << endl;
         if(server_dhexchange.get_key_container().get_validity())
             cout << "Unit tester: The shared secret with the server is " << server_dhexchange.get_key_container().get_shared_secret() << endl;
         else
             cout << "Unit tester: The server's shared secret wasn't set." << endl;
+        wait();
     }
     else ///The child.
     {
@@ -30,12 +31,12 @@ int main()
         cout << "The client (child process) is beginning." << endl;
         Client_DHExchange client_dhexchange;
         client_dhexchange.perform_key_exchange(server_ip_address, server_port_str);
-
+        cout << "Client's job is done." << endl;
         if(client_dhexchange.get_key_container().get_validity())
             cout << "Unit tester: The shared secret with the client is " << client_dhexchange.get_key_container().get_shared_secret() << endl;
         else
             cout << "Unit tester: The client's shared secret wasn't set." << endl;
-        exit(0);
+        //exit(0);
     }
     /*
     if(getpid() != child_pid) /// The parent.
