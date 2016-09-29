@@ -1,13 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (sftp)
 
-###Samples:
-#add_library(shared src/shared/Logger.cpp)
-#target_link_libraries(shared somelib1 somelib2)
-#add_executable(unit_test_encrypt src/security/unit_test/encrypt.cpp src/security/unit_test/hello.cpp)
-#target_link_libraries(unit_test_encrypt shared)
-#add_library(include src/security/encrypt.cpp)
-
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED OFF)
 set(Boost_USE_STATIC_RUNTIME OFF)
@@ -34,9 +27,12 @@ target_link_libraries(unit_test_logger shared)
 
 ###Security module
 add_library(security
+	src/security/cryptmath.cpp
+	src/security/cryptstr.cpp
 	src/security/encrypt.cpp
 	src/security/diffiehellman.cpp
-	src/security/SecureSocketManager.cpp
+	src/security/rsa.cpp
+	src/security/securesocket.cpp
 	)
 target_link_libraries(security shared)
 
@@ -47,8 +43,11 @@ target_link_libraries(unit_test_encrypt security)
 add_executable(unit_test_diffiehellman src/unit_test/security/diffiehellman.cpp)
 target_link_libraries(unit_test_diffiehellman security)
 
+add_executable(unit_test_rsa src/unit_test/security/rsa.cpp)
+target_link_libraries(unit_test_rsa security)
+
 ###Timeline module
 add_executable(timeline_server
 	src/sync/timeline/TimelineServer.cpp
 	)
-target_link_libraries(timeline_server shared security)
+target_link_libraries(timeline_server shared)

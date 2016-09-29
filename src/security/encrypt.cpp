@@ -1,4 +1,3 @@
-#include <bitset>
 #include "security/encrypt.hpp"
 std::string EncryptModule::encrypt(std::string message, char key)
 {

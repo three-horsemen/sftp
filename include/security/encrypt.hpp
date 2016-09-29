@@ -1,3 +1,4 @@
+#include <bitset>
 class EncryptModule
 {
 public:
