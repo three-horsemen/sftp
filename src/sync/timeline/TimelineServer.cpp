@@ -12,27 +12,12 @@
 #include <shared/SignalHandler.hpp>
 #include <security/SecureSocketManager.hpp>
 
+namespace sftp{
+
+namespace sync {
+
 using namespace std;
 using namespace security;
-
-/*
- struct MyException: public exception {
- const char * what() const throw () {
- return "C++ Exception";
- }
- };
-
- int main() {
- try {
- throw MyException();
- } catch (MyException& e) {
- std::cout << "MyException caught" << std::endl;
- std::cout << e.what() << std::endl;
- } catch (std::exception& e) {
- //Other errors
- }
- }
- */
 
 class TimelineServer {
 private:
@@ -121,6 +106,12 @@ public:
 		close(listenSocketDescriptor);
 	}
 };
+
+}; /* synchronized namespace */
+
+};
+
+using namespace sftp::sync;
 
 int main(int argc, char** argv) {
 	if (argc < 2) {

@@ -33,6 +33,7 @@ add_library(security
 	src/security/diffiehellman.cpp
 	src/security/rsa.cpp
 	src/security/securesocket.cpp
+	src/security/SecureSocketManager.cpp
 	)
 target_link_libraries(security shared)
 
@@ -50,4 +51,4 @@ target_link_libraries(unit_test_rsa security)
 add_executable(timeline_server
 	src/sync/timeline/TimelineServer.cpp
 	)
-target_link_libraries(timeline_server shared)
+target_link_libraries(timeline_server shared security)
