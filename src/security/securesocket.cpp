@@ -2,56 +2,64 @@
 #include "shared/logger.hpp"
 #include <iostream>
 using namespace std;
+
+
 bool SecureSocket::getValidity()
 {
     return valid;
 }
-
 void SecureSocket::setValidity(bool newValidity)
 {
     valid = newValidity;
 }
-
 int SecureSocket::getSocketDescriptor()
 {
     return socketDescriptor;
 }
-
 void SecureSocket::setSocketDescriptor(int newSocketDescriptor)
 {
     socketDescriptor = newSocketDescriptor;
 }
-
 string SecureSocket::getTargetIPAddress()
 {
     return targetIPAddress;
 }
-
 void SecureSocket::setTargetIPAddress(string newTargetIPAddress)
 {
     targetIPAddress = newTargetIPAddress;
 }
-
 string SecureSocket::getTargetPortNumber()
 {
     return targetPortNumber;
 }
-
 void SecureSocket::setTargetPortNumber(string newTargetPortNumber)
 {
     targetPortNumber = newTargetPortNumber;
 }
-
+string SecureSocket::getSourceIPAddress()
+{
+    return sourceIPAddress;
+}
+void SecureSocket::setSourceIPAddress(string newSourceIPAddress)
+{
+    sourceIPAddress = newSourceIPAddress;
+}
+string SecureSocket::getSourcePortNumber()
+{
+    return sourcePortNumber;
+}
+void SecureSocket::setSourcePortNumber(string newSourcePortNumber)
+{
+    sourcePortNumber = newSourcePortNumber;
+}
 string SecureSocket::getBuffer()
 {
     return buffer;
 }
-
 void SecureSocket::setBuffer(string newBuffer)
 {
     buffer = newBuffer;
 }
-
 int SecureSocket::initSecureSocket()
 {
     setSocketDescriptor(socket(PF_INET,SOCK_STREAM,0));
@@ -77,11 +85,13 @@ int SecureSocket::initSecureSocket()
         setValidity(true);
     }
 
+    setSourceIPAddress(getSourceAddrFromSockDesc());
+    setSourcePortNumber(getSourcePortFromSockDesc());
 
     return getSocketDescriptor();
 }
 
-int SecureSocket::connectSecureSocket()
+int SecureDataSocket::connectSecureSocket()
 {
     int result = -2;
     if(getValidity() == true)
@@ -95,11 +105,7 @@ int SecureSocket::connectSecureSocket()
         char* targetIPAddress_charArray = string_to_charArray(getTargetIPAddress());
         server_address.sin_addr.s_addr = inet_addr(targetIPAddress_charArray);
         free(targetIPAddress_charArray);
-        //server_address.sin_addr.s_addr = inet_addr(server_ip_address);
-        char* s = inet_ntoa(((struct sockaddr_in*)&server_address)->sin_addr);
-        cout << "Before the connect:" << endl;
-        cout << "connectSecureSocket: The IP address is " << charArray_to_string(s, strlen(s)) << endl;
-        cout << "connectSecureSocket: The port number is " << ntohs(((struct sockaddr_in*)&server_address)->sin_port) << endl;
+
         result = connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address));
         if(result < 0)
         {
@@ -112,35 +118,30 @@ int SecureSocket::connectSecureSocket()
             setValidity(true);
         }
 
-        struct sockaddr tempSockAddr;
-        socklen_t tempLen = sizeof(tempSockAddr);
-        getsockname(getSocketDescriptor(), &tempSockAddr, &tempLen);
-        //getpeername(getSocketDescriptor(), &tempSockAddr, &tempLen);
-        s = inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr);
-        cout << "connectSecureSocket: The getsockname IP address is " << charArray_to_string(s, strlen(s)) << endl;
-        cout << "connectSecureSocket: The getsockname port number is " << ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port) << endl;
-        getpeername(getSocketDescriptor(), &tempSockAddr, &tempLen);
-        s = inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr);
-        cout << "connectSecureSocket: The getpeername IP address is " << charArray_to_string(s, strlen(s)) << endl;
-        cout << "connectSecureSocket: The getpeername port number is " << ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port) << endl;
+        cout << "After the connect:" << endl;
+        cout << "connectSecureSocket: The source IP address is " << getSourceAddrFromSockDesc() << endl;
+        cout << "connectSecureSocket: The source port number is " << getSourcePortFromSockDesc() << endl;
+        cout << "connectSecureSocket: The destination IP address is " << getTargetAddrFromSockDesc() << endl;
+        cout << "connectSecureSocket: The destination port number is " << getTargetPortFromSockDesc() << endl;
 
     }
     return result;
 }
 
-int SecureSocket::readSecureSocket()
+int SecureDataSocket::readSecureSocket()
 {
     int len = -2;
     if(getValidity() == true)
     {
-        char buffer_char[256];
-        len = read(getSocketDescriptor(), buffer_char, sizeof(buffer_char));
-        setBuffer(charArray_to_string(buffer_char, strlen(buffer_char)));
+        char buffer[256];
+        bzero(buffer,256);
+        len = read(getSocketDescriptor(), buffer, sizeof(buffer));
+        setBuffer(charArray_to_string(buffer, strlen(buffer)));
     }
     return len;
 }
 
-int SecureSocket::writeSecureSocket()
+int SecureDataSocket::writeSecureSocket()
 {
     int len = -2;
     if(getValidity() == true)
@@ -155,4 +156,92 @@ int SecureSocket::writeSecureSocket()
 int SecureSocket::destroySecureSocket()
 {
     return close(getSocketDescriptor());
+}
+
+string SecureSocket::getSourceAddrFromSockDesc()
+{
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getsockname(getSocketDescriptor(), &tempSockAddr, &tempLen);
+    return charArray_to_string(inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr));
+}
+string SecureSocket::getSourcePortFromSockDesc()
+{
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getsockname(getSocketDescriptor(), &tempSockAddr, &tempLen);
+    return int_to_string(ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port));
+}
+string SecureSocket::getTargetAddrFromSockDesc()
+{
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getpeername(getSocketDescriptor(), &tempSockAddr, &tempLen);
+    char *s = inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr);
+    string result = charArray_to_string(s, strlen(s));
+    //free(s);
+    return result;
+}
+string SecureSocket::getTargetPortFromSockDesc()
+{
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getpeername(getSocketDescriptor(), &tempSockAddr, &tempLen);
+    string result = int_to_string(ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port));
+    return result;
+}
+
+
+
+
+int SecureListenSocket::bindSecureSocket()
+{
+    int result = -2;
+    if(getValidity() == true)
+    {
+        struct sockaddr_in servAddr;
+        memset(&servAddr,0,sizeof(servAddr));
+        servAddr.sin_family = AF_INET;
+        servAddr.sin_addr.s_addr = inet_addr(string_to_charArray(getSourceIPAddress()));
+        servAddr.sin_port = htons(atoi(string_to_charArray(getSourcePortNumber())));
+        result = bind(getSocketDescriptor(),(struct sockaddr*)&servAddr,sizeof(servAddr));
+    }
+    return result;
+}
+
+int SecureListenSocket::listenSecureSocket()
+{
+    int result = -2;
+    if(getValidity() == true)
+    {
+        result = listen(getSocketDescriptor(),queueSize);
+    }
+    return result;
+}
+
+SecureDataSocket SecureListenSocket::acceptSecureSocket()
+{
+    SecureDataSocket newSecureDataSocket;
+    newSecureDataSocket.setValidity(false);
+    if(getValidity() == true)
+    {
+        struct sockaddr_in clientAddr;
+        socklen_t clientAddrLen = sizeof(clientAddr);
+        int s = accept(getSocketDescriptor(), (struct sockaddr *)&clientAddr, &clientAddrLen);
+/*
+        newSecureDataSocket.setSocketDescriptor(s);
+        newSecureDataSocket.setSourceIPAddress(this->getSourceIPAddress());
+        newSecureDataSocket.setSourcePortNumber(this->getSourcePortNumber());
+        newSecureDataSocket.setTargetIPAddress(newSecureDataSocket.getTargetAddrFromSockDesc());
+        newSecureDataSocket.setTargetPortNumber(newSecureDataSocket.getTargetPortFromSockDesc());
+        newSecureDataSocket.setValidity(true);
+*/
+        newSecureDataSocket.setSocketDescriptor(s);
+        newSecureDataSocket.setSourceIPAddress(this->getSourceIPAddress());
+        newSecureDataSocket.setSourcePortNumber(this->getSourcePortNumber());
+        newSecureDataSocket.setTargetIPAddress(newSecureDataSocket.getTargetAddrFromSockDesc());
+        newSecureDataSocket.setTargetPortNumber(newSecureDataSocket.getTargetPortFromSockDesc());
+        newSecureDataSocket.setValidity(true);
+    }
+    return newSecureDataSocket;
 }

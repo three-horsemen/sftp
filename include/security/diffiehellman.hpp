@@ -58,6 +58,7 @@ class Server_DHExchange
 private:
     DHExchange_serverContainer server_keys_container;
 public:
-    int perform_key_exchange(string server_ip_address, int server_port, int number_of_exchanges);
+    //int perform_key_exchange(string server_ip_address, int server_port, int number_of_exchanges);
+    int perform_key_exchange(string server_ip_address, string server_port, int number_of_exchanges);
     DHExchange_serverContainer get_key_container();
 };

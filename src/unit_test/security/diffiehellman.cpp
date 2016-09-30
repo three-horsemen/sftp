@@ -15,9 +15,9 @@ int main()
     int child_pid;
     if(child_pid = fork()) ///The parent.
     {
-        cout << "The server (parent process) is beginning." << endl;
+        cout << "The server (parent process) is beginning: #" << getpid() << endl;
         Server_DHExchange server_dhexchange;
-        server_dhexchange.perform_key_exchange(string_to_charArray(server_ip_address), server_port, 1);
+        server_dhexchange.perform_key_exchange(server_ip_address, server_port_str, 1);
         cout << "Server's job is done." << endl;
         if(server_dhexchange.get_key_container().get_validity())
             cout << "Unit tester: The shared secret with the server is " << server_dhexchange.get_key_container().get_shared_secret() << endl;
@@ -27,8 +27,8 @@ int main()
     }
     else ///The child.
     {
-        sleep(1);
-        cout << "The client (child process) is beginning." << endl;
+        sleep(2);
+        cout << "The client (child process) is beginning: #" << getpid() << endl;
         Client_DHExchange client_dhexchange;
         client_dhexchange.perform_key_exchange(server_ip_address, server_port_str);
         cout << "Client's job is done." << endl;

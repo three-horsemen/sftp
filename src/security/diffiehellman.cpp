@@ -98,11 +98,10 @@ void DHExchange_serverContainer::set_shared_secret(int new_shared_secret)
 //int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port)
 int Client_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port)
 {
-
-    SecureSocket secureClientSocket;
-    secureClientSocket.setTargetIPAddress(server_ip_address__str);
-    secureClientSocket.setTargetPortNumber(server_port);
-    secureClientSocket.initSecureSocket();
+    SecureDataSocket clientSecureDataSocket;
+    clientSecureDataSocket.setTargetIPAddress(server_ip_address__str);
+    clientSecureDataSocket.setTargetPortNumber(server_port);
+    clientSecureDataSocket.initSecureSocket();
 
     char* server_ip_address = string_to_charArray(server_ip_address__str);
     client_keys_container.set_validity(false);
@@ -117,54 +116,18 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 	char dh_secret[256];
 
     int len;
-/*
-    int socket_descriptor, len;
-    struct sockaddr_in server_address;
-
-    char buffer[256];
-
-	memset(&server_address,0,sizeof(server_address));
-	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(server_port);
-    server_address.sin_addr.s_addr = inet_addr(server_ip_address);
-    if((socket_descriptor = socket(PF_INET,SOCK_STREAM,0)) < 0)
-	{
-        perror("Error: Socket failed! >>socket()");
-        return 1;
-    }
-	else
-	{
-        //printf("Successfully created socket: %d\n", socket_descriptor);
-    }
-*/
-
-    if(secureClientSocket.getValidity() == false)
+    if(clientSecureDataSocket.getValidity() == false)
     {
         perror("Error: Socket failed! >>socket()");
         return -1;
     }
-/*
-    ///These lines were added to ensure a port can be reused, if the server is restarted.
-    int force_reuse_socket_port__yes = 1;
-    if (setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
+    else
     {
-        perror("setsockopt");
-        return 1;
+        cout << "The client's socket was successfully created: " << clientSecureDataSocket.getSocketDescriptor() << endl;
     }
-*/
-/*
-	if(connect(socket_descriptor,(struct sockaddr*)&server_address,sizeof(server_address)) < 0)
-	{
-        perror("Error: Connection failed! >>connect()");
-        return 1;
-    }
-	else
-	{
-        //printf("Successfully connected to socket: %d\n", socket_descriptor);
-    }
-*/
+
     cout << "The client is attempting to connect." << endl;
-    if(secureClientSocket.connectSecureSocket() < 0)
+    if(clientSecureDataSocket.connectSecureSocket() < 0)
     {
         perror("Error: Client Connection failed! >>connect()");
         return 1;
@@ -175,20 +138,15 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, strin
     }
 
     ///Hello to server.
-	//strcpy(buffer, "hello_exchangeDH");
-    secureClientSocket.setBuffer("hello_exchangeDH");
-    cout << endl << secureClientSocket.getBuffer() << endl << endl;
-    //printf("-> %s\n", buffer);
-    //len = write(socket_descriptor, buffer, strlen(buffer));
+    clientSecureDataSocket.setBuffer("hello_exchangeDH");
+    cout << endl << clientSecureDataSocket.getBuffer() << endl << endl;
 cout << "ClientMark1" << endl;
-    secureClientSocket.writeSecureSocket();
-    //printf("Sent %d bytes.\n", len);
+    clientSecureDataSocket.writeSecureSocket();
 cout << "ClientMark2" << endl;
 	begin:
 cout << "ClientMark2.1" << endl;
     ///Try to receive p.
-    //len = read(socket_descriptor, buffer, sizeof(buffer));
-    len = secureClientSocket.readSecureSocket();
+    len = clientSecureDataSocket.readSecureSocket();
 cout << "ClientMark3" << endl;
     if(len < 0)
 	{
@@ -197,13 +155,7 @@ cout << "ClientMark3" << endl;
     }
 	else
 	{
-	    //printf("Received %d bytes for p.\n",len);
-	    //buffer[len] = '\0';
-
-        string buffer = secureClientSocket.getBuffer();
-	    //printf("<- ");
-	    //fputs(buffer,stdout);
-		//printf("\n");
+        string buffer = clientSecureDataSocket.getBuffer();
         bool hash_seen_flag = false;
         dh_p_int = 0;
         dh_q_int = 0;
@@ -232,10 +184,8 @@ cout << "ClientMark3" << endl;
 	client_private_int = custom_rand(100);
 	sprintf(client_private, "%d", client_private_int);
 	sprintf(client_public, "%d", mpmod(dh_q_int, client_private_int, dh_p_int));
-	//sprintf(buffer, "%s", client_public);
-    //len = write(socket_descriptor, buffer, strlen(buffer));
-    secureClientSocket.setBuffer(charArray_to_string(buffer_charArray, strlen(buffer_charArray)));
-    len = secureClientSocket.writeSecureSocket();
+    clientSecureDataSocket.setBuffer(charArray_to_string(buffer_charArray, strlen(buffer_charArray)));
+    len = clientSecureDataSocket.writeSecureSocket();
 cout << "ClientMark4" << endl;
     ///If the client public key was found to be zero or one, then restart the process.
     if(atoi(client_public) <= 1)
@@ -244,8 +194,7 @@ cout << "ClientMark4" << endl;
     	goto begin;
     }
 
-    //len = read(socket_descriptor, buffer, sizeof(buffer));
-    len = secureClientSocket.readSecureSocket();
+    len = clientSecureDataSocket.readSecureSocket();
 cout << "ClientMark5" << endl;
     if(len < 0)
 	{
@@ -256,8 +205,7 @@ cout << "ClientMark5" << endl;
 	else
 	{
         cout << "ClientMark5.2" << endl;
-	    //buffer[len] = '\0';
-        char* temp = string_to_charArray(secureClientSocket.getBuffer());
+        char* temp = string_to_charArray(clientSecureDataSocket.getBuffer());
 		strcpy(server_public, temp);
         free(temp);
 cout << "ClientMark5.3" << endl;
@@ -270,7 +218,6 @@ cout << "ClientMark5.3" << endl;
             cout << "ClientMark5.5" << endl;
         }
 	}
-
     int dh_secret_int = mpmod(atoi(server_public), client_private_int, dh_p_int);
     ///If the shared secret was found to be less than 10, then restart the process.
     if(dh_secret_int < 10)
@@ -280,13 +227,11 @@ cout << "ClientMark5.3" << endl;
         goto begin;
         cout << "ClientMark5.7" << endl;
     }
-
 	sprintf(dh_secret, "%d", dh_secret_int);
 	//printf("Diffie-Hellman secret: %s\n\n", dh_secret);
 
-    //close(socket_descriptor);
 cout << "ClientMark6" << endl;
-    secureClientSocket.destroySecureSocket();
+    clientSecureDataSocket.destroySecureSocket();
 cout << "ClientMark7" << endl;
     client_keys_container.set_validity(true);
     client_keys_container.set_client_private(client_private_int);
@@ -303,17 +248,17 @@ DHExchange_clientContainer Client_DHExchange::get_key_container()
 }
 
 
-int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port, int number_of_exchanges)
-// int Server_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port, int number_of_exchanges)
+// int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port, int number_of_exchanges)
+int Server_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port, int number_of_exchanges)
 {
-    /*
-    SecureSocket secureServerSocket;
-    secureServerSocket.setTargetIPAddress(server_ip_address__str);
-    secureServerSocket.setTargetPortNumber(server_port);
-    secureServerSocket.initSecureSocket();
-*/
+    SecureListenSocket serverSecureListenSocket;
+    serverSecureListenSocket.setSourceIPAddress(server_ip_address__str);
+    serverSecureListenSocket.setSourcePortNumber(server_port);
+
+
     char* server_ip_address = string_to_charArray(server_ip_address__str);
 
+    DHExchange_serverContainer server_keys_container;
     server_keys_container.set_validity(false);
 
     int queueSize = 16;
@@ -327,40 +272,35 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 	int listenSocketDescriptor, s;
 	socklen_t clientAddrLen;
 	char buffer_charArray[256];
-    //string buffer;
-    char buffer[256];
+    string buffer;
+    char buffer_char[256];
 
 	struct sockaddr_in servAddr, clientAddr;
 	int n;
 
 
-	listenSocketDescriptor=socket(AF_INET,SOCK_STREAM,0);
-	if(listenSocketDescriptor<0)
+	//listenSocketDescriptor=socket(AF_INET,SOCK_STREAM,0);
+
+	if(serverSecureListenSocket.initSecureSocket()<0)
 	{
-		printf("Error: Socket failed!\n");
+		printf("Error: Server socket failed!\n");
 		return 1;
 	}
 	else
 	{
 		//printf("Successfully created socket: %d\n",listenSocketDescriptor);
+        cout << "Socket creation successful for the server: " << serverSecureListenSocket.getSocketDescriptor() << endl;
 	}
-
-    ///These lines were added to ensure a port can be reused, if the server is restarted.
-    int force_reuse_socket_port__yes = 1;
-    if (setsockopt(listenSocketDescriptor, SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
-    {
-        perror("setsockopt");
-        return 1;
-    }
-
+/*
 	memset(&servAddr,0,sizeof(servAddr));
     //printf("Port number: %d\n", server_port);
     //printf("Server IP address: %s\n", server_ip_address);
     servAddr.sin_family = AF_INET;
     servAddr.sin_addr.s_addr = inet_addr(server_ip_address);
     servAddr.sin_port = htons(server_port);
-
-	if(bind(listenSocketDescriptor,(struct sockaddr*)&servAddr,sizeof(servAddr))<0)
+*/
+	//if(bind(listenSocketDescriptor,(struct sockaddr*)&servAddr,sizeof(servAddr))<0)
+    if(serverSecureListenSocket.bindSecureSocket()<0)
 	{
 		printf("Error: Bind failed!\n");
 		return 1;
@@ -368,22 +308,30 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 	else
 	{
 		//printf("Successfully performed bind on socket\n");
+        cout << "Bind was successfully performed for the server." << endl;
 	}
 
-	if(listen(listenSocketDescriptor,queueSize)<0){
+	//if(listen(listenSocketDescriptor,queueSize)<0)
+    if(serverSecureListenSocket.listenSecureSocket()<0)
+    {
 		printf("Error: Listen failed!\n");
 		return 1;
 	}
 	else
 	{
 		//printf("Successfully listening to socket\n");
+        cout << "Listen mode activated for the server." << endl;
 	}
 	clientAddrLen = sizeof(clientAddr);
 
+
+    SecureDataSocket newSecureDataSocket;
 	while(number_of_exchanges > 0)
 	{
 		//printf("Waiting for connection\n");
-		if((s = accept(listenSocketDescriptor,(struct sockaddr *) &clientAddr,&clientAddrLen))<0)
+		//if((s = accept(listenSocketDescriptor,(struct sockaddr *) &clientAddr,&clientAddrLen))<0)
+        newSecureDataSocket = serverSecureListenSocket.acceptSecureSocket();
+        if(newSecureDataSocket.getValidity() == false)
 		{
 			printf("Error: Connection was not accepted: %d!\n",s);
 			return 1;
@@ -394,13 +342,17 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 		}
 
         ///Try to read a HELLO request from a client.
-		bzero(buffer,256);
-		if((n = read(s,buffer,255))>=0)
-			buffer[n] = '\0';
-		if(strcmp(buffer, "hello_exchangeDH") != 0)
+		//bzero(buffer,256);
+		//if((n = read(s,buffer,255))>=0)
+        if((n = newSecureDataSocket.readSecureSocket())<=0)
+			cout << "Something went wrong with the read!" << endl;
+
+		//if(strcmp(buffer, "hello_exchangeDH") != 0)
+        if(newSecureDataSocket.getBuffer() == "hello_exchangeDH")
 		{
 			printf("Invalid HELLO request from client.\n");
-			close(s);
+			//close(s);
+            newSecureDataSocket.destroySecureSocket();
 			continue;
 		}
 		//printf("HELLO request from client recognized.\n");
@@ -408,20 +360,21 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 	    begin:
         ///Try to send p and q.
         dh_p_int = next_pr(custom_rand(100));
-		//sprintf(dh_p, "%d", next_pr(custom_rand(100)));
-        sprintf(buffer,"%d",dh_p_int);
         dh_q_int = custom_rand(dh_p_int);
-        //sprintf(dh_q, "%d", custom_rand(atoi(dh_p)));
-        sprintf(buffer,"%d#%d", dh_p_int, dh_q_int);
-		n = write(s,buffer,strlen(buffer));
+        sprintf(buffer_char,"%d#%d", dh_p_int, dh_q_int);
+		//n = write(s,buffer,strlen(buffer));
+        newSecureDataSocket.setBuffer(charArray_to_string(buffer_char));
+        n = newSecureDataSocket.writeSecureSocket();
         ///Try to receive client "public" key.
-		bzero(buffer,256);
-		if((n = read(s,buffer,255))>=0)
-            buffer[n] = '\0';
-		strcpy(client_public, buffer);
+		//bzero(buffer_char,256);
+		//if((n = read(s,buffer,255))>=0)
+        if((n = newSecureDataSocket.readSecureSocket())<=0)
+            cout << "Something went wrong with the read!" << endl;
+		//strcpy(client_public, buffer);
+        string client_public_str = newSecureDataSocket.getBuffer();
 
         ///If the client public key was found to be zero or one, then restart the process.
-        if(atoi(client_public) <= 1)
+        if(atoi(string_to_charArray(client_public_str)) <= 1)
         {
         	//printf("Server: The client public key was too low! Restarting the exchange.\n\n");
         	goto begin;
@@ -431,8 +384,10 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
 		server_private_int = custom_rand(100);
 		sprintf(server_private, "%d", server_private_int);
 		sprintf(server_public, "%d", mpmod(dh_q_int, server_private_int, dh_p_int));
-		sprintf(buffer, "%s", server_public);
-		n = write(s,buffer,strlen(buffer));
+		sprintf(buffer_char, "%s", server_public);
+		//n = write(s,buffer,strlen(buffer));
+        newSecureDataSocket.setBuffer(charArray_to_string(buffer_char));
+        n = newSecureDataSocket.writeSecureSocket();
 
         ///If the server public key was found to be zero, then restart the process.
         if(atoi(server_public) <= 1)
@@ -451,18 +406,20 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int s
         }
 
         ///Calculate the shared secret.
-		close(s);
+		//close(s);
+        newSecureDataSocket.destroySecureSocket();
 
         number_of_exchanges--;
 	}
-    close(listenSocketDescriptor);
-/*
+    //close(listenSocketDescriptor);
+    serverSecureListenSocket.destroySecureSocket();
+
     server_keys_container.set_validity(true);
     server_keys_container.set_server_private(server_private_int);
     server_keys_container.set_client_public(atoi(client_public));
     server_keys_container.set_server_public(atoi(server_public));
     server_keys_container.set_shared_secret(dh_secret_int);
-*/
+
     return 0;
 }
 

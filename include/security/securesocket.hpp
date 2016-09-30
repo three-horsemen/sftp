@@ -18,9 +18,12 @@ private:
     string targetIPAddress;
     string targetPortNumber;
 
+    string sourceIPAddress;
+    string sourcePortNumber;
+
     string buffer;
-    void setValidity(bool newValidity);
 public:
+    void setValidity(bool newValidity);
     bool getValidity();
     int getSocketDescriptor();
     void setSocketDescriptor(int newSocketDescriptor);
@@ -28,43 +31,38 @@ public:
     void setTargetIPAddress(string newTargetIPAddress);
     string getTargetPortNumber();
     void setTargetPortNumber(string newTargetPortNumber);
+
+    string getSourceIPAddress();
+    void setSourceIPAddress(string newSourceIPAddress);
+    string getSourcePortNumber();
+    void setSourcePortNumber(string newSourcePortNumber);
 
     string getBuffer();
     void setBuffer(string newBuffer);
 
     int initSecureSocket();
-    int connectSecureSocket();
     int destroySecureSocket();
+
+    string getTargetAddrFromSockDesc();
+    string getTargetPortFromSockDesc();
+    string getSourceAddrFromSockDesc();
+    string getSourcePortFromSockDesc();
+};
+
+class SecureDataSocket : public SecureSocket
+{
+public:
+    int connectSecureSocket();
     int readSecureSocket();
     int writeSecureSocket();
-
 };
-/*
-class SecureListenSocket
+
+class SecureListenSocket : public SecureSocket
 {
 private:
-    bool valid;
-    int listenSocketDescriptor;
-    string targetIPAddress;
-    string targetPortNumber;
-
-    string buffer;
-    void setValidity(bool newValidity);
+    static const int queueSize = 16;
 public:
-    bool getValidity();
-    int getSocketDescriptor();
-    void setSocketDescriptor(int newSocketDescriptor);
-    string getTargetIPAddress();
-    void setTargetIPAddress(string newTargetIPAddress);
-    string getTargetPortNumber();
-    void setTargetPortNumber(string newTargetPortNumber);
-
-    string getBuffer();
-    void setBuffer(string newBuffer);
-
-    int initSecureListenSocket();
-    int bindSecureListenSocket();
-    int listenSecureListenSocket();
-
-}
-*/
+    int bindSecureSocket();
+    int listenSecureSocket();
+    SecureDataSocket acceptSecureSocket();
+};
