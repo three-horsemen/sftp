@@ -85,8 +85,11 @@ int SecureSocket::initSecureSocket()
         setValidity(true);
     }
 
-    setSourceIPAddress(getSourceAddrFromSockDesc());
-    setSourcePortNumber(getSourcePortFromSockDesc());
+    cout << "initSecureSocket(), getSourceAddrFromSockDesc(): " << getSourceAddrFromSockDesc() << endl;
+    cout << "initSecureSocket(), getSourcePortFromSockDesc(): " << getSourcePortFromSockDesc() << endl;
+
+    //setSourceIPAddress(getSourceAddrFromSockDesc());
+    //setSourcePortNumber(getSourcePortFromSockDesc());
 
     return getSocketDescriptor();
 }
@@ -96,21 +99,36 @@ int SecureDataSocket::connectSecureSocket()
     int result = -2;
     if(getValidity() == true)
     {
+        cout << "The socket descriptor for the client is: " << getSocketDescriptor() << endl;
+        cout << "The target IP address for the client is: " << getTargetIPAddress() << endl;
+        cout << "The target port number for the client is: " << getTargetPortNumber() << endl;
         struct sockaddr_in server_address;
         memset(&server_address,0,sizeof(server_address));
     	server_address.sin_family = AF_INET;
         char* targetPortNumber_charArray = string_to_charArray(getTargetPortNumber());
     	server_address.sin_port = htons(atoi(targetPortNumber_charArray));
-        free(targetPortNumber_charArray);
+        //free(targetPortNumber_charArray);
         char* targetIPAddress_charArray = string_to_charArray(getTargetIPAddress());
+        printf("Printing the targetIPAddress_charArray: <%s>\n", targetIPAddress_charArray);
         server_address.sin_addr.s_addr = inet_addr(targetIPAddress_charArray);
-        free(targetIPAddress_charArray);
+        //free(targetIPAddress_charArray);
+
+cout << endl << endl;
+
+        cout << "Before the connect:" << endl;
+        cout << "connectSecureSocket: The source IP address is " << getSourceAddrFromSockDesc() << endl;
+        cout << "connectSecureSocket: The source port number is " << getSourcePortFromSockDesc() << endl;
+        cout << "connectSecureSocket: The destination IP address is " << getTargetAddrFromSockDesc() << endl;
+        cout << "connectSecureSocket: The destination port number is " << getTargetPortFromSockDesc() << endl;
+
+cout << endl;
 
         result = connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address));
         if(result < 0)
         {
             setValidity(false);
-            cout << "Something went wrong with connect()." << endl;
+            //cout << "Something went wrong with connect(), returning: " << result << endl;
+            perror("Something went wrong with connect(): ");
         }
         else
         {

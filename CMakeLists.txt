@@ -47,6 +47,11 @@ target_link_libraries(unit_test_diffiehellman security)
 add_executable(unit_test_rsa src/unit_test/security/rsa.cpp)
 target_link_libraries(unit_test_rsa security)
 
+add_executable(unit_test_SecureTCP_client src/unit_test/security/SecureTCP_Comms/client.cpp)
+target_link_libraries(unit_test_SecureTCP_client security)
+add_executable(unit_test_SecureTCP_server src/unit_test/security/SecureTCP_Comms/server.cpp)
+target_link_libraries(unit_test_SecureTCP_server security)
+
 ###Timeline module
 add_executable(timeline_server
 	src/sync/timeline/TimelineServer.cpp

@@ -94,8 +94,6 @@ void DHExchange_serverContainer::set_shared_secret(int new_shared_secret)
 }
 
 
-
-//int Client_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port)
 int Client_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port)
 {
     SecureDataSocket clientSecureDataSocket;
@@ -258,7 +256,6 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 
     char* server_ip_address = string_to_charArray(server_ip_address__str);
 
-    DHExchange_serverContainer server_keys_container;
     server_keys_container.set_validity(false);
 
     int queueSize = 16;
