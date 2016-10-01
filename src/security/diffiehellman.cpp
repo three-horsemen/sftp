@@ -1,8 +1,5 @@
 #include "security/diffiehellman.hpp"
 
-#include <iostream>
-using namespace std;
-
 DHExchange_clientContainer::DHExchange_clientContainer()
 {
     valid = false;
@@ -94,7 +91,7 @@ void DHExchange_serverContainer::set_shared_secret(int new_shared_secret)
 }
 
 
-int Client_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port)
+int Client_DHExchange::perform_key_exchange(std::string server_ip_address__str, std::string server_port)
 {
     SecureDataSocket clientSecureDataSocket;
     clientSecureDataSocket.setTargetIPAddress(server_ip_address__str);
@@ -121,10 +118,10 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, strin
     }
     else
     {
-        cout << "The client's socket was successfully created: " << clientSecureDataSocket.getSocketDescriptor() << endl;
+        std::cout << "The client's socket was successfully created: " << clientSecureDataSocket.getSocketDescriptor() << std::endl;
     }
 
-    cout << "The client is attempting to connect." << endl;
+    std::cout << "The client is attempting to connect." << std::endl;
     if(clientSecureDataSocket.connectSecureSocket() < 0)
     {
         perror("Error: Client Connection failed! >>connect()");
@@ -137,15 +134,15 @@ int Client_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 
     ///Hello to server.
     clientSecureDataSocket.setBuffer("hello_exchangeDH");
-    cout << endl << clientSecureDataSocket.getBuffer() << endl << endl;
-cout << "ClientMark1" << endl;
+    std::cout << std::endl << clientSecureDataSocket.getBuffer() << std::endl << std::endl;
+std::cout << "ClientMark1" << std::endl;
     clientSecureDataSocket.writeSecureSocket();
-cout << "ClientMark2" << endl;
+std::cout << "ClientMark2" << std::endl;
 	begin:
-cout << "ClientMark2.1" << endl;
+std::cout << "ClientMark2.1" << std::endl;
     ///Try to receive p.
     len = clientSecureDataSocket.readSecureSocket();
-cout << "ClientMark3" << endl;
+std::cout << "ClientMark3" << std::endl;
     if(len < 0)
 	{
         printf("Error: Received: %d bytes!\n",len);
@@ -153,7 +150,7 @@ cout << "ClientMark3" << endl;
     }
 	else
 	{
-        string buffer = clientSecureDataSocket.getBuffer();
+        std::string buffer = clientSecureDataSocket.getBuffer();
         bool hash_seen_flag = false;
         dh_p_int = 0;
         dh_q_int = 0;
@@ -184,7 +181,7 @@ cout << "ClientMark3" << endl;
 	sprintf(client_public, "%d", mpmod(dh_q_int, client_private_int, dh_p_int));
     clientSecureDataSocket.setBuffer(charArray_to_string(buffer_charArray, strlen(buffer_charArray)));
     len = clientSecureDataSocket.writeSecureSocket();
-cout << "ClientMark4" << endl;
+std::cout << "ClientMark4" << std::endl;
     ///If the client public key was found to be zero or one, then restart the process.
     if(atoi(client_public) <= 1)
     {
@@ -193,44 +190,44 @@ cout << "ClientMark4" << endl;
     }
 
     len = clientSecureDataSocket.readSecureSocket();
-cout << "ClientMark5" << endl;
+std::cout << "ClientMark5" << std::endl;
     if(len < 0)
 	{
-        cout << "ClientMark5.1" << endl;
+        std::cout << "ClientMark5.1" << std::endl;
         //printf("Error: Received: %d bytes!\n",len);
         return 1;
     }
 	else
 	{
-        cout << "ClientMark5.2" << endl;
+        std::cout << "ClientMark5.2" << std::endl;
         char* temp = string_to_charArray(clientSecureDataSocket.getBuffer());
 		strcpy(server_public, temp);
         free(temp);
-cout << "ClientMark5.3" << endl;
+std::cout << "ClientMark5.3" << std::endl;
         ///If the server public key was found to be zero or one, then restart the process.
         if(atoi(server_public) <= 1)
         {
-            cout << "ClientMark5.4" << endl;
+            std::cout << "ClientMark5.4" << std::endl;
         	//printf("The server public key was too low! Restarting the exchange.\n\n");
         	goto begin;
-            cout << "ClientMark5.5" << endl;
+            std::cout << "ClientMark5.5" << std::endl;
         }
 	}
     int dh_secret_int = mpmod(atoi(server_public), client_private_int, dh_p_int);
     ///If the shared secret was found to be less than 10, then restart the process.
     if(dh_secret_int < 10)
     {
-        cout << "ClientMark5.6" << endl;
+        std::cout << "ClientMark5.6" << std::endl;
         //printf("The shared secret was too low! Restarting the process.\n\n");
         goto begin;
-        cout << "ClientMark5.7" << endl;
+        std::cout << "ClientMark5.7" << std::endl;
     }
 	sprintf(dh_secret, "%d", dh_secret_int);
 	//printf("Diffie-Hellman secret: %s\n\n", dh_secret);
 
-cout << "ClientMark6" << endl;
+std::cout << "ClientMark6" << std::endl;
     clientSecureDataSocket.destroySecureSocket();
-cout << "ClientMark7" << endl;
+std::cout << "ClientMark7" << std::endl;
     client_keys_container.set_validity(true);
     client_keys_container.set_client_private(client_private_int);
     client_keys_container.set_client_public(atoi(client_public));
@@ -245,9 +242,7 @@ DHExchange_clientContainer Client_DHExchange::get_key_container()
     return client_keys_container;
 }
 
-
-// int Server_DHExchange::perform_key_exchange(string server_ip_address__str, int server_port, int number_of_exchanges)
-int Server_DHExchange::perform_key_exchange(string server_ip_address__str, string server_port, int number_of_exchanges)
+int Server_DHExchange::perform_key_exchange(std::string server_ip_address__str, std::string server_port, int number_of_exchanges)
 {
     SecureListenSocket serverSecureListenSocket;
     serverSecureListenSocket.setSourceIPAddress(server_ip_address__str);
@@ -269,7 +264,7 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 	int listenSocketDescriptor, s;
 	socklen_t clientAddrLen;
 	char buffer_charArray[256];
-    string buffer;
+    std::string buffer;
     char buffer_char[256];
 
 	struct sockaddr_in servAddr, clientAddr;
@@ -286,7 +281,7 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 	else
 	{
 		//printf("Successfully created socket: %d\n",listenSocketDescriptor);
-        cout << "Socket creation successful for the server: " << serverSecureListenSocket.getSocketDescriptor() << endl;
+        std::cout << "Socket creation successful for the server: " << serverSecureListenSocket.getSocketDescriptor() << std::endl;
 	}
 /*
 	memset(&servAddr,0,sizeof(servAddr));
@@ -305,7 +300,7 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 	else
 	{
 		//printf("Successfully performed bind on socket\n");
-        cout << "Bind was successfully performed for the server." << endl;
+        std::cout << "Bind was successfully performed for the server." << std::endl;
 	}
 
 	//if(listen(listenSocketDescriptor,queueSize)<0)
@@ -317,7 +312,7 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 	else
 	{
 		//printf("Successfully listening to socket\n");
-        cout << "Listen mode activated for the server." << endl;
+        std::cout << "Listen mode activated for the server." << std::endl;
 	}
 	clientAddrLen = sizeof(clientAddr);
 
@@ -342,7 +337,7 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 		//bzero(buffer,256);
 		//if((n = read(s,buffer,255))>=0)
         if((n = newSecureDataSocket.readSecureSocket())<=0)
-			cout << "Something went wrong with the read!" << endl;
+			std::cout << "Something went wrong with the read!" << std::endl;
 
 		//if(strcmp(buffer, "hello_exchangeDH") != 0)
         if(newSecureDataSocket.getBuffer() == "hello_exchangeDH")
@@ -366,9 +361,9 @@ int Server_DHExchange::perform_key_exchange(string server_ip_address__str, strin
 		//bzero(buffer_char,256);
 		//if((n = read(s,buffer,255))>=0)
         if((n = newSecureDataSocket.readSecureSocket())<=0)
-            cout << "Something went wrong with the read!" << endl;
+            std::cout << "Something went wrong with the read!" << std::endl;
 		//strcpy(client_public, buffer);
-        string client_public_str = newSecureDataSocket.getBuffer();
+        std::string client_public_str = newSecureDataSocket.getBuffer();
 
         ///If the client public key was found to be zero or one, then restart the process.
         if(atoi(string_to_charArray(client_public_str)) <= 1)

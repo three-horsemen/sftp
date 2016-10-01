@@ -1,46 +1,47 @@
-
+//Server program to keep talking to clients until a "quit" message is sent.
+//Multithreading functionality is enabled, but not limited.
 #include "security/securesocket.hpp"
+#include <boost/thread.hpp>
 #include <iostream>
 using namespace std;
+
+void customthread(SecureDataSocket acceptedSecureDataSocket)
+{
+	do
+	{
+		acceptedSecureDataSocket.readSecureSocket();
+		cout << "Received: " << acceptedSecureDataSocket.getBuffer() << endl;
+		acceptedSecureDataSocket.writeSecureSocket();
+		cout << "Finished write attempt." << endl;
+	} while(acceptedSecureDataSocket.getBuffer() != "quit" && acceptedSecureDataSocket.getValidity() == true);
+	acceptedSecureDataSocket.destroySecureSocket();
+}
+
 int main()
 {
 	SecureListenSocket serverSecureListenSocket;
 	serverSecureListenSocket.initSecureSocket();
-	string buffer;
 	serverSecureListenSocket.setSourceIPAddress("127.0.0.1");
-	serverSecureListenSocket.setSourcePortNumber("8088");
-	if((serverSecureListenSocket.getValidity()) == false)
+	serverSecureListenSocket.setSourcePortNumber("8889");
+	serverSecureListenSocket.bindSecureSocket();
+	serverSecureListenSocket.listenSecureSocket();
+	SecureDataSocket serverSecureDataSocket;
+	if(serverSecureListenSocket.getValidity() == false)
 	{
-		printf("ERROR IN LISTEN SOCKET\n");
-		return 0;
+		cout << "Something went wrong!" << endl;
+		return -1;
 	}
-	if((serverSecureListenSocket.bindSecureSocket())<0)
+	else
 	{
-		printf("ERROR IN BINDING\n");
-		return 0;
+		cout << "Server is ready to accept connections from clients." << endl;
 	}
-	if(serverSecureListenSocket.listenSecureSocket()<0)
+	while(true)
 	{
-		printf("ERROR LISTENING \n");
-		return 0;
+		cout << "Waiting to accept a connection..." << endl;
+		serverSecureDataSocket = serverSecureListenSocket.acceptSecureSocket();
+		boost::thread t{customthread, serverSecureDataSocket};
+	    //t.join();
 	}
-	SecureDataSocket acceptedClientDataSocket;
-	while(fork() != 0)
-	{
-		printf("Hello World\n");
-		acceptedClientDataSocket = serverSecureListenSocket.acceptSecureSocket();
-		if(acceptedClientDataSocket.getValidity() == false)
-		{
-			printf("ERROR ACCEPTING CONNECTION \n");
-			return 0;
-		}
-		acceptedClientDataSocket.readSecureSocket();
-		cout << "Server <--: " << acceptedClientDataSocket.getBuffer() << endl;
-		acceptedClientDataSocket.writeSecureSocket();
-		cout << "Server -->: " << acceptedClientDataSocket.getBuffer() << endl;
-		acceptedClientDataSocket.destroySecureSocket();
-		exit(0);
-	}
-	serverSecureListenSocket.destroySecureSocket();
+	cout << "Server program ending." << endl;
 	return 0;
 }

@@ -15,38 +15,38 @@ class SecureSocket
 private:
     bool valid;
     int socketDescriptor;
-    string targetIPAddress;
-    string targetPortNumber;
+    std::string targetIPAddress;
+    std::string targetPortNumber;
 
-    string sourceIPAddress;
-    string sourcePortNumber;
+    std::string sourceIPAddress;
+    std::string sourcePortNumber;
 
-    string buffer;
+    std::string buffer;
 public:
     void setValidity(bool newValidity);
     bool getValidity();
     int getSocketDescriptor();
     void setSocketDescriptor(int newSocketDescriptor);
-    string getTargetIPAddress();
-    void setTargetIPAddress(string newTargetIPAddress);
-    string getTargetPortNumber();
-    void setTargetPortNumber(string newTargetPortNumber);
+    std::string getTargetIPAddress();
+    void setTargetIPAddress(std::string newTargetIPAddress);
+    std::string getTargetPortNumber();
+    void setTargetPortNumber(std::string newTargetPortNumber);
 
-    string getSourceIPAddress();
-    void setSourceIPAddress(string newSourceIPAddress);
-    string getSourcePortNumber();
-    void setSourcePortNumber(string newSourcePortNumber);
+    std::string getSourceIPAddress();
+    void setSourceIPAddress(std::string newSourceIPAddress);
+    std::string getSourcePortNumber();
+    void setSourcePortNumber(std::string newSourcePortNumber);
 
-    string getBuffer();
-    void setBuffer(string newBuffer);
+    std::string getBuffer();
+    void setBuffer(std::string newBuffer);
 
     int initSecureSocket();
     int destroySecureSocket();
 
-    string getTargetAddrFromSockDesc();
-    string getTargetPortFromSockDesc();
-    string getSourceAddrFromSockDesc();
-    string getSourcePortFromSockDesc();
+    std::string getTargetAddrFromSockDesc();
+    std::string getTargetPortFromSockDesc();
+    std::string getSourceAddrFromSockDesc();
+    std::string getSourcePortFromSockDesc();
 };
 
 class SecureDataSocket : public SecureSocket

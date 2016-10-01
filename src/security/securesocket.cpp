@@ -65,31 +65,25 @@ int SecureSocket::initSecureSocket()
     setSocketDescriptor(socket(PF_INET,SOCK_STREAM,0));
     if(getSocketDescriptor() < 0)
     {
-        cout << "The socket failed to create." << endl;
+        perror("The socket failed to create. socket():");
         setValidity(false);
     }
     else
     {
-        cout << "The socket was successfully created." << endl;
+        //cout << "The socket was successfully created." << endl;
         setValidity(true);
     }
     int force_reuse_socket_port__yes = 1;
     if (setsockopt(getSocketDescriptor(), SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
     {
-        cout << "The socket couldn't be reused." << endl;
+        perror("The socket couldn't be reused. setsockopt():");
         setValidity(false);
     }
     else
     {
-        cout << "The socket is being used successfully." << endl;
+        //cout << "The socket is being used successfully." << endl;
         setValidity(true);
     }
-
-    cout << "initSecureSocket(), getSourceAddrFromSockDesc(): " << getSourceAddrFromSockDesc() << endl;
-    cout << "initSecureSocket(), getSourcePortFromSockDesc(): " << getSourcePortFromSockDesc() << endl;
-
-    //setSourceIPAddress(getSourceAddrFromSockDesc());
-    //setSourcePortNumber(getSourcePortFromSockDesc());
 
     return getSocketDescriptor();
 }
@@ -99,9 +93,6 @@ int SecureDataSocket::connectSecureSocket()
     int result = -2;
     if(getValidity() == true)
     {
-        cout << "The socket descriptor for the client is: " << getSocketDescriptor() << endl;
-        cout << "The target IP address for the client is: " << getTargetIPAddress() << endl;
-        cout << "The target port number for the client is: " << getTargetPortNumber() << endl;
         struct sockaddr_in server_address;
         memset(&server_address,0,sizeof(server_address));
     	server_address.sin_family = AF_INET;
@@ -109,39 +100,21 @@ int SecureDataSocket::connectSecureSocket()
     	server_address.sin_port = htons(atoi(targetPortNumber_charArray));
         //free(targetPortNumber_charArray);
         char* targetIPAddress_charArray = string_to_charArray(getTargetIPAddress());
-        printf("Printing the targetIPAddress_charArray: <%s>\n", targetIPAddress_charArray);
         server_address.sin_addr.s_addr = inet_addr(targetIPAddress_charArray);
         //free(targetIPAddress_charArray);
 
-cout << endl << endl;
-
-        cout << "Before the connect:" << endl;
-        cout << "connectSecureSocket: The source IP address is " << getSourceAddrFromSockDesc() << endl;
-        cout << "connectSecureSocket: The source port number is " << getSourcePortFromSockDesc() << endl;
-        cout << "connectSecureSocket: The destination IP address is " << getTargetAddrFromSockDesc() << endl;
-        cout << "connectSecureSocket: The destination port number is " << getTargetPortFromSockDesc() << endl;
-
-cout << endl;
 
         result = connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address));
         if(result < 0)
         {
             setValidity(false);
-            //cout << "Something went wrong with connect(), returning: " << result << endl;
             perror("Something went wrong with connect(): ");
         }
         else
         {
-            cout << "Connect was successful!" << endl;
+            //cout << "Connect was successful!" << endl;
             setValidity(true);
         }
-
-        cout << "After the connect:" << endl;
-        cout << "connectSecureSocket: The source IP address is " << getSourceAddrFromSockDesc() << endl;
-        cout << "connectSecureSocket: The source port number is " << getSourcePortFromSockDesc() << endl;
-        cout << "connectSecureSocket: The destination IP address is " << getTargetAddrFromSockDesc() << endl;
-        cout << "connectSecureSocket: The destination port number is " << getTargetPortFromSockDesc() << endl;
-
     }
     return result;
 }
@@ -151,10 +124,20 @@ int SecureDataSocket::readSecureSocket()
     int len = -2;
     if(getValidity() == true)
     {
-        char buffer[256];
-        bzero(buffer,256);
-        len = read(getSocketDescriptor(), buffer, sizeof(buffer));
-        setBuffer(charArray_to_string(buffer, strlen(buffer)));
+        setBuffer("");
+        char buffer_char[256];
+        bzero(buffer_char,256);
+        len = read(getSocketDescriptor(), buffer_char, sizeof(buffer_char));
+        if(len <= 0)
+        {
+            setValidity(false);
+            //printf("Perhaps, the client was disconnected forcefully by the server?\n");
+        }
+        setBuffer(charArray_to_string(buffer_char, strlen(buffer_char)));
+    }
+    else
+    {
+        //printf("%s\n", "While trying to read, the socket was invalid.");
     }
     return len;
 }
@@ -166,6 +149,11 @@ int SecureDataSocket::writeSecureSocket()
     {
         char* buffer_char = string_to_charArray(getBuffer());
         len = write(getSocketDescriptor(), buffer_char, strlen(buffer_char));
+        if(len <= 0)
+        {
+            setValidity(false);
+            //printf("Perhaps, the server went offline?\n");
+        }
         free(buffer_char);
     }
     return len;
@@ -209,9 +197,6 @@ string SecureSocket::getTargetPortFromSockDesc()
     return result;
 }
 
-
-
-
 int SecureListenSocket::bindSecureSocket()
 {
     int result = -2;
@@ -246,14 +231,6 @@ SecureDataSocket SecureListenSocket::acceptSecureSocket()
         struct sockaddr_in clientAddr;
         socklen_t clientAddrLen = sizeof(clientAddr);
         int s = accept(getSocketDescriptor(), (struct sockaddr *)&clientAddr, &clientAddrLen);
-/*
-        newSecureDataSocket.setSocketDescriptor(s);
-        newSecureDataSocket.setSourceIPAddress(this->getSourceIPAddress());
-        newSecureDataSocket.setSourcePortNumber(this->getSourcePortNumber());
-        newSecureDataSocket.setTargetIPAddress(newSecureDataSocket.getTargetAddrFromSockDesc());
-        newSecureDataSocket.setTargetPortNumber(newSecureDataSocket.getTargetPortFromSockDesc());
-        newSecureDataSocket.setValidity(true);
-*/
         newSecureDataSocket.setSocketDescriptor(s);
         newSecureDataSocket.setSourceIPAddress(this->getSourceIPAddress());
         newSecureDataSocket.setSourcePortNumber(this->getSourcePortNumber());

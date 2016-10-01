@@ -1,8 +1,8 @@
 Computer Networks Lab - Project Synopsis (Secured FTP)
 ===
 
-Team members: 
-	Ayush Soni, 
+Team members:
+	Ayush Soni,
 	Reuben John
 	Soorya Annadurai
 
@@ -46,7 +46,7 @@ The client-server model is implemented here, where the client(s) uses a custom t
 
 Expected Results:
 ---
-Upon completion of this project, we expect to have drafted a new protocol for secured file transmission and storage on a private, local cloud service.
+Upon completion of this project, we expect to have drafted an API for a new protocol for secured file transmission and storage on a private, local cloud service. This API will be demonstrated through its use in a secured and shared file server.
 
 Setup
 ---
