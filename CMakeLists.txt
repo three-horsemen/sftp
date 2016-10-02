@@ -30,7 +30,6 @@ add_library(security
 	src/security/cryptmath.cpp
 	src/security/cryptstr.cpp
 	src/security/encrypt.cpp
-	src/security/diffiehellman.cpp
 	src/security/rsa.cpp
 	src/security/securesocket.cpp
 	)
@@ -39,9 +38,6 @@ target_link_libraries(security shared)
 
 add_executable(unit_test_encrypt src/unit_test/security/encrypt.cpp)
 target_link_libraries(unit_test_encrypt security)
-
-add_executable(unit_test_diffiehellman src/unit_test/security/diffiehellman.cpp)
-target_link_libraries(unit_test_diffiehellman security)
 
 add_executable(unit_test_rsa src/unit_test/security/rsa.cpp)
 target_link_libraries(unit_test_rsa security)

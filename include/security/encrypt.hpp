@@ -1,6 +1,3 @@
 #include <bitset>
-class EncryptModule
-{
-public:
-	std::string encrypt(std::string message, char key);
-};
+std::string encrypt(std::string message, int key);
+std::string decrypt(std::string message, int key);

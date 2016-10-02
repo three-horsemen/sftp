@@ -1,5 +1,6 @@
 //Server program to keep talking to clients until a "quit" message is sent.
 //Multithreading functionality is enabled, but not limited.
+//The communications are secured over a Diffie-Hellman key exchange.
 #include "security/securesocket.hpp"
 #include <boost/thread.hpp>
 #include <iostream>
@@ -7,13 +8,21 @@ using namespace std;
 
 void customthread(SecureDataSocket acceptedSecureDataSocket)
 {
-	do
+	acceptedSecureDataSocket.performDHExchange_asServer();
+	if(acceptedSecureDataSocket.getValidity() == true)
 	{
-		acceptedSecureDataSocket.readSecureSocket();
-		cout << "Received: " << acceptedSecureDataSocket.getBuffer() << endl;
-		acceptedSecureDataSocket.writeSecureSocket();
-		cout << "Finished write attempt." << endl;
-	} while(acceptedSecureDataSocket.getBuffer() != "quit" && acceptedSecureDataSocket.getValidity() == true);
+		cout << "Diffie-Hellman key exchange with client " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!" << endl;
+		do
+		{
+			acceptedSecureDataSocket.readSecureSocket();
+			if(acceptedSecureDataSocket.getValidity() == false) break;
+			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " <--$ " << acceptedSecureDataSocket.getBuffer() << endl;
+			acceptedSecureDataSocket.writeSecureSocket();
+			if(acceptedSecureDataSocket.getValidity() == false) break;
+			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ " << acceptedSecureDataSocket.getBuffer() << endl;
+		} while(acceptedSecureDataSocket.getBuffer() != "quit" && acceptedSecureDataSocket.getValidity() == true);
+	}
+	cout << "Closing the connection from " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << endl;
 	acceptedSecureDataSocket.destroySecureSocket();
 }
 

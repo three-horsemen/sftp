@@ -28,3 +28,36 @@ std::string int_to_string(int a)
 {
     return std::to_string(a);
 }
+
+int string_to_int(std::string a)
+{
+    return atoi(a.c_str());
+}
+
+std::vector<std::string> Tokenize(std::string str, const std::string& delimiters)
+{
+	std::vector<std::string> tokens;
+    // Skip delimiters at beginning.
+    std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    // Find first "non-delimiter".
+    std::string::size_type pos = str.find_first_of(delimiters, lastPos);
+    while (std::string::npos != pos || std::string::npos != lastPos)
+    {
+        // Found a token, add it to the vector.
+        tokens.push_back(str.substr(lastPos, pos - lastPos));
+        // Skip delimiters.  Note the "not_of"
+        lastPos = str.find_first_not_of(delimiters, pos);
+        // Find next "non-delimiter"
+        pos = str.find_first_of(delimiters, lastPos);
+    }
+    return tokens;
+    /* Sample usage:
+        string str = "0123#456@789";
+        string delims = "@#";
+        vector<string> tokens = Tokenize(str, delims);
+        //vector<string> tokens = Tokenize(str);
+        for(int i = 0; i < tokens.size(); i++)
+        cout << tokens[i] << endl;
+        cout << "The original string: " << str << endl;
+    */
+}

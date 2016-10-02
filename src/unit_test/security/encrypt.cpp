@@ -6,11 +6,10 @@ int main()
 {
 	string message = "Hi there!";
 	char key = 'a';
-	EncryptModule testEncryptModule;
-	string encrypted = testEncryptModule.encrypt(message, key);
+	string encrypted = encrypt(message, (int)key);
 	cout << "The encrypted form of \"" << message << "\" with the key as '" << key << "' is:" << endl;
 	for(int i = 0; i < encrypted.length(); i++)
 		cout << (int)encrypted[i] << " ";
-	cout << endl << "The decrypted message is \"" << testEncryptModule.encrypt(encrypted, key) << "\"" << endl;
+	cout << endl << "The decrypted message is \"" << encrypt(encrypted, (int)key) << "\"" << endl;
 	return 0;
 }

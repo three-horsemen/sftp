@@ -10,6 +10,47 @@
 #include "security/cryptstr.hpp"
 #include "security/encrypt.hpp"
 
+class DHKeyContainer
+{
+private:
+    static const int goodPrimePThreshold;
+    static const int goodPrimeQThreshold;
+    static const std::string goodLocalPrivateThreshold;
+    static const std::string goodLocalPublicThreshold;
+    static const std::string goodRemotePublicThreshold;
+    static const std::string goodSharedSecretThreshold;
+
+    bool valid;
+    int primeP;
+    int primeQ;
+    std::string localPrivate;
+    std::string localPublic;
+    std::string remotePublic;
+    std::string sharedSecret;
+public:
+    DHKeyContainer();
+    bool isGoodPrimeP();
+    bool isGoodPrimeQ();
+    bool isGoodLocalPrivate();
+    bool isGoodLocalPublic();
+    bool isGoodRemotePublic();
+    bool isGoodSharedSecret();
+    void setValidity(bool newValidity);
+    bool getValidity();
+    int getPrimeP();
+    void setPrimeP(int p);
+    int getPrimeQ();
+    void setPrimeQ(int q);
+    std::string getLocalPrivate();
+    void setLocalPrivate(std::string newLocalPrivate);
+    std::string getLocalPublic();
+    void setLocalPublic(std::string newLocalPublic);
+    std::string getRemotePublic();
+    void setRemotePublic(std::string newRemotePublic);
+    std::string getSharedSecret();
+    void setSharedSecret(std::string newSharedSecret);
+};
+
 class SecureSocket
 {
 private:
@@ -23,6 +64,7 @@ private:
 
     std::string buffer;
 public:
+    SecureSocket();
     void setValidity(bool newValidity);
     bool getValidity();
     int getSocketDescriptor();
@@ -51,16 +93,22 @@ public:
 
 class SecureDataSocket : public SecureSocket
 {
+private:
+    DHKeyContainer keyContainer;
 public:
+    DHKeyContainer getKeyContainer();
     int connectSecureSocket();
     int readSecureSocket();
     int writeSecureSocket();
+
+    int performDHExchange_asClient();
+    int performDHExchange_asServer();
 };
 
 class SecureListenSocket : public SecureSocket
 {
 private:
-    static const int queueSize = 16;
+    static const int queueSize;
 public:
     int bindSecureSocket();
     int listenSecureSocket();
