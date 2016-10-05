@@ -11,7 +11,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
+#include <boost/core/null_deleter.hpp>
 #include <fstream>
 #include <ostream>
 
@@ -41,7 +41,7 @@ boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
 sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>(LOGFILE));
 
 // add "console" output stream to our sink
-sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, logging::empty_deleter()));
+sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
 
 // specify the format of the log message
 logging::formatter formatter = expr::stream
