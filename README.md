@@ -3,7 +3,7 @@ Computer Networks Lab - Project Synopsis (Secured FTP)
 
 Team members:
 	Ayush Soni,
-	Reuben John
+	Reuben John,
 	Soorya Annadurai
 
 Abstract:
@@ -30,6 +30,7 @@ Software Requirements:
 Methodology:
 ---
 The project consists of three abstract modules:
+
 1. Security of stored files and connections
 2. Synchronization and sharing of permissible files
 3. CLI Interface with verified custom commands
@@ -48,7 +49,7 @@ Expected Results:
 ---
 Upon completion of this project, we expect to have drafted an API for a new protocol for secured file transmission and storage on a private, local cloud service. This API will be demonstrated through its use in a secured and shared file server.
 
-Setup
+Setup:
 ---
 Clone the repository as a folder called 'src/'.
 Create another folder in the same level called 'build/'.

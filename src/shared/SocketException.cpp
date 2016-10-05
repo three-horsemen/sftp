@@ -1,10 +1,3 @@
-/*
- * SocketException.cpp
- *
- *  Created on: 29-Sep-2016
- *      Author: reubenjohn
- */
-
 #include "shared/SocketException.h"
 
 namespace shared {
