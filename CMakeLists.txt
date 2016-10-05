@@ -15,10 +15,7 @@ include_directories(include ${Boost_INCLUDE_DIRS})
 add_library(shared
 	src/shared/logger.cpp
 	src/shared/SignalHandler.cpp
-	src/shared/InvalidSocketException.cpp
-	src/shared/SocketIOException.cpp
-	src/shared/SocketBufferEmptyException.cpp
-	src/shared/SocketException.cpp
+	src/shared/socketexceptions.cpp
 	)
 target_link_libraries(shared ${Boost_LIBRARIES} pthread)
 
