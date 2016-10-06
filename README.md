@@ -23,9 +23,10 @@ Software Requirements:
 ---
 1. C++11
 2. (C++) Boost libraries
-3. C Socket Programming libraries
-4. CMake and Make
-5. Linux OS
+3. SQLite3 libraries
+4. C Socket Programming libraries
+5. CMake and Make
+6. Linux OS
 
 Methodology:
 ---
@@ -51,6 +52,37 @@ Upon completion of this project, we expect to have drafted an API for a new prot
 
 Setup:
 ---
+###Prerequisites###
+#####Installing Boost#####
+(Taken from http://www.linuxfromscratch.org/blfs/view/svn/general/boost.html)
+First, download the Boost Libraries, extract them, and open a terminal inside the extracted folder.
+Fix a bug with the header files path, when Python3 is used:
+`sed -e '/using python/ s@;@: /usr/include/python${PYTHON_VERSION/3*/${PYTHON_VERSION}m} ;@' \
+     -i bootstrap.sh`
+
+Install Boost by running the following commands:
+`sed -e '1 i#ifndef Q_MOC_RUN' \
+     -e '$ a#endif'            \
+     -i boost/type_traits/detail/has_binary_operator.hpp &&
+
+	 ./bootstrap.sh --prefix=/usr &&
+	 ./b2 stage threading=multi link=shared`
+
+Now, as the root user:
+`./b2 install threading=multi link=shared`
+
+#####Installing SQLite3#####
+(Taken from http://www.w3resource.com/sqlite/sqlite-download-installation-getting-started.php)
+First, download the autoconf version of SQLite3, extract them, and open a terminal inside the extracted folder.
+You may end up receiving a "SQLite header and source version mismatch" error message after you finished installation if you run ./configure command.
+To avoid this you may run the following ./configure command:
+`./configure --disable-dynamic-extensions --enable-static --disable-shared`
+
+Now, make and install SQLite3 by running the following commands:
+`make`
+`sudo make install`
+
+###Setup###
 Clone the repository as a folder called 'src/'.
 Create another folder in the same level called 'build/'.
 Open a terminal and change directory to the 'build/' folder.
