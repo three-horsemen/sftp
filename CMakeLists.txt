@@ -31,6 +31,7 @@ add_library(security
 	src/security/encrypt.cpp
 	src/security/rsa.cpp
 	src/security/securesocket.cpp
+	src/security/socketexceptions.cpp
 	)
 target_link_libraries(security shared)
 
