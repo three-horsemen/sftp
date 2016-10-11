@@ -18,7 +18,6 @@ include_directories(include ${Boost_INCLUDE_DIRS})
 add_library(shared
 	src/shared/logger.cpp
 	src/shared/SignalHandler.cpp
-	src/shared/socketexceptions.cpp
 	)
 target_link_libraries(shared ${Boost_LIBRARIES} pthread)
 
@@ -32,6 +31,7 @@ add_library(security
 	src/security/encrypt.cpp
 	src/security/rsa.cpp
 	src/security/securesocket.cpp
+	src/security/socketexceptions.cpp
 	)
 target_link_libraries(security shared)
 
@@ -46,6 +46,6 @@ target_link_libraries(unit_test_SecureTCP_client security)
 add_executable(unit_test_SecureTCP_server src/unit_test/security/SecureTCP_Comms/server.cpp)
 target_link_libraries(unit_test_SecureTCP_server security)
 
-###Sync Module
-add_executable(timeline_server src/sync/timeline/TimelineServer.cpp)
-target_link_libraries(timeline_server security ${SQLITE3_LIBRARIES})
+# ###Sync Module
+# add_executable(timeline_server src/sync/timeline/TimelineServer.cpp)
+# target_link_libraries(timeline_server security ${SQLITE3_LIBRARIES})

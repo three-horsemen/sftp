@@ -9,7 +9,7 @@ using namespace std;
 void customthread(SecureDataSocket acceptedSecureDataSocket)
 {
 	cout << "Negotiating with new client." << endl;
-	acceptedSecureDataSocket.performDHExchange_asServer();
+	//acceptedSecureDataSocket.performDHExchange_asServer();
 	if(acceptedSecureDataSocket.getValidity() == true)
 	{
 		cout << "Diffie-Hellman key exchange with client " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!" << endl;
@@ -17,7 +17,7 @@ void customthread(SecureDataSocket acceptedSecureDataSocket)
 		{
 			std::string message = acceptedSecureDataSocket.decryptAndReceiveSecureSocket();
 			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " <--$ ";
-			cout << message << endl;
+			cout << message << " $$$Mesg length: " << message.length() << " &&&Mesg size: " << message.size() << endl;
 			acceptedSecureDataSocket.encryptAndSendSecureSocket(message);
 			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
 			cout << acceptedSecureDataSocket.getBuffer() << endl;
@@ -29,7 +29,7 @@ void customthread(SecureDataSocket acceptedSecureDataSocket)
 
 int main()
 {
-	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8889");
+	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8081");
 	if(serverSecureListenSocket.getValidity() == false)
 	{
 		cout << "Something went wrong!" << endl;
