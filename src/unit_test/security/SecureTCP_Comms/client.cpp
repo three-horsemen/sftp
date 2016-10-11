@@ -4,24 +4,20 @@
 
 int main()
 {
-	SecureDataSocket clientSecureDataSocket;
-	clientSecureDataSocket.initSecureSocket();
-	clientSecureDataSocket.setTargetIPAddress("127.0.0.1");
-	clientSecureDataSocket.setTargetPortNumber("8889");
-	clientSecureDataSocket.connectSecureSocket();
-	clientSecureDataSocket.performDHExchange_asClient();
-	std::string buffer;
-	while(buffer!="quit" && clientSecureDataSocket.getValidity() == true)
 	{
-		std::cout << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << " (Client) >>> " << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << ": ";
-		std::getline(std::cin, buffer); //This form accepts whitespaces,
-		clientSecureDataSocket.setBuffer(encrypt(buffer, string_to_int(clientSecureDataSocket.getKeyContainer().getSharedSecret())));
-		clientSecureDataSocket.writeSecureSocket();
-		clientSecureDataSocket.setBuffer("");
-		clientSecureDataSocket.readSecureSocket();
-		std::cout << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << " (Client) <<< " << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << ": " << decrypt(clientSecureDataSocket.getBuffer(), string_to_int(clientSecureDataSocket.getKeyContainer().getSharedSecret())) << std::endl;
+		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8889", HOST_MODE_CLIENT);
+		std::string buffer;
+		while(buffer!="quit" && clientSecureDataSocket.getValidity() == true)
+		{
+			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) >>> " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
+			std::getline(std::cin, buffer); //This form accepts whitespaces,
+			clientSecureDataSocket.encryptAndSendSecureSocket(buffer);
+			buffer = clientSecureDataSocket.decryptAndReceiveSecureSocket();
+			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) <<< " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
+			std::cout << clientSecureDataSocket.getAndDecryptBuffer() << std::endl; //The buffer is still in an encrypted state.
+		}
+		clientSecureDataSocket.destroySecureSocket();
 	}
-	clientSecureDataSocket.destroySecureSocket();
 	std::cout << "Client program ending." << std::endl;
 	return 0;
 }

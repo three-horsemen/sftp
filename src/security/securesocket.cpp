@@ -1,6 +1,5 @@
 #include "security/securesocket.hpp"
 #include "shared/logger.hpp"
-#include <iostream>
 using namespace std;
 
 const int DHKeyContainer::goodPrimePThreshold = 20;
@@ -191,8 +190,10 @@ int SecureSocket::initSecureSocket()
     setSocketDescriptor(socket(PF_INET,SOCK_STREAM,0));
     if(getSocketDescriptor() < 0)
     {
-        perror("The socket failed to create. socket():");
+        throw SecureSocketException(*this, "The socket failed to create. socket():");
+        //perror("The socket failed to create. socket():");
         setValidity(false);
+
     }
     else
     {
@@ -202,7 +203,8 @@ int SecureSocket::initSecureSocket()
     int force_reuse_socket_port__yes = 1;
     if (setsockopt(getSocketDescriptor(), SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
     {
-        perror("The socket couldn't be reused. setsockopt():");
+        throw SecureSocketException(*this, "The socket couldn't be reused. setsockopt():");
+        //perror("The socket couldn't be reused. setsockopt():");
         setValidity(false);
     }
     else
@@ -215,8 +217,11 @@ int SecureSocket::initSecureSocket()
 }
 int SecureSocket::destroySecureSocket()
 {
+    int result = close(getSocketDescriptor());
+    if(result < 0)
+        throw SecureSocketException(*this, "The socket could not be closed.");
     setValidity(false);
-    return close(getSocketDescriptor());
+    return result;
 }
 string SecureSocket::getSourceAddrFromSockDesc()
 {
@@ -237,9 +242,7 @@ string SecureSocket::getTargetAddrFromSockDesc()
     struct sockaddr tempSockAddr;
     socklen_t tempLen = sizeof(tempSockAddr);
     getpeername(getSocketDescriptor(), &tempSockAddr, &tempLen);
-    char *s = inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr);
-    string result = charArray_to_string(s, strlen(s));
-    //free(s);
+    string result = charArray_to_string(inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr));
     return result;
 }
 string SecureSocket::getTargetPortFromSockDesc()
@@ -250,7 +253,45 @@ string SecureSocket::getTargetPortFromSockDesc()
     string result = int_to_string(ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port));
     return result;
 }
-
+/*
+SecureSocket::~SecureSocket()
+{
+    if(getValidity() == true)
+    {
+        cout << "Closing socket #"
+            << getSocketDescriptor() << " assigned to "
+            << getTargetAddrFromSockDesc() << ":"
+            << getTargetPortFromSockDesc() << endl;
+        destroySecureSocket();
+        setValidity(false);
+    }
+}
+*/
+SecureDataSocket::SecureDataSocket()
+{
+    //cout << "Calling the constructor SecureDataSocket() wasn't supposed to happen." << endl;
+}
+SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode)
+{
+    try
+    {
+        initSecureSocket();
+    	setTargetIPAddress(targetIPAddress);
+    	setTargetPortNumber(targetPortNumber);
+    	connectSecureSocket();
+        if(hostMode == HOST_MODE_CLIENT)
+            performDHExchange_asClient();
+        else if(hostMode == HOST_MODE_SERVER)
+            performDHExchange_asServer();
+        else
+            throw SecureDataSocketException(*this, "Incorrect host mode selected.");
+    }
+    catch(SecureDataSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketException(*this, "Could not create a secure data socket.");
+    }
+}
 DHKeyContainer SecureDataSocket::getKeyContainer()
 {
     return keyContainer;
@@ -275,13 +316,18 @@ int SecureDataSocket::connectSecureSocket()
         if(result < 0)
         {
             setValidity(false);
-            perror("Something went wrong with connect(): ");
+            //perror("Something went wrong with connect(): ");
+            throw SecureDataSocketConnectException(*this, "Something went wrong with connect()");
         }
         else
         {
             //cout << "Connect was successful!" << endl;
             setValidity(true);
         }
+    }
+    else
+    {
+        throw SecureDataSocketException(*this, "During connectSecureSocket(), getValidity() was false.");
     }
     return result;
 }
@@ -304,6 +350,7 @@ int SecureDataSocket::readSecureSocket()
     else
     {
         //printf("%s\n", "While trying to read, the socket was invalid.");
+        throw SecureDataSocketException(*this, "During readSecureSocket(), getValidity() was false.");
     }
     return len;
 }
@@ -312,6 +359,8 @@ int SecureDataSocket::writeSecureSocket()
     int len = -2;
     if(getValidity() == true)
     {
+        if(getBuffer().length() <= 0)
+            throw SecureDataSocketException(*this, "The buffer is empty.");
         char* buffer_char = string_to_charArray(getBuffer());
         len = write(getSocketDescriptor(), buffer_char, strlen(buffer_char));
         if(len <= 0)
@@ -321,190 +370,312 @@ int SecureDataSocket::writeSecureSocket()
         }
         free(buffer_char);
     }
+    else
+    {
+        throw SecureDataSocketException(*this, "During writeSecureSocket(), getValidity() was false.");
+    }
     return len;
 }
+
+void SecureDataSocket::setAndEncryptBuffer(std::string message)
+{
+    if(getKeyContainer().getValidity() == false)
+        throw SecureDataSocketDHException(*this, "The key container was found invalid, while trying to encrypt the buffer.");
+    if(message.length() <= 0)
+        throw SecureDataSocketException(*this, "The message length is zero.");
+    try
+    {
+        setBuffer(encrypt(message, string_to_int(getKeyContainer().getSharedSecret())));
+    }
+    catch(SecureSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketException(*this, "Could not set and encrypt the buffer.");
+    }
+}
+
+std::string SecureDataSocket::getAndDecryptBuffer()
+{
+    if(getKeyContainer().getValidity() == false)
+        throw SecureDataSocketDHException(*this, "The key container was found invalid, while trying to decrypt the buffer.");
+    try
+    {
+        return (decrypt(getBuffer(), string_to_int(getKeyContainer().getSharedSecret())));
+    }
+    catch(SecureSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketException(*this, "Could not get and decrypt the buffer.");
+    }
+}
+
+void SecureDataSocket::encryptAndSendSecureSocket(std::string message)
+{
+    try
+    {
+        setAndEncryptBuffer(message);
+        writeSecureSocket();
+    }
+    catch(SecureSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketException(*this, "Could not encrypt and send the message.");
+    }
+}
+
+void SecureDataSocket::encryptAndSendSecureSocket()
+{
+    try
+    {
+        setAndEncryptBuffer(getBuffer());
+        writeSecureSocket();
+    }
+    catch(SecureSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketException(*this, "Could not encrypt and send the existing buffer.");
+    }
+}
+
+
+std::string SecureDataSocket::decryptAndReceiveSecureSocket()
+{
+    try
+    {
+        readSecureSocket();
+        std::string message = getAndDecryptBuffer();
+        return message;
+    }
+    catch(SecureSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketException(*this, "Could not receive and decrypt the message.");
+    }
+}
+
 int SecureDataSocket::performDHExchange_asClient()
 {
-    if(this->getValidity() == true)
+    try
     {
-        //First, hello to server.
-        // cout << "Sending hello_exchangeDH to the server." << endl;
-        this->setBuffer("hello_exchangeDH");
-        this->writeSecureSocket();
-        if(this->getValidity() == false)
+        if(this->getValidity() == true)
         {
-            return -2;
-        }
-        // cout << "Sent hello_exchangeDH to the server." << endl;
-        bool passFlag = false;
-        do
-        {
-            //Second, receive the server's primes and public key.
-            //Expected format: <primeP#primeQ@serverPublic>
-            this->readSecureSocket();
-            if(this->getValidity() == false)
-            {
-                return -1;
-            }
-            // cout << "Read the primes and the server public key." << endl;
-            //Format checking.
-            int index = 0;
-            if(this->getBuffer()[index] != '<') return -1;
-            while(isdigit(this->getBuffer()[++index]));
-            if(this->getBuffer()[index] != '#') return -1;
-            while(isdigit(this->getBuffer()[++index]));
-            if(this->getBuffer()[index] != '@') return -1;
-            while(isdigit(this->getBuffer()[++index]));
-            if(this->getBuffer()[index] != '>') return -1;
-
-            vector <string> t = Tokenize(this->getBuffer(), "@#<>");
-            this->keyContainer.setPrimeP(string_to_int(t[0]));
-            this->keyContainer.setPrimeQ(string_to_int(t[1]));
-            this->keyContainer.setRemotePublic(t[2]);
-
-            //Third, send the client's public key.
-            this->keyContainer.setLocalPrivate(int_to_string(custom_rand(100)));
-            this->keyContainer.setLocalPublic(int_to_string(mpmod(this->keyContainer.getPrimeQ(),
-                                                                string_to_int(this->keyContainer.getLocalPrivate()),
-                                                                this->keyContainer.getPrimeP())));
-            this->setBuffer(this->keyContainer.getLocalPublic());
+            //First, hello to server.
+            this->setBuffer("hello_exchangeDH");
             this->writeSecureSocket();
             if(this->getValidity() == false)
             {
-                return -1;
+                throw SecureDataSocketIOException(*this, "Hello transmission failed.");
+                //return -2;
             }
-            // cout << "Sent the client public key." << endl;
-            if((this->keyContainer.isGoodPrimeQ() &&
-                this->keyContainer.isGoodPrimeP() &&
-                this->keyContainer.isGoodRemotePublic() &&
-                this->keyContainer.isGoodLocalPublic() &&
-                this->keyContainer.isGoodLocalPrivate() &&
-                this->getValidity()) == false)
+            bool passFlag = false;
+            do
             {
-                this->keyContainer.setValidity(false);
-                continue;
-            }
+                //Second, receive the server's primes and public key.
+                //Expected format: <primeP#primeQ@serverPublic>
+                this->readSecureSocket();
+                if(this->getValidity() == false)
+                {
+                    //return -1;
+                    throw SecureDataSocketIOException(*this, "Failed to read keys and public key from server.");
+                }
+                // cout << "Read the primes and the server public key." << endl;
+                //Format checking.
+                int index = 0;
+                if(this->getBuffer()[index] != '<') return -1;
+                while(isdigit(this->getBuffer()[++index]));
+                if(this->getBuffer()[index] != '#') return -1;
+                while(isdigit(this->getBuffer()[++index]));
+                if(this->getBuffer()[index] != '@') return -1;
+                while(isdigit(this->getBuffer()[++index]));
+                if(this->getBuffer()[index] != '>') return -1;
 
-            //Finally, calculate the shared secret.
-            this->keyContainer.setSharedSecret(int_to_string(mpmod(string_to_int(this->keyContainer.getRemotePublic()),
-                                                                    string_to_int(this->keyContainer.getLocalPrivate()),
-                                                                    (this->keyContainer).getPrimeP()
-                                                                )
-                                                            )
-                                                );
-            if(this->keyContainer.isGoodSharedSecret() == false)
-            {
-                this->keyContainer.setValidity(false);
-                continue;
-            }
-            // cout << "All client checks passed!" << endl;
-            passFlag = true;
-            this->keyContainer.setValidity(true);
-        } while (passFlag == false);
-        return 1;
-    }
-    return 0;
-}
-int SecureDataSocket::performDHExchange_asServer()
-{
-    if(this->getValidity() == true)
-    {
-        //First, hello from client.
-        // cout << "Waiting for a hello_exchangeDH" << endl;
-        this->readSecureSocket();
-        if(this->getValidity() == false)
-        {
-            return -3;
-        }
-        if(this->getBuffer() != "hello_exchangeDH")
-        {
-            this->setValidity(false);
-            return -2;
-        }
-        // cout << "Found a hello_exchangeDH" << endl;
-        bool passFlag = false;
-        do
-        {
-            // cout << "Entering the do-while loop." << endl;
-            //Second, send the server's primes and public key.
-            //Predefined format: <primeP#primeQ@serverPublic>
-            while (true)
-            {
-                this->keyContainer.setPrimeP(next_pr(custom_rand(100)));
-                this->keyContainer.setPrimeQ(custom_rand(this->keyContainer.getPrimeP()));
+                vector <string> t = Tokenize(this->getBuffer(), "@#<>");
+                this->keyContainer.setPrimeP(string_to_int(t[0]));
+                this->keyContainer.setPrimeQ(string_to_int(t[1]));
+                this->keyContainer.setRemotePublic(t[2]);
+
+                //Third, send the client's public key.
                 this->keyContainer.setLocalPrivate(int_to_string(custom_rand(100)));
                 this->keyContainer.setLocalPublic(int_to_string(mpmod(this->keyContainer.getPrimeQ(),
                                                                     string_to_int(this->keyContainer.getLocalPrivate()),
                                                                     this->keyContainer.getPrimeP())));
+                this->setBuffer(this->keyContainer.getLocalPublic());
+                this->writeSecureSocket();
+                if(this->getValidity() == false)
+                {
+                    throw SecureDataSocketIOException(*this, "Failed to send public key to server.");
+                    // return -1;
+                }
+                // cout << "Sent the client public key." << endl;
                 if((this->keyContainer.isGoodPrimeQ() &&
                     this->keyContainer.isGoodPrimeP() &&
+                    this->keyContainer.isGoodRemotePublic() &&
                     this->keyContainer.isGoodLocalPublic() &&
                     this->keyContainer.isGoodLocalPrivate() &&
-                    this->getValidity()) == true)
+                    this->getValidity()) == false)
                 {
-                    break;
+                    this->keyContainer.setValidity(false);
+                    continue;
                 }
-                else
+
+                //Finally, calculate the shared secret.
+                this->keyContainer.setSharedSecret(int_to_string(mpmod(string_to_int(this->keyContainer.getRemotePublic()),
+                                                                        string_to_int(this->keyContainer.getLocalPrivate()),
+                                                                        (this->keyContainer).getPrimeP()
+                                                                    )
+                                                                )
+                                                    );
+                if(this->keyContainer.isGoodSharedSecret() == false)
                 {
-                    // cout << "Restarting the server key calculations." << endl;
+                    this->keyContainer.setValidity(false);
+                    continue;
                 }
-            }
-
-            // cout << "Calculated the primes and the server key pair." << endl;
-
-            this->setBuffer("<" +
-                            int_to_string(this->keyContainer.getPrimeP()) +
-                            "#" +
-                            int_to_string(this->keyContainer.getPrimeQ()) +
-                            "@" +
-                            this->keyContainer.getLocalPublic() +
-                            ">");
-            this->writeSecureSocket();
-            if(this->getValidity() == false)
-            {
-                return -1;
-            }
-            // cout << "Sent the primes and the server key pair." << endl;
-            //Third, receive the client's public key.
+                // cout << "All client checks passed!" << endl;
+                passFlag = true;
+                this->keyContainer.setValidity(true);
+            } while (passFlag == false);
+            return 1;
+        }
+        else
+        {
+            throw SecureDataSocketException(*this, "During performDHExchange_asClient(), getValidity() was false.");
+        }
+    }
+    catch (SecureSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketDHException(*this, "DH key exchanged failed for the client.");
+    }
+}
+int SecureDataSocket::performDHExchange_asServer()
+{
+    try
+    {
+        if(this->getValidity() == true)
+        {
+            //First, hello from client.
+            // cout << "Waiting for a hello_exchangeDH" << endl;
             this->readSecureSocket();
             if(this->getValidity() == false)
             {
-                return -1;
+                return -3;
             }
-            // cout << "Read the client's public key." << endl;
-            this->keyContainer.setRemotePublic(this->getBuffer());
-
-            if((this->keyContainer.isGoodPrimeQ() &&
-                this->keyContainer.isGoodPrimeP() &&
-                this->keyContainer.isGoodRemotePublic() &&
-                this->keyContainer.isGoodLocalPublic() &&
-                this->keyContainer.isGoodLocalPrivate() &&
-                this->getValidity()) == false)
+            if(this->getBuffer() != "hello_exchangeDH")
             {
-                this->keyContainer.setValidity(false);
-                continue;
+                this->setValidity(false);
+                return -2;
             }
-
-            //Finally, calculate the shared secret.
-            this->keyContainer.setSharedSecret(int_to_string(mpmod(string_to_int(this->keyContainer.getRemotePublic()),
-                                                    string_to_int(this->keyContainer.getLocalPrivate()),
-                                                    this->keyContainer.getPrimeP())));
-            if(this->keyContainer.isGoodSharedSecret() == false)
+            // cout << "Found a hello_exchangeDH" << endl;
+            bool passFlag = false;
+            do
             {
-                this->keyContainer.setValidity(false);
-                continue;
-            }
-            // cout << "All server checks passed!" << endl;
-            passFlag = true;
-            this->keyContainer.setValidity(true);
-        } while (passFlag == false);
-        return 1;
+                // cout << "Entering the do-while loop." << endl;
+                //Second, send the server's primes and public key.
+                //Predefined format: <primeP#primeQ@serverPublic>
+                while (true)
+                {
+                    this->keyContainer.setPrimeP(next_pr(custom_rand(100)));
+                    this->keyContainer.setPrimeQ(custom_rand(this->keyContainer.getPrimeP()));
+                    this->keyContainer.setLocalPrivate(int_to_string(custom_rand(100)));
+                    this->keyContainer.setLocalPublic(int_to_string(mpmod(this->keyContainer.getPrimeQ(),
+                                                                        string_to_int(this->keyContainer.getLocalPrivate()),
+                                                                        this->keyContainer.getPrimeP())));
+                    if((this->keyContainer.isGoodPrimeQ() &&
+                        this->keyContainer.isGoodPrimeP() &&
+                        this->keyContainer.isGoodLocalPublic() &&
+                        this->keyContainer.isGoodLocalPrivate() &&
+                        this->getValidity()) == true)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        // cout << "Restarting the server key calculations." << endl;
+                    }
+                }
+
+                // cout << "Calculated the primes and the server key pair." << endl;
+
+                this->setBuffer("<" +
+                                int_to_string(this->keyContainer.getPrimeP()) +
+                                "#" +
+                                int_to_string(this->keyContainer.getPrimeQ()) +
+                                "@" +
+                                this->keyContainer.getLocalPublic() +
+                                ">");
+                this->writeSecureSocket();
+                if(this->getValidity() == false)
+                {
+                    //return -1;
+                    throw SecureDataSocketIOException(*this, "Could not send primes and public key to client.");
+                }
+                // cout << "Sent the primes and the server key pair." << endl;
+                //Third, receive the client's public key.
+                this->readSecureSocket();
+                if(this->getValidity() == false)
+                {
+                    // return -1;
+                    throw SecureDataSocketIOException(*this, "Could not read client public key.");
+                }
+                // cout << "Read the client's public key." << endl;
+                this->keyContainer.setRemotePublic(this->getBuffer());
+
+                if((this->keyContainer.isGoodPrimeQ() &&
+                    this->keyContainer.isGoodPrimeP() &&
+                    this->keyContainer.isGoodRemotePublic() &&
+                    this->keyContainer.isGoodLocalPublic() &&
+                    this->keyContainer.isGoodLocalPrivate() &&
+                    this->getValidity()) == false)
+                {
+                    this->keyContainer.setValidity(false);
+                    continue;
+                }
+
+                //Finally, calculate the shared secret.
+                this->keyContainer.setSharedSecret(int_to_string(mpmod(string_to_int(this->keyContainer.getRemotePublic()),
+                                                        string_to_int(this->keyContainer.getLocalPrivate()),
+                                                        this->keyContainer.getPrimeP())));
+                if(this->keyContainer.isGoodSharedSecret() == false)
+                {
+                    this->keyContainer.setValidity(false);
+                    continue;
+                }
+                // cout << "All server checks passed!" << endl;
+                passFlag = true;
+                this->keyContainer.setValidity(true);
+            } while (passFlag == false);
+            return 1;
+        }
+        else
+        {
+            throw SecureDataSocketException(*this, "During performDHExchange_asServer(), getValidity() was false.");
+        }
     }
-    // cout << "The situation is invalid." << endl;
-    return 0;
+    catch (SecureSocketException e)
+    {
+        cout << e.what();
+        throw SecureDataSocketDHException(*this, "DH key exchanged failed for the server.");
+    }
 }
 
 const int SecureListenSocket::queueSize = 16;
+SecureListenSocket::SecureListenSocket(){} //Is this safe? MARK
+SecureListenSocket::SecureListenSocket(std::string serverIPAddress, std::string serverPortNumber)
+{
+    try
+    {
+        initSecureSocket();
+    	setSourceIPAddress(serverIPAddress);
+    	setSourcePortNumber(serverPortNumber);
+    	bindSecureSocket();
+    	listenSecureSocket();
+    }
+    catch(SecureListenSocketException e)
+    {
+        cout << e.what();
+        throw SecureListenSocketException(*this, "Could not activate the listen socket.");
+    }
+}
 int SecureListenSocket::bindSecureSocket()
 {
     int result = -2;
@@ -516,6 +687,12 @@ int SecureListenSocket::bindSecureSocket()
         servAddr.sin_addr.s_addr = inet_addr(string_to_charArray(getSourceIPAddress()));
         servAddr.sin_port = htons(atoi(string_to_charArray(getSourcePortNumber())));
         result = bind(getSocketDescriptor(),(struct sockaddr*)&servAddr,sizeof(servAddr));
+        if(result < 0)
+            throw SecureListenSocketBindException(*this, "Could not bind the secure socket.");
+    }
+    else
+    {
+        throw SecureListenSocketException(*this, "During bindSecureSocket(), getValidity() was false.");
     }
     return result;
 }
@@ -525,6 +702,12 @@ int SecureListenSocket::listenSecureSocket()
     if(getValidity() == true)
     {
         result = listen(getSocketDescriptor(),queueSize);
+        if(result < 0)
+            throw SecureListenSocketListenException(*this, "Could not make the secure socket to listen.");
+    }
+    else
+    {
+        throw SecureListenSocketException(*this, "During listenSecureSocket(), getValidity() was false.");
     }
     return result;
 }
@@ -537,12 +720,18 @@ SecureDataSocket SecureListenSocket::acceptSecureSocket()
         struct sockaddr_in clientAddr;
         socklen_t clientAddrLen = sizeof(clientAddr);
         int s = accept(getSocketDescriptor(), (struct sockaddr *)&clientAddr, &clientAddrLen);
+        if(s < 0)
+            throw SecureListenSocketAcceptException(*this, "Accepted a bad connection, or failed to accept altogether.");
         newSecureDataSocket.setSocketDescriptor(s);
         newSecureDataSocket.setSourceIPAddress(this->getSourceIPAddress());
         newSecureDataSocket.setSourcePortNumber(this->getSourcePortNumber());
         newSecureDataSocket.setTargetIPAddress(newSecureDataSocket.getTargetAddrFromSockDesc());
         newSecureDataSocket.setTargetPortNumber(newSecureDataSocket.getTargetPortFromSockDesc());
         newSecureDataSocket.setValidity(true);
+    }
+    else
+    {
+        throw SecureListenSocketException(*this, "During acceptSecureSocket(), getValidity() was false.");
     }
     return newSecureDataSocket;
 }
