@@ -11,7 +11,6 @@ public:
   ChangeDirectoryCommand();
   void executeChangeDirectoryCommand();
   //std::string getCommandAndAttributesSpecified(); //possibly useless
-  void setPathSpecified();
   std::string getPathSpecified();
   std::string getRawCommand();
 }
