@@ -1,3 +1,6 @@
+#ifndef INCLUDE_SECURITY_SECURESOCKET_HPP_
+#define INCLUDE_SECURITY_SECURESOCKET_HPP_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -230,3 +233,5 @@ public:
 		return string_to_charArray("Exception: DHKeyContainerException. " + message + "\n");
 	}
 };
+
+#endif /* INCLUDE_SECURITY_SECURESOCKET_HPP_ */

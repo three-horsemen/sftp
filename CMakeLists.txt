@@ -18,7 +18,6 @@ include_directories(include ${Boost_INCLUDE_DIRS})
 add_library(shared
 	src/shared/logger.cpp
 	src/shared/SignalHandler.cpp
-	src/shared/socketexceptions.cpp
 	)
 target_link_libraries(shared ${Boost_LIBRARIES} pthread)
 
@@ -32,8 +31,17 @@ add_library(security
 	src/security/encrypt.cpp
 	src/security/rsa.cpp
 	src/security/securesocket.cpp
+	src/security/socketexceptions.cpp
 	)
 target_link_libraries(security shared)
+
+###DB module
+add_library(db
+	src/database/DbManager.cpp
+	src/database/UserManager.cpp
+	src/database/PermissionManager.cpp
+	)
+target_link_libraries(db shared security ${SQLITE_LIBRARIES})
 
 add_executable(unit_test_encrypt src/unit_test/security/encrypt.cpp)
 target_link_libraries(unit_test_encrypt security)

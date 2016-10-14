@@ -387,7 +387,7 @@ void SecureDataSocket::setAndEncryptBuffer(std::string message)
     {
         setBuffer(encrypt(message, string_to_int(getKeyContainer().getSharedSecret())));
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException& e)
     {
         cout << e.what();
         throw SecureDataSocketException(*this, "Could not set and encrypt the buffer.");
@@ -402,7 +402,7 @@ std::string SecureDataSocket::getAndDecryptBuffer()
     {
         return (decrypt(getBuffer(), string_to_int(getKeyContainer().getSharedSecret())));
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException& e)
     {
         cout << e.what();
         throw SecureDataSocketException(*this, "Could not get and decrypt the buffer.");
@@ -416,7 +416,7 @@ void SecureDataSocket::encryptAndSendSecureSocket(std::string message)
         setAndEncryptBuffer(message);
         writeSecureSocket();
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException& e)
     {
         cout << e.what();
         throw SecureDataSocketException(*this, "Could not encrypt and send the message.");
@@ -430,7 +430,7 @@ void SecureDataSocket::encryptAndSendSecureSocket()
         setAndEncryptBuffer(getBuffer());
         writeSecureSocket();
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException& e)
     {
         cout << e.what();
         throw SecureDataSocketException(*this, "Could not encrypt and send the existing buffer.");
@@ -446,7 +446,7 @@ std::string SecureDataSocket::decryptAndReceiveSecureSocket()
         std::string message = getAndDecryptBuffer();
         return message;
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException& e)
     {
         cout << e.what();
         throw SecureDataSocketException(*this, "Could not receive and decrypt the message.");
@@ -541,7 +541,7 @@ int SecureDataSocket::performDHExchange_asClient()
             throw SecureDataSocketException(*this, "During performDHExchange_asClient(), getValidity() was false.");
         }
     }
-    catch (SecureSocketException e)
+    catch (SecureSocketException& e)
     {
         cout << e.what();
         throw SecureDataSocketDHException(*this, "DH key exchanged failed for the client.");
@@ -651,7 +651,7 @@ int SecureDataSocket::performDHExchange_asServer()
             throw SecureDataSocketException(*this, "During performDHExchange_asServer(), getValidity() was false.");
         }
     }
-    catch (SecureSocketException e)
+    catch (SecureSocketException& e)
     {
         cout << e.what();
         throw SecureDataSocketDHException(*this, "DH key exchanged failed for the server.");
