@@ -18,4 +18,6 @@ public:
   void setPresentWorkingDirectory(std::string newWorkingDirectory);
   std::string getPresentWorkingDirectory();
   std::string getUsername();
+  bool clientSideExecution();
+  bool serverSideExecution();
 }
