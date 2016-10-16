@@ -9,10 +9,10 @@ Command::Command(std::string commandInput, UserSessionDetail newUser){
 
 void Command::interpretCommandType(std::string rawCommand) {
   if(rawCommand.compare(0,2,"cd")){
-    ChangeDirectoryCommand newChild(rawCommand);
+    ChangeDirectoryCommand newChild();
   }
   else if(rawCommand.compare(0,2,"ls")){
-    ListDirectoryContentsCommand newChild(rawCommand);
+    ListDirectoryContentsCommand newChild();
   }
 /*  else if(rawCommand.compare(0,5,"mkdir")){
     MakeDirectoryCommand newChild(rawCommand);

@@ -5,13 +5,12 @@
 using namespace std;
 
 ChangeDirectoryCommand::ChangeDirectoryCommand() {
-  std::string rawCommand = getRawCommand();
   setPathSpecified();
   executeChangeDirectoryCommand();
 }
 
 void ChangeDirectoryCommand::setPathSpecified() {
-  pathSpecified = CommandPathFinder.getPathSpecified(rawCommand);
+  pathSpecified = CommandPathUtil.getPathSpecified(rawCommand);
 }
 
 void ChangeDirectoryCommand::executeChangeDirectoryCommand() {
