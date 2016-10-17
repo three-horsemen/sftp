@@ -48,11 +48,3 @@ std::string UserSessionDetail::getPresentWorkingDirectory() {
 std::string UserSessionDetail::getUsername() {
   return username;
 }
-
-bool UserSessionDetail::clientSideExecution() {
-  
-}
-
-bool UserSessionDetail::serverSideExecution() {
-
-}
