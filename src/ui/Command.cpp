@@ -1,6 +1,6 @@
 #include "ui/Command.hpp"
 
-Command::Command(std::string commandInput, UserSessionDetail newUser){
+Command::Command(std::string commandInput, UserSessionDetail newUser) {
   boost::trim(commandInput);
   userSessionDetail = newUser;
   rawCommand = commandInput;
@@ -8,10 +8,10 @@ Command::Command(std::string commandInput, UserSessionDetail newUser){
 }
 
 void Command::interpretCommandType(std::string rawCommand) {
-  if(rawCommand.compare(0,2,"cd")){
+  if(rawCommand.compare(0,2,"cd")) {
     ChangeDirectoryCommand newChild();
   }
-  else if(rawCommand.compare(0,2,"ls")){
+  else if(rawCommand.compare(0,2,"ls")) {
     ListDirectoryContentsCommand newChild();
   }
 /*  else if(rawCommand.compare(0,5,"mkdir")){
@@ -26,11 +26,19 @@ void Command::interpretCommandType(std::string rawCommand) {
   else if(rawCommand.compare(0,5,"chown")){
     ChangeFileOwnerAndGroupCommand newChild(rawCommand);
   }*/
-  else{
+  else {
     std::cout<<"\nError: Invalid command. Please enter one of 'cd', 'ls', 'mkdir', 'cp', 'rm' or 'chown'.";
   }
 }
 
-std::string Command::getRawCommand(){
+std::string Command::getRawCommand () {
   return rawCommand;
+}
+
+void Command::setCommandOutput(std::string commandResult) {
+  commandOutput = commandResult;
+}
+
+std::string Command::getCommandOutput () {
+  return commandOutput;
 }

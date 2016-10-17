@@ -6,10 +6,11 @@ using namespace std;
 class ListDirectoryContentsCommand {
 private:
   std::string pathSpecified;
-  std::string commandOutput;
+  std::string attributesSpecified;
 public:
   ListDirectoryContentsCommand();
   void executeListDirectoryContentsCommand();
+  void executeListDirectoryContentsCommandUtil();
+  void setPathSpecified();
   std::string getPathSpecified();
-  std::string getRawCommand();
 }

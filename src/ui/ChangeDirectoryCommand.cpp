@@ -19,16 +19,16 @@ void ChangeDirectoryCommand::executeChangeDirectoryCommand() {
   if(CommandPathUtil.specifiedPathExists(newWorkingDirectory) && CommandPathUtil.specifiedPathIsDirectory()) {
     //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
       userSessionDetail.setPresentWorkingDirectory(newWorkingDirectory);
-      commandOutput = "Working directory successfully changed to: " + newWorkingDirectory;
+      setCommandOutput(string("Working directory successfully changed to: ") + newWorkingDirectory);
       //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
     //}
     else {
-      commandOutput = "Error: Access Denied";
+      setCommandOutput(string("Error: Access Denied"));
       //>>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error:access denied <reuben>
     }
   }
   else {
-    commandOutput = "Error: Invalid path (Path does not exist, or leads to a file, not directory)";
+    setCommandOutput(string("Error: Invalid path (Path does not exist, or leads to a file, not directory)"));
     //>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error: invalid path <reuben>
   }
 }
@@ -41,8 +41,4 @@ std::string ChangeDirectoryCommand::getCommandAndAttributesSpecified() {
 */
 std::string ChangeDirectoryCommand::getPathSpecified() {
   return pathSpecified;
-}
-
-std::string ChangeDirectoryCommand::getRawCommand() {
-  return Command::getRawCommand();
 }
