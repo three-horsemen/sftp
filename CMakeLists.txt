@@ -8,7 +8,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 add_compile_options(-std=c++11)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 find_path(SQLITE3_INCLUDE_DIR NAMES sqlite3.h)
-find_library(SQLITE3_LIBRARY NAMES sqlite)
+find_library(SQLITE3_LIBRARY NAMES sqlite3)
 #find_package( SQLite3 COMPONENTS REQUIRED )
 find_package( Boost 1.54 COMPONENTS log log_setup thread system REQUIRED )
 
@@ -35,14 +35,6 @@ add_library(security
 	)
 target_link_libraries(security shared)
 
-###DB module
-add_library(db
-	src/database/DbManager.cpp
-	src/database/UserManager.cpp
-	src/database/PermissionManager.cpp
-	)
-target_link_libraries(db shared security ${SQLITE_LIBRARIES})
-
 add_executable(unit_test_encrypt src/unit_test/security/encrypt.cpp)
 target_link_libraries(unit_test_encrypt security)
 
@@ -53,6 +45,21 @@ add_executable(unit_test_SecureTCP_client src/unit_test/security/SecureTCP_Comms
 target_link_libraries(unit_test_SecureTCP_client security)
 add_executable(unit_test_SecureTCP_server src/unit_test/security/SecureTCP_Comms/server.cpp)
 target_link_libraries(unit_test_SecureTCP_server security)
+
+###DB module
+add_library(db
+	src/database/DbHandler.cpp
+	src/database/DbManager.cpp
+	src/database/UserManager.cpp
+	src/database/PermissionManager.cpp
+	src/database/UserManager.cpp
+	)
+target_link_libraries(db shared security ${SQLITE3_LIBRARY})
+
+add_executable(unit_user_manager 
+	src/unit_test/database/UserManagerUnitTest.cpp
+	)
+target_link_libraries(unit_user_manager db)
 
 ###Sync Module
 add_executable(timeline_server src/sync/timeline/TimelineServer.cpp)

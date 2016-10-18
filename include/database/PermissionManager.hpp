@@ -10,6 +10,8 @@
 
 #include <string>
 
+#include <security/securesocket.hpp>
+
 namespace security {
 
 using namespace std;
@@ -20,10 +22,10 @@ public:
 	virtual ~PermissionManager();
 
 	bool setOwners(string absolutePath, string newOwners[]);
-	vector<string> getOwners(string absolutePath);
 	bool isResourceAccessible(string absolutePath, string username);
 	bool moveResource(string sourceAbsolutePath,
 			string destinationAbsolutePath);
+	//vector<string> getOwners(string absolutePath);
 };
 
 } /* namespace security */
