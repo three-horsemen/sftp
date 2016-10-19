@@ -1,7 +1,7 @@
 #include <iostream>
-#include <stdlib>
-
-using namespace std;
+#include <stdlib.h>
+#include <string>
+#include "ui/CommandPathUtil.hpp"
 
 class UserSessionDetail {
 private:
@@ -18,6 +18,5 @@ public:
   void setPresentWorkingDirectory(std::string newWorkingDirectory);
   std::string getPresentWorkingDirectory();
   std::string getUsername();
-  bool clientSideExecution();
-  bool serverSideExecution();
-}
+  void display();
+};

@@ -1,8 +1,6 @@
-#include <sys/stat.h>
 #include "ui/CommandPathUtil.hpp"
-using namespace std;
 
-static std::string CommandPathUtil::getPathSpecified(std::string rawCommand) {
+ std::string CommandPathUtil::getPathSpecified(std::string rawCommand) {
   //Finds pathSpecified
   int pathStartPosition, pathEndPosition;
   for(int i=0;i<rawCommand.size();i++) {
@@ -19,7 +17,7 @@ static std::string CommandPathUtil::getPathSpecified(std::string rawCommand) {
   return rawCommand.substr(pathStartPosition,pathEndPosition);
 }
 
-static std::string CommandPathUtil::getPathSpecified(std::string rawCommand, int fromThisPosition) {
+ std::string CommandPathUtil::getPathSpecified(std::string rawCommand, int fromThisPosition) {
   //Finds pathSpecified
   int pathStartPosition, pathEndPosition;
   for(int i=fromThisPosition;i<rawCommand.size();i++) {
@@ -36,7 +34,7 @@ static std::string CommandPathUtil::getPathSpecified(std::string rawCommand, int
   return rawCommand.substr(pathStartPosition,pathEndPosition);
 }
 
-static bool CommandPathUtil::specifiedPathExists(std::string pathSpecified) {
+ bool CommandPathUtil::specifiedPathExists(std::string pathSpecified) {
   struct stat st;
   if (stat(pathSpecified.c_str(),&st)==0)
     return true;
@@ -46,7 +44,7 @@ static bool CommandPathUtil::specifiedPathExists(std::string pathSpecified) {
       //cout<<"INVALID PATH.";
 }
 
-static std::string CommandPathUtil::convertToAbsolutePath(std::string pathSpecified, std::string presentWorkingDirectory) {
+ std::string CommandPathUtil::convertToAbsolutePath(std::string pathSpecified, std::string presentWorkingDirectory) {
   if(pathSpecified.size()!=0 && pathSpecified[0]=='/') return pathSpecified;
   std::vector<std::string> tokenizedPresentWorkingDirectory;
 	std::string newWorkingDirectory;
@@ -69,7 +67,7 @@ static std::string CommandPathUtil::convertToAbsolutePath(std::string pathSpecif
 	return newWorkingDirectory;
 }
 
-static bool CommandPathUtil::specifiedPathIsDirectory(std::string pathSpecified) {
+ bool CommandPathUtil::specifiedPathIsDirectory(std::string pathSpecified) {
   struct stat st;
   if (stat(pathSpecified.c_str(),&st)==0) {
     if ( st.st_mode & S_IFDIR ) return true;
@@ -77,4 +75,13 @@ static bool CommandPathUtil::specifiedPathIsDirectory(std::string pathSpecified)
   }
   else
     return false;
+}
+
+ std::string CommandPathUtil::getCurrentWorkingDirectory() {
+  char cwd[1024];
+  if (getcwd(cwd, sizeof(cwd)) != NULL)
+ 		 return string(cwd);
+  else
+ 		 perror("Couldn't get the present working directory. <getcwd() error>");
+  return string("NULL");
 }

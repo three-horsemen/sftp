@@ -1,14 +1,11 @@
-#include "ui/UserSessionDetail"
-#include "ui/CommandExecutor"
-#include <iostream>
-#include <string>
+#include "ui/UserSessionDetail.hpp"
 
 UserSessionDetail::UserSessionDetail(std::string uName, std::string password){
   username = uName;
   //Call function to check if credentials are valid.
-  presentWorkingDirectory = CommandExecutor.executeCommand(string("pwd").c_str());
+  presentWorkingDirectory = CommandPathUtil::getCurrentWorkingDirectory();
   setLoginTimestamp();
-  logoutTime = "Not yet logged out.";
+  logoutTimestamp = "Not yet logged out.";
 }
 
 void UserSessionDetail::setLoginTimestamp() {
@@ -47,4 +44,11 @@ std::string UserSessionDetail::getPresentWorkingDirectory() {
 
 std::string UserSessionDetail::getUsername() {
   return username;
+}
+
+void UserSessionDetail::display() {
+  cout<<"\nUsername: "<<username;
+  cout<<"\nLogin time: "<<loginTimestamp;
+  cout<<"\nPresent working directory: "<<presentWorkingDirectory;
+  cout<<"\nLogout time: "<<logoutTimestamp;
 }

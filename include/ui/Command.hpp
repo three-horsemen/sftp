@@ -15,7 +15,7 @@ public:
   std::string getRawCommand();
   std::string getCommandOutput();
   void setCommandOutput(std::string commandResult);
-}
+};
 
 class ChangeDirectoryCommand : public Command {
 private:
@@ -26,7 +26,7 @@ public:
   void executeChangeDirectoryCommand();
   //std::string getCommandAndAttributesSpecified(); //possibly useless
   std::string getPathSpecified();
-}
+};
 
 class ListDirectoryContentsCommand : public Command {
 private:
@@ -38,4 +38,4 @@ public:
   void executeListDirectoryContentsCommandUtil();
   void setPathSpecified();
   std::string getPathSpecified();
-}
+};
