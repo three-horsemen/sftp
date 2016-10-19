@@ -1,4 +1,5 @@
-#include <stdlib>
+#include <stdlib.h>
+#include "ui/UserSessionDetail.hpp"
 #include <iostream>
 #include <stdio.h>
 #include <boost/algorithm/string.hpp>
@@ -10,11 +11,13 @@ private:
   UserSessionDetail userSessionDetail;
   std::string commandOutput;
 public:
+  Command();
   Command(std::string commandInput, UserSessionDetail newUser);
   void interpretCommandType(std::string rawCommand);
   std::string getRawCommand();
   std::string getCommandOutput();
   void setCommandOutput(std::string commandResult);
+  UserSessionDetail getUserSessionDetail();
 };
 
 class ChangeDirectoryCommand : public Command {
@@ -26,6 +29,7 @@ public:
   void executeChangeDirectoryCommand();
   //std::string getCommandAndAttributesSpecified(); //possibly useless
   std::string getPathSpecified();
+  void setPathSpecified();
 };
 
 class ListDirectoryContentsCommand : public Command {
@@ -35,7 +39,7 @@ private:
 public:
   ListDirectoryContentsCommand();
   void executeListDirectoryContentsCommand();
-  void executeListDirectoryContentsCommandUtil();
+  void executeListDirectoryContentsCommandUtil(std::string pathToBeListed);
   void setPathSpecified();
   std::string getPathSpecified();
 };

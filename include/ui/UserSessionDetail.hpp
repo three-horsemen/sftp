@@ -10,6 +10,7 @@ private:
   std::string loginTimestamp;
   std::string logoutTimestamp;
 public:
+  UserSessionDetail();
   UserSessionDetail(std::string uName, std::string password);
   void setLoginTimestamp();
   std::string getLoginTimestamp();

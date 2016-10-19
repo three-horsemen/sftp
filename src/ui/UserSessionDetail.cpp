@@ -1,5 +1,12 @@
 #include "ui/UserSessionDetail.hpp"
 
+UserSessionDetail::UserSessionDetail() {
+  username = string("");
+  presentWorkingDirectory = string("");
+  loginTimestamp = string("");
+  logoutTimestamp = string("");
+}
+
 UserSessionDetail::UserSessionDetail(std::string uName, std::string password){
   username = uName;
   //Call function to check if credentials are valid.

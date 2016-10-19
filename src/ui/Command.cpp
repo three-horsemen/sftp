@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <vector>
 
+Command::Command() {
+  rawCommand = string("");
+}
+
 Command::Command(std::string commandInput, UserSessionDetail newUser) {
   boost::trim(commandInput);
   userSessionDetail = newUser;
@@ -48,28 +52,33 @@ std::string Command::getCommandOutput () {
   return commandOutput;
 }
 
+UserSessionDetail Command::getUserSessionDetail() {
+  return userSessionDetail;
+}
+
 ChangeDirectoryCommand::ChangeDirectoryCommand() {
-  setPathSpecified();
-  executeChangeDirectoryCommand();
+  this->setPathSpecified();
+  this->executeChangeDirectoryCommand();
 }
 
 void ChangeDirectoryCommand::setPathSpecified() {
-  pathSpecified = CommandPathUtil.getPathSpecified(rawCommand);
+  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
 }
 
 void ChangeDirectoryCommand::executeChangeDirectoryCommand() {
   //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
-  std::string newWorkingDirectory = CommandPathUtil.convertToAbsolutePath(getPathSpecified(), userSessionDetail.getPresentWorkingDirectory());
-  if(CommandPathUtil.specifiedPathExists(newWorkingDirectory) && CommandPathUtil.specifiedPathIsDirectory()) {
+  std::string newWorkingDirectory = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
+  if(CommandPathUtil::specifiedPathExists(newWorkingDirectory) && CommandPathUtil::specifiedPathIsDirectory(newWorkingDirectory)) {
     //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
-      userSessionDetail.setPresentWorkingDirectory(newWorkingDirectory);
+      getUserSessionDetail().setPresentWorkingDirectory(newWorkingDirectory);
       setCommandOutput(string("Working directory successfully changed to: ") + newWorkingDirectory);
       //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
     //}
-    else {
-      setCommandOutput(string("Error: Access Denied"));
+
+    //else {
+    //  setCommandOutput(string("Error: Access Denied"));
       //>>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error:access denied <reuben>
-    }
+    //}
   }
   else {
     setCommandOutput(string("Error: Invalid path (Path does not exist, or leads to a file, not directory)"));
@@ -106,7 +115,7 @@ void ListDirectoryContentsCommand::executeListDirectoryContentsCommandUtil(std::
 	} else {
   	/* could not open directory */
   	localCommandOutput = "Cannot open directory";
-  	return -1;
+  	return;
 	}
 	sort(lsOutput.begin(),lsOutput.end());
 	lsOutput.erase(lsOutput.begin());
@@ -119,16 +128,16 @@ void ListDirectoryContentsCommand::executeListDirectoryContentsCommandUtil(std::
 
 void ListDirectoryContentsCommand::executeListDirectoryContentsCommand () {
   //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
-  std::string pathToBeListed = CommandPathUtil.convertToAbsolutePath(getPathSpecified(), userSessionDetail.getPresentWorkingDirectory());
-  if(CommandPathUtil.specifiedPathExists(pathToBeListed) && CommandPathUtil.specifiedPathIsDirectory(pathToBeListed)) {
+  std::string pathToBeListed = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
+  if(CommandPathUtil::specifiedPathExists(pathToBeListed) && CommandPathUtil::specifiedPathIsDirectory(pathToBeListed)) {
     //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
-      executeListDirectoryContentsCommandUtil();
+      executeListDirectoryContentsCommandUtil(pathToBeListed);
       //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
     //}
-    else {
-      setCommandOutput(string("Error: Access Denied"));
+    //else {
+    //  setCommandOutput(string("Error: Access Denied"));
       //>>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error:access denied <reuben>
-    }
+  //  }
   }
   else {
     setCommandOutput(string("Error: Invalid path (Path does not exist, or leads to a file, not directory)"));
@@ -141,5 +150,5 @@ std::string ListDirectoryContentsCommand::getPathSpecified () {
 }
 
 void ListDirectoryContentsCommand::setPathSpecified () {
-  pathSpecified = CommandPathUtil.getPathSpecified (rawCommand);
+  pathSpecified = CommandPathUtil::getPathSpecified (Command::getRawCommand());
 }
