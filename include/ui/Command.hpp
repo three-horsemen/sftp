@@ -1,8 +1,12 @@
 #include <stdlib.h>
-#include "ui/UserSessionDetail.hpp"
 #include <iostream>
 #include <stdio.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <algorithm>
+#include <vector>
 #include <boost/algorithm/string.hpp>
+#include "ui/UserSessionDetail.hpp"
 using namespace std;
 
 class Command {
@@ -25,7 +29,7 @@ private:
   //std::string commandAndAttributesSpecified; //possibly useless
   std::string pathSpecified;
 public:
-  ChangeDirectoryCommand();
+  ChangeDirectoryCommand(std::string commandInput, UserSessionDetail newUser);
   void executeChangeDirectoryCommand();
   //std::string getCommandAndAttributesSpecified(); //possibly useless
   std::string getPathSpecified();
@@ -37,7 +41,7 @@ private:
   std::string pathSpecified;
   std::string attributesSpecified;
 public:
-  ListDirectoryContentsCommand();
+  ListDirectoryContentsCommand(std::string commandInput, UserSessionDetail newUser);
   void executeListDirectoryContentsCommand();
   void executeListDirectoryContentsCommandUtil(std::string pathToBeListed);
   void setPathSpecified();

@@ -1,9 +1,4 @@
 #include "ui/Command.hpp"
-#include <iostream>
-#include <unistd.h>
-#include <dirent.h>
-#include <algorithm>
-#include <vector>
 
 Command::Command() {
   rawCommand = string("");
@@ -13,14 +8,15 @@ Command::Command(std::string commandInput, UserSessionDetail newUser) {
   boost::trim(commandInput);
   userSessionDetail = newUser;
   rawCommand = commandInput;
-  interpretCommandType(rawCommand);
+  //interpretCommandType(rawCommand);
 }
 
+/* shifted code to command interpreter
 void Command::interpretCommandType(std::string rawCommand) {
-  if(rawCommand.compare(0,2,"cd")) {
+  if(rawCommand.compare(0,2,"cd")==0) {
     ChangeDirectoryCommand newChild();
   }
-  else if(rawCommand.compare(0,2,"ls")) {
+  else if(rawCommand.compare(0,2,"ls")==0) {
     ListDirectoryContentsCommand newChild();
   }
 /*  else if(rawCommand.compare(0,5,"mkdir")){
@@ -34,11 +30,12 @@ void Command::interpretCommandType(std::string rawCommand) {
   }
   else if(rawCommand.compare(0,5,"chown")){
     ChangeFileOwnerAndGroupCommand newChild(rawCommand);
-  }*/
+  }
   else {
     std::cout<<"\nError: Invalid command. Please enter one of 'cd', 'ls', 'mkdir', 'cp', 'rm' or 'chown'.";
   }
 }
+*/
 
 std::string Command::getRawCommand () {
   return rawCommand;
@@ -56,7 +53,7 @@ UserSessionDetail Command::getUserSessionDetail() {
   return userSessionDetail;
 }
 
-ChangeDirectoryCommand::ChangeDirectoryCommand() {
+ChangeDirectoryCommand::ChangeDirectoryCommand(std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
   this->setPathSpecified();
   this->executeChangeDirectoryCommand();
 }
@@ -96,7 +93,7 @@ std::string ChangeDirectoryCommand::getPathSpecified() {
   return pathSpecified;
 }
 
-ListDirectoryContentsCommand::ListDirectoryContentsCommand () {
+ListDirectoryContentsCommand::ListDirectoryContentsCommand (std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
   setPathSpecified ();
   executeListDirectoryContentsCommand ();
 }
@@ -123,6 +120,7 @@ void ListDirectoryContentsCommand::executeListDirectoryContentsCommandUtil(std::
 	for(int i=0;i<lsOutput.size();i++) {
 		localCommandOutput = localCommandOutput + lsOutput[i] + string("\n");
 	}
+  //cout<<localCommandOutput;
   setCommandOutput(localCommandOutput);
 }
 

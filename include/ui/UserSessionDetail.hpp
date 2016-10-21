@@ -1,6 +1,5 @@
 #include <iostream>
 #include <stdlib.h>
-#include <string>
 #include "ui/CommandPathUtil.hpp"
 
 class UserSessionDetail {

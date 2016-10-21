@@ -29,6 +29,7 @@ target_link_libraries(unit_test_logger shared)
 ###UI module
 add_library(ui
 	src/ui/Command.cpp
+	src/ui/CommandInterpreter.cpp
 	src/ui/CommandPathUtil.cpp
 	src/ui/UserSessionDetail.cpp
 	)
