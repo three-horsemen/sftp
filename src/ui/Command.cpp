@@ -5,7 +5,6 @@ Command::Command() {
 }
 
 Command::Command(std::string commandInput, UserSessionDetail newUser) {
-  boost::trim(commandInput);
   userSessionDetail = newUser;
   rawCommand = commandInput;
   //interpretCommandType(rawCommand);
@@ -120,7 +119,6 @@ void ListDirectoryContentsCommand::executeListDirectoryContentsCommandUtil(std::
 	for(int i=0;i<lsOutput.size();i++) {
 		localCommandOutput = localCommandOutput + lsOutput[i] + string("\n");
 	}
-  //cout<<localCommandOutput;
   setCommandOutput(localCommandOutput);
 }
 

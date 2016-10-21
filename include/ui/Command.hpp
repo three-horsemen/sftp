@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include <algorithm>
 #include <vector>
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim_all.hpp>
 #include "ui/UserSessionDetail.hpp"
 using namespace std;
 

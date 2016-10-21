@@ -1,6 +1,7 @@
 #include "ui/CommandInterpreter.hpp"
 
 Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSessionDetail newUser) {
+  boost::trim_all(rawCommand);
   if(rawCommand.compare(0,2,"cd")==0) {
     // return new ChangeDirectoryCommand(rawCommand, newUser);
     return ChangeDirectoryCommand(rawCommand, newUser);
