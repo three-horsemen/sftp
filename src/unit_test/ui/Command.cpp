@@ -5,9 +5,10 @@ int main() {
   std::string username; cin>>username;
   cout<<"\nEnter password: ";
   std::string password; cin>>password;
+  cin.ignore(); //IMPORTANT
 
   UserSessionDetail newUser(username, password);
-  cin.ignore();
+
   cout<<"\nEnter a command (ls only currently): ";
   std::string rawCommand; getline(cin, rawCommand);
   Command newCommand = CommandInterpreter::interpretCommandType(rawCommand, newUser);

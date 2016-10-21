@@ -47,3 +47,14 @@ public:
   void setPathSpecified();
   std::string getPathSpecified();
 };
+
+class MakeDirectoryCommand : public Command {
+private:
+  std::string pathSpecified;
+public:
+  MakeDirectoryCommand(std::string commandInput, UserSessionDetail newUser);
+  void executeMakeDirectoryCommand();
+  void executeMakeDirectoryCommandUtil(std::string pathToNewDirectory);
+  void setPathSpecified();
+  std::string getPathSpecified();
+}
