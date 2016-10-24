@@ -13,9 +13,9 @@ public:
   static bool specifiedPathExists(std::string pathSpecified);
   static std::string getPathSpecified(std::string rawCommand);
   static bool specifiedPathIsDirectory(std::string pathSpecified);
+  static std::string findParentToGivenPath(std::string pathToNewDirectory);
   static std::string getPathSpecified(std::string rawCommand, int fromThisPosition);
   static void reduceToCanonicalForm(vector<std::string>& tokenizedPresentWorkingDirectory);
   //static bool prisonerIsLeavingJail(std::string rawCommand, PATH_TO_JAIL); //server side usage only
   static std::string convertToAbsolutePath(std::string pathSpecified, std::string presentWorkingDirectory);
-  static std::string convertToAbsolutePath(std::string pathSpecified, std::string presentWorkingDirectory, bool findParent); //For MakeDirectoryCommand
 };

@@ -28,12 +28,10 @@ public:
 
 class ChangeDirectoryCommand : public Command {
 private:
-  //std::string commandAndAttributesSpecified; //possibly useless
   std::string pathSpecified;
 public:
   ChangeDirectoryCommand(std::string commandInput, UserSessionDetail newUser);
   void executeChangeDirectoryCommand();
-  //std::string getCommandAndAttributesSpecified(); //possibly useless
   std::string getPathSpecified();
   void setPathSpecified();
 };

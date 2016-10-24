@@ -14,6 +14,9 @@ bool CommandInterpreter::interpretIfOnServerExecution(std::string rawCommand) {
 
 Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSessionDetail newUser, bool isCurrentlyOnClientSide) {
   boost::trim_all(rawCommand);
+  if((rawCommand[rawCommand.size()-1]=='/') || (rawCommand[rawCommand.size()-1]=='\\')) {
+    rawCommand = rawCommand.substr(0, rawCommand.size()-1);
+  }
   if(isCurrentlyOnClientSide && interpretIfOnServerExecution(rawCommand)) {
     //Send to server /* SOORYA */
     //receive the output in a string 'outputFromServer' /* SOORYA */
@@ -27,10 +30,10 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   else if(rawCommand.compare(0,2,"ls")==0) {
     return ListDirectoryContentsCommand(rawCommand, newUser);
   }
-/*  else if(rawCommand.compare(0,5,"mkdir")){
+  else if(rawCommand.compare(0,5,"mkdir")==0){
     return MakeDirectoryCommand(rawCommand, newUser);
   }
-  else if(rawCommand.compare(0,2,"cp")){
+/*  else if(rawCommand.compare(0,2,"cp")){
     return CopyFilesAndDirectoriesCommand(rawCommand, newUser);
   }
   else if(rawCommand.compare(0,2,"rm")){

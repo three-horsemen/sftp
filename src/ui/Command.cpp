@@ -26,7 +26,6 @@ UserSessionDetail Command::getUserSessionDetail() {
   return userSessionDetail;
 }
 
-
 /***** Change directory command *****/
 
 ChangeDirectoryCommand::ChangeDirectoryCommand(std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
@@ -137,7 +136,7 @@ MakeDirectoryCommand::MakeDirectoryCommand( std::string commandInput, UserSessio
 void MakeDirectoryCommand::executeMakeDirectoryCommand() {
   //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
   std::string pathToNewDirectory = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
-  std::string pathToParentDirectoryOfNewDirectory = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory(), true);
+  std::string pathToParentDirectoryOfNewDirectory = CommandPathUtil::findParentToGivenPath(pathToNewDirectory);
   if(CommandPathUtil::specifiedPathExists(pathToParentDirectoryOfNewDirectory) && CommandPathUtil::specifiedPathIsDirectory(pathToParentDirectoryOfNewDirectory)) {
     //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
       executeMakeDirectoryCommandUtil(pathToNewDirectory);

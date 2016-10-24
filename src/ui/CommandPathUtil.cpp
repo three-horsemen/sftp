@@ -90,37 +90,12 @@ std::string CommandPathUtil::convertToAbsolutePath(std::string pathSpecified, st
   }
 }
 
-std::string CommandPathUtil::convertToAbsolutePath(std::string pathSpecified, std::string presentWorkingDirectory, bool findParent) {
-  if(pathSpecified.size()!=0 && pathSpecified[0]=='/') {
-    return pathSpecified;
+std::string CommandPathUtil::findParentToGivenPath(std::string pathToNewDirectory) {
+  std::size_t parentPathEndPosition = pathToNewDirectory.find_last_of("/\\");
+  if(parentPathEndPosition!=std::string::npos) {
+    return pathToNewDirectory.substr(0, parentPathEndPosition);
   }
-  else if(pathSpecified.size()==0 && !findParent) {
-    return presentWorkingDirectory;
-  }
-  else {
-    std::vector<std::string> tokenizedPresentWorkingDirectory;
-    std::string newWorkingDirectory;
-    presentWorkingDirectory = presentWorkingDirectory + string("/") + pathSpecified;
-    boost::split(tokenizedPresentWorkingDirectory, presentWorkingDirectory, boost::is_any_of("/"), boost::token_compress_on);
-    tokenizedPresentWorkingDirectory.erase(
-      std::remove_if(
-      tokenizedPresentWorkingDirectory.begin(),
-      tokenizedPresentWorkingDirectory.end(),
-      [](std::string const& tempString) { return tempString.size()==0; }),
-      tokenizedPresentWorkingDirectory.end());
-		reduceToCanonicalForm(tokenizedPresentWorkingDirectory);
-		int size = tokenizedPresentWorkingDirectory.size();
-    if(findParent) {
-      size--;
-    }
-		if(size==0) {
-			return string("/");
-		}
-    for(int i=0; i<size;i++) {
-      newWorkingDirectory =newWorkingDirectory + string("/")+ tokenizedPresentWorkingDirectory[i];
-    }
-    return newWorkingDirectory;
-  }
+  return pathToNewDirectory;
 }
 
 bool CommandPathUtil::specifiedPathIsDirectory(std::string pathSpecified) {
