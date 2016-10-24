@@ -3,5 +3,6 @@
 class CommandInterpreter {
 public:
   CommandInterpreter();
-  static Command interpretCommandType(std::string rawCommand, UserSessionDetail newUser);
+  static bool interpretIfOnServerExecution(std::string rawCommand);
+  static Command interpretCommandType(std::string rawCommand, UserSessionDetail newUser, bool isCurrentlyOnClientSide);
 };

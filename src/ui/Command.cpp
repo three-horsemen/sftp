@@ -10,32 +10,6 @@ Command::Command(std::string commandInput, UserSessionDetail newUser) {
   //interpretCommandType(rawCommand);
 }
 
-/* shifted code to command interpreter
-void Command::interpretCommandType(std::string rawCommand) {
-  if(rawCommand.compare(0,2,"cd")==0) {
-    ChangeDirectoryCommand newChild();
-  }
-  else if(rawCommand.compare(0,2,"ls")==0) {
-    ListDirectoryContentsCommand newChild();
-  }
-/*  else if(rawCommand.compare(0,5,"mkdir")){
-    MakeDirectoryCommand newChild(rawCommand);
-  }
-  else if(rawCommand.compare(0,2,"cp")){
-    CopyFilesAndDirectoriesCommand newChild(rawCommand);
-  }
-  else if(rawCommand.compare(0,2,"rm")){
-    RemoveFilesAndDirectoriesCommand newChild(rawCommand);
-  }
-  else if(rawCommand.compare(0,5,"chown")){
-    ChangeFileOwnerAndGroupCommand newChild(rawCommand);
-  }
-  else {
-    std::cout<<"\nError: Invalid command. Please enter one of 'cd', 'ls', 'mkdir', 'cp', 'rm' or 'chown'.";
-  }
-}
-*/
-
 std::string Command::getRawCommand () {
   return rawCommand;
 }
@@ -52,9 +26,12 @@ UserSessionDetail Command::getUserSessionDetail() {
   return userSessionDetail;
 }
 
+
+/***** Change directory command *****/
+
 ChangeDirectoryCommand::ChangeDirectoryCommand(std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
-  this->setPathSpecified();
-  this->executeChangeDirectoryCommand();
+  setPathSpecified();
+  executeChangeDirectoryCommand();
 }
 
 void ChangeDirectoryCommand::setPathSpecified() {
@@ -82,15 +59,13 @@ void ChangeDirectoryCommand::executeChangeDirectoryCommand() {
   }
 }
 
-/*
-//Possibly useless
-std::string ChangeDirectoryCommand::getCommandAndAttributesSpecified() {
-  return commandAndAttributesSpecified;
-}
-*/
 std::string ChangeDirectoryCommand::getPathSpecified() {
   return pathSpecified;
 }
+
+
+
+/*****List directory command*****/
 
 ListDirectoryContentsCommand::ListDirectoryContentsCommand (std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
   setPathSpecified ();
@@ -150,6 +125,10 @@ void ListDirectoryContentsCommand::setPathSpecified () {
 }
 
 
+
+
+/*****Make directory command*****/
+
 MakeDirectoryCommand::MakeDirectoryCommand( std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser){
   setPathSpecified();
   executeMakeDirectoryCommand();
@@ -157,10 +136,11 @@ MakeDirectoryCommand::MakeDirectoryCommand( std::string commandInput, UserSessio
 
 void MakeDirectoryCommand::executeMakeDirectoryCommand() {
   //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
-  std::string pathToBeListed = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
-  if(CommandPathUtil::specifiedPathExists(pathToBeListed) && CommandPathUtil::specifiedPathIsDirectory(pathToBeListed)) {
+  std::string pathToNewDirectory = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
+  std::string pathToParentDirectoryOfNewDirectory = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory(), true);
+  if(CommandPathUtil::specifiedPathExists(pathToParentDirectoryOfNewDirectory) && CommandPathUtil::specifiedPathIsDirectory(pathToParentDirectoryOfNewDirectory)) {
     //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
-      executeListDirectoryContentsCommandUtil(pathToBeListed);
+      executeMakeDirectoryCommandUtil(pathToNewDirectory);
       //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
     //}
     //else {
@@ -171,6 +151,17 @@ void MakeDirectoryCommand::executeMakeDirectoryCommand() {
   else {
     setCommandOutput(string("Error: Invalid path (Path does not exist, or leads to a file, not directory)"));
     //>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error: invalid path <reuben>
+  }
+}
+
+
+void MakeDirectoryCommand::executeMakeDirectoryCommandUtil(std::string pathToNewDirectory) {
+  boost::filesystem::path dir(pathToNewDirectory.c_str());
+  if(boost::filesystem::create_directory(dir)) {
+    setCommandOutput(string("Directory created: ")+pathToNewDirectory);
+  }
+  else {
+    setCommandOutput(string("Internal error occured while creating directory."));
   }
 }
 

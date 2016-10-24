@@ -5,6 +5,9 @@
 #include <dirent.h>
 #include <algorithm>
 #include <vector>
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+#include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS                                    /***used for  MakeDirectoryCommand***/
 #include <boost/algorithm/string/trim_all.hpp>
 #include "ui/UserSessionDetail.hpp"
 using namespace std;
@@ -17,7 +20,6 @@ private:
 public:
   Command();
   Command(std::string commandInput, UserSessionDetail newUser);
-  void interpretCommandType(std::string rawCommand);
   std::string getRawCommand();
   std::string getCommandOutput();
   void setCommandOutput(std::string commandResult);
@@ -57,4 +59,4 @@ public:
   void executeMakeDirectoryCommandUtil(std::string pathToNewDirectory);
   void setPathSpecified();
   std::string getPathSpecified();
-}
+};
