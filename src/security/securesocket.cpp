@@ -283,7 +283,7 @@ SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targ
         else
             throw SecureSocketException(DATA_SOCK_BADHOST);
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException &e)
     {
         cout << e.what();
         throw SecureSocketException(DATA_SOCK_EXC);
@@ -388,7 +388,7 @@ void SecureDataSocket::setAndEncryptBuffer(std::string message)
     {
         setBuffer(encrypt(message, string_to_int(getKeyContainer().getSharedSecret())));
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException &e)
     {
         cout << e.what();
         throw SecureSocketException(DATA_SOCK_ENCR_EXC, "Could not set and encrypt the buffer.");
@@ -407,35 +407,35 @@ std::string SecureDataSocket::getAndDecryptBuffer()
         */
         return (decrypt(getBuffer(), string_to_int(getKeyContainer().getSharedSecret())));
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException &e)
     {
         cout << e.what();
         throw SecureSocketException(DATA_SOCK_DECR_EXC, "Could not get and decrypt the buffer.");
     }
 }
 
-void SecureDataSocket::encryptAndSendSecureSocket(std::string message)
+void SecureDataSocket::encryptAndSend(std::string message)
 {
     try
     {
         setAndEncryptBuffer(message);
         writeSecureSocket();
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException &e)
     {
         cout << e.what();
         throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the message.");
     }
 }
 
-void SecureDataSocket::encryptAndSendSecureSocket()
+void SecureDataSocket::encryptAndSend()
 {
     try
     {
         setAndEncryptBuffer(getBuffer());
         writeSecureSocket();
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException &e)
     {
         cout << e.what();
         throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the existing buffer.");
@@ -443,7 +443,7 @@ void SecureDataSocket::encryptAndSendSecureSocket()
 }
 
 
-std::string SecureDataSocket::decryptAndReceiveSecureSocket()
+std::string SecureDataSocket::receiveAndDecrypt()
 {
     try
     {
@@ -451,7 +451,7 @@ std::string SecureDataSocket::decryptAndReceiveSecureSocket()
         std::string message = getAndDecryptBuffer();
         return message;
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException &e)
     {
         cout << e.what();
         throw SecureSocketException(DATA_SOCK_DECRRECV_EXC, "Could not receive and decrypt the message.");
@@ -675,7 +675,7 @@ SecureListenSocket::SecureListenSocket(std::string serverIPAddress, std::string 
     	bindSecureSocket();
     	listenSecureSocket();
     }
-    catch(SecureSocketException e)
+    catch(SecureSocketException &e)
     {
         cout << e.what();
         throw SecureSocketException(LISTEN_SOCK_EXC, "Could not activate the listen socket.");

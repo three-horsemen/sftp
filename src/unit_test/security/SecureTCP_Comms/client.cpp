@@ -11,8 +11,8 @@ int main()
 		{
 			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) >>> " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
 			std::getline(std::cin, buffer); //This form accepts whitespaces,
-			clientSecureDataSocket.encryptAndSendSecureSocket(buffer);
-			buffer = clientSecureDataSocket.decryptAndReceiveSecureSocket();
+			clientSecureDataSocket.encryptAndSend(buffer);
+			buffer = clientSecureDataSocket.receiveAndDecrypt();
 			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) <<< " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
 			std::cout << clientSecureDataSocket.getAndDecryptBuffer() << std::endl; //The buffer is still in an encrypted state.
 		}

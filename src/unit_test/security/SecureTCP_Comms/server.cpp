@@ -15,10 +15,10 @@ void customthread(SecureDataSocket acceptedSecureDataSocket)
 		cout << "Diffie-Hellman key exchange with client " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!" << endl;
 		do
 		{
-			std::string message = acceptedSecureDataSocket.decryptAndReceiveSecureSocket();
+			std::string message = acceptedSecureDataSocket.receiveAndDecrypt();
 			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " <--$ ";
 			cout << message << " $$$Mesg length: " << message.length() << " &&&Mesg size: " << message.size() << endl;
-			acceptedSecureDataSocket.encryptAndSendSecureSocket(message);
+			acceptedSecureDataSocket.encryptAndSend(message);
 			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
 			cout << acceptedSecureDataSocket.getBuffer() << endl;
 		} while(acceptedSecureDataSocket.getAndDecryptBuffer() != "quit" && acceptedSecureDataSocket.getValidity() == true);
