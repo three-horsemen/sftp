@@ -1,5 +1,5 @@
 #include "security/securesocket.hpp"
-
+#include "shared/logger.hpp"
 
 const int DHKeyContainer::goodPrimePThreshold = 20;
 const int DHKeyContainer::goodPrimeQThreshold = 20;
@@ -336,14 +336,37 @@ int SecureDataSocket::readSecureSocket()
         setBuffer("");
         char buffer_char[256];
         bzero(buffer_char,256);
-        len = read(getSocketDescriptor(), buffer_char, sizeof(buffer_char));
+        string temp_str = "";
+
+        //Get to know the size of the string to receive.
+        len = read(getSocketDescriptor(), buffer_char, 16);
         if(len <= 0)
         {
             setValidity(false);
             throw SecureSocketException(DATA_SOCK_READ_EMPTY_EXC);
             //printf("Perhaps, the client was disconnected forcefully by the server?\n");
         }
-        setBuffer(charArray_to_string(buffer_char, strlen(buffer_char)));
+        int sizeOfIncomingMessage = atoi(buffer_char);
+        int numberOfReadBytes = 0;
+        while(numberOfReadBytes < sizeOfIncomingMessage))
+        {
+            len = read(getSocketDescriptor(), buffer_char, sizeof(buffer_char));
+            if(len <= 0)
+            {
+                break;
+            }
+            temp_str += charArray_to_string(buffer_char, strlen(buffer_char));
+            numberOfReadBytes += len;
+            LOG_DEBUG << "Read byte count: " << (len) << "\n";
+        }
+        LOG_DEBUG << "Out of the while-loop.";
+        if(temp_str.size() <= 0)
+        {
+            setValidity(false);
+            throw SecureSocketException(DATA_SOCK_READ_EMPTY_EXC);
+            //printf("Perhaps, the client was disconnected forcefully by the server?\n");
+        }
+        setBuffer(temp_str);
     }
     else
     {
@@ -359,15 +382,21 @@ int SecureDataSocket::writeSecureSocket()
     {
         if(getBuffer().length() <= 0)
             throw SecureSocketException(DATA_SOCK_WRITE_EMPTYBUFFER_EXC, "The buffer is empty.");
-        char* buffer_char = string_to_charArray(getBuffer());
-        len = write(getSocketDescriptor(), buffer_char, strlen(buffer_char));
-        if(len <= 0)
+
+        for (unsigned i = 0; i < getBuffer().length(); i += 20)
         {
-            setValidity(false);
-            throw SecureSocketException(DATA_SOCK_WRITE_EMPTY_EXC, "Perhaps, the server went offline?");
-            //printf("Perhaps, the server went offline?\n");
+            char* buffer_char = string_to_charArray(getBuffer().substr(i, 20));
+            len = write(getSocketDescriptor(), buffer_char, strlen(buffer_char));
+            if(len <= 0)
+            {
+                setValidity(false);
+                throw SecureSocketException(DATA_SOCK_WRITE_EMPTY_EXC, "Perhaps, the server went offline?");
+                //printf("Perhaps, the server went offline?\n");
+            }
+            LOG_DEBUG << "Sent byte count: " << (len) << "\n";
+            free(buffer_char);
         }
-        free(buffer_char);
+        LOG_DEBUG << "Out of the for-loop.";
     }
     else
     {
