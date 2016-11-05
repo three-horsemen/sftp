@@ -16,6 +16,7 @@ DbManager* DbManager::dbManager = NULL;
 DbManager::DbManager(DbHandler &dbHandler) :
 		dbHandler(dbHandler) {
 	userManager = NULL;
+	permissionManager = NULL;
 
 }
 
@@ -38,6 +39,15 @@ UserManager& DbManager::getUserManager() {
 	} else {
 		userManager = new UserManager(dbManager->dbHandler);
 		return *userManager;
+	}
+}
+
+PermissionManager& DbManager::getPermissionManager() {
+	if (permissionManager) {
+		return *permissionManager;
+	} else {
+		permissionManager = new PermissionManager(dbManager->dbHandler);
+		return *permissionManager;
 	}
 }
 

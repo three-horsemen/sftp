@@ -12,6 +12,7 @@
 
 #include <database/UserManager.hpp>
 #include <database/DbHandler.hpp>
+#include <database/PermissionManager.hpp>
 
 namespace sftp {
 
@@ -22,10 +23,12 @@ private:
 	static DbManager* dbManager;
 	DbHandler dbHandler;
 	UserManager* userManager;
+	PermissionManager* permissionManager;
 public:
 	DbManager(DbHandler&);
 	virtual ~DbManager();
 	UserManager& getUserManager();
+	PermissionManager& getPermissionManager();
 	static DbManager* getDb();
 	static void initializeStaticDbManager(std::string);
 };

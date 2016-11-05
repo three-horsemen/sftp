@@ -48,6 +48,7 @@ target_link_libraries(unit_test_SecureTCP_server security)
 
 ###DB module
 add_library(db
+	src/database/SQLiteException.cpp
 	src/database/DbHandler.cpp
 	src/database/DbManager.cpp
 	src/database/UserManager.cpp
@@ -56,10 +57,15 @@ add_library(db
 	)
 target_link_libraries(db shared security ${SQLITE3_LIBRARY})
 
-add_executable(unit_user_manager 
+add_executable(unit_test_user_manager
 	src/unit_test/database/UserManagerUnitTest.cpp
 	)
-target_link_libraries(unit_user_manager db)
+target_link_libraries(unit_test_user_manager db)
+
+add_executable(unit_test_permission_manager
+	src/unit_test/database/PermissionManagerUnitTest.cpp
+	)
+target_link_libraries(unit_test_permission_manager db)
 
 ###Sync Module
 add_executable(timeline_server src/sync/timeline/TimelineServer.cpp)

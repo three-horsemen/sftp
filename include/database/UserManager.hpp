@@ -13,6 +13,7 @@
 
 #include <shared/logger.hpp>
 #include <database/DbHandler.hpp>
+#include <database/SQLiteException.hpp>
 
 namespace sftp {
 

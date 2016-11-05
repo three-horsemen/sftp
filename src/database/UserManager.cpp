@@ -26,7 +26,7 @@ int UserManager::isAuthenticationValidCallback(void *data, int argc,
 	failure = true;
 	if(argc==1) {
 		LOG_DEBUG<<"Row count valid";
-		if(strcmp("cnt",azColName[0])==0) {
+		if(strcmp("count(*)",azColName[0])==0) {
 			LOG_DEBUG<<"Column name valid";
 			if(argv[0] && atoi(argv[0])==1) {
 				LOG_DEBUG<<"Count is not null and 1";
@@ -35,21 +35,6 @@ int UserManager::isAuthenticationValidCallback(void *data, int argc,
 		}
 	}
 	LOG_DEBUG<<"Returning authentication failure = "<<failure;
-	return failure;
-}
-
-int UserManager::registerUserCallback(void *data, int argc, char **argv,
-		char **azColName) {
-	LOG_DEBUG<< "Fetched "<<argc<<" rows";
-	int i;
-	for (i = 0; i < argc; i++) {
-		LOG_INFO<< azColName[i] << " = " << argv[i] ? argv[i] : "NULL";
-	}
-	LOG_INFO<< endl;
-
-	if (argc == 1) {
-		*((bool*)data) = true;
-	}
 	return 0;
 }
 
@@ -62,39 +47,31 @@ bool UserManager::registerUser(string username, string password) {
 	string sql = "INSERT INTO User(username,password) VALUES ('" + username
 			+ "', '" + password + "');";
 
-	/* Execute SQL statement */
-	int rc = dbHandler.executeSQL(sql, registerUserCallback, success,
-			errorMessage);
-	if (rc != SQLITE_OK) {
-		fprintf(stderr, "SQL error: %s\n", errorMessage);
-		sqlite3_free(errorMessage);
+	try {
+		int count = dbHandler.executeInsert(sql);
+		if (count == 1)
+			success = true;
+	} catch (SQLiteException &e) {
+		LOG_ERROR<<e.what();
 		return false;
-	} else {
-		LOG_INFO<<"Operation success";
-		return success;
 	}
+	LOG_INFO<<"Operation success: "<<success;
+	return success;
 }
 
 bool UserManager::isAuthenticationValid(string username, string password) {
 
 	char* errorMessage;
-	bool success = false;
+	bool failure = false;
 
 	//TODO Prevent SQL injection
-	string sql = "SELECT count(*) cnt from User where username='" + username
+	string sql = "SELECT count(*) from User where username='" + username
 			+ "' and password='" + password + "'";
 
 	/* Execute SQL statement */
-	int rc = dbHandler.executeSQL(sql, isAuthenticationValidCallback, success,
-			errorMessage);
-	if (rc != SQLITE_OK) {
-		fprintf(stderr, "SQL error: %s\n", errorMessage);
-		sqlite3_free(errorMessage);
-		return false;
-	} else {
-		LOG_INFO<<"Operation success";
-		return !success;
-	}
+	dbHandler.executeQuery(sql, isAuthenticationValidCallback, failure);
+	int rowCount = dbHandler.getRowCount(sql);
+	return !failure;
 }
 
 }
