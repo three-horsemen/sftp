@@ -19,46 +19,35 @@ void timelineServerThread(SecureDataSocket acceptedSecureDataSocket) {
 	cout << "Negotiating with new client." << endl;
 	//acceptedSecureDataSocket.performDHExchange_asServer();
 	if (acceptedSecureDataSocket.getValidity() == true) {
-		cout << "Diffie-Hellman key exchange with client "
-				<< acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":"
-				<< acceptedSecureDataSocket.getTargetPortFromSockDesc()
-				<< " successful!" << endl;
-		do {
-			acceptedSecureDataSocket.encryptAndSendSecureSocket(
-					UserManager::USERNAME);
+		acceptedSecureDataSocket.encryptAndSend(UserManager::USERNAME);
+		string username = acceptedSecureDataSocket.receiveAndDecrypt();
+		acceptedSecureDataSocket.encryptAndSend("PASSWORD");
+		string password = acceptedSecureDataSocket.receiveAndDecrypt();
 
-			string username =
-					acceptedSecureDataSocket.decryptAndReceiveSecureSocket();
-			acceptedSecureDataSocket.encryptAndSendSecureSocket("PASSWORD");
-			string password =
-					acceptedSecureDataSocket.decryptAndReceiveSecureSocket();
-
-			try {
-				bool isAuthentic =
-						DbManager::getDb()->getUserManager().isAuthenticationValid(
-								username, password);
-				if (isAuthentic) {
-					acceptedSecureDataSocket.encryptAndSendSecureSocket(
-							"VALID");
-				} else {
-					acceptedSecureDataSocket.encryptAndSendSecureSocket(
-							"INVALID");
-				}
-			} catch (SQLiteException &e) {
-				acceptedSecureDataSocket.encryptAndSendSecureSocket("INVALID");
+		try {
+			bool isAuthentic =
+					DbManager::getDb()->getUserManager().isAuthenticationValid(
+							username, password);
+			if (isAuthentic) {
+				acceptedSecureDataSocket.encryptAndSend("VALID");
+			} else {
+				acceptedSecureDataSocket.encryptAndSend("INVALID");
 			}
-		} while (acceptedSecureDataSocket.getAndDecryptBuffer() != "QUIT"
+		} catch (SQLiteException &e) {
+			acceptedSecureDataSocket.encryptAndSend("INVALID");
+		}
+		do {
+		} while (acceptedSecureDataSocket.getAndDecryptBuffer()
+				!= UserManager::LOGOUT
 				&& acceptedSecureDataSocket.getValidity() == true);
 	}
-	cout << "Closing the connection from "
-			<< acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":"
-			<< acceptedSecureDataSocket.getTargetPortFromSockDesc() << endl;
 	acceptedSecureDataSocket.destroySecureSocket();
 }
 
 }
 
 int main() {
+	sftp::DbManager::initializeStaticDbManager("sftp.db");
 	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8081");
 	if (serverSecureListenSocket.getValidity() == false) {
 		cout << "Something went wrong!" << endl;

@@ -32,6 +32,7 @@ public:
 	static constexpr const char* PASSWORD = "PASSWORD";
 	static constexpr const char* CREDENTIALS_VALID = "VALID";
 	static constexpr const char* CREDENTIALS_INVALID = "INVALID";
+	static constexpr const char* LOGOUT = "LOGOUT";
 
 	UserManager(DbHandler&);
 	virtual ~UserManager();

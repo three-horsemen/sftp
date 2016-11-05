@@ -1,23 +1,55 @@
 //Client program to keep talking to a server until a "quit" message is sent.
 #include "security/securesocket.hpp"
+
 #include <iostream>
 
-int main()
-{
+#include <database/UserManager.hpp>
+
+using namespace std;
+using namespace sftp::db;
+
+int main() {
 	{
-		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8081", HOST_MODE_CLIENT);
-		std::string buffer;
-		while(buffer!="quit" && clientSecureDataSocket.getValidity() == true)
-		{
-			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) >>> " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
-			std::getline(std::cin, buffer); //This form accepts whitespaces,
-			clientSecureDataSocket.encryptAndSendSecureSocket(buffer);
-			buffer = clientSecureDataSocket.decryptAndReceiveSecureSocket();
-			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) <<< " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
-			std::cout << clientSecureDataSocket.getAndDecryptBuffer() << std::endl; //The buffer is still in an encrypted state.
+		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8081",
+		HOST_MODE_CLIENT);
+
+		try {
+			runtime_error unknownResponseException(
+					string("Unknown server response"));
+
+			string buffer;
+
+			buffer = clientSecureDataSocket.receiveAndDecrypt();
+			if (buffer != UserManager::USERNAME)
+				throw unknownResponseException;
+			string username = "";
+			cout << "Username: ";
+			getline(cin, username);
+			clientSecureDataSocket.encryptAndSend(username);
+
+			buffer = clientSecureDataSocket.receiveAndDecrypt();
+			if (buffer != UserManager::PASSWORD)
+				throw unknownResponseException;
+			string password = "";
+			cout << "Password: ";
+			getline(cin, password);
+			clientSecureDataSocket.encryptAndSend(password);
+			buffer = clientSecureDataSocket.receiveAndDecrypt();
+			if (buffer == UserManager::CREDENTIALS_VALID)
+				cout << "Login success\n";
+			else
+				cout << "Invalid credentials\n";
+		} catch (exception &e) {
+			cout << e.what() << endl;
+		}
+
+		string buffer = "";
+		while (buffer != UserManager::LOGOUT
+				&& clientSecureDataSocket.getValidity() == true) {
+
 		}
 		clientSecureDataSocket.destroySecureSocket();
 	}
-	std::cout << "Client program ending." << std::endl;
+	cout << "Client program ending." << endl;
 	return 0;
 }
