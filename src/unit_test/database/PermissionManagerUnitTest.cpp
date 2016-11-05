@@ -9,7 +9,10 @@
 #include <shared/logger.hpp>
 #include <limits>	//cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
+#include <iostream>
+
 using namespace sftp::db;
+using namespace std;
 
 int getInt() {
 	int i;
