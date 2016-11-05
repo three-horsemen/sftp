@@ -84,6 +84,22 @@ int main(int argc, char** argv) {
 			} else {
 				cout<<"Permission to resource denied\n";
 			}
+		} else if(ch==3) {
+			string sourcePath,destinationPath;
+			cout<<"Source path: ";
+			cin>>sourcePath;cout<<sourcePath<<endl;
+			cout<<"Destination path: ";
+			cin>>destinationPath;cout<<destinationPath<<endl;
+			try {
+				int count = DbManager::getDb()->getPermissionManager().moveResource(sourcePath,destinationPath);
+				if(count>=0) {
+					cout<<"Successfully moved resource\n";
+				} else {
+					cout<<"Failed to moved resource\n";
+				}
+			} catch(SQLiteException &e) {
+				cout<<"Failed to move resource: "<<e.what()<<endl;
+			}
 		} else {
 			cout<<"Unknown choice\n";
 		}

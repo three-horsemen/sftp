@@ -31,7 +31,7 @@ public:
 	bool setOwner(string, string);
 	bool setOwners(string, string[], unsigned int);
 	bool isResourceAccessible(string, string);
-	bool moveResource(string, string);
+	int moveResource(string, string);
 
 };
 

@@ -48,8 +48,6 @@ bool PermissionManager::setOwner(string absolutePath, string newOwner) {
 
 bool PermissionManager::setOwners(string absolutePath, string newOwners[],
 		unsigned ownerCount) {
-	char* errorMessage;
-	bool success = false;
 
 	//TODO Prevent SQL injection
 	for (unsigned int i = 0; i < ownerCount; i++) {
@@ -59,9 +57,14 @@ bool PermissionManager::setOwners(string absolutePath, string newOwners[],
 	return false;
 }
 
-bool PermissionManager::moveResource(string sourceAbsolutePath,
+int PermissionManager::moveResource(string sourceAbsolutePath,
 		string destinationAbsolutePath) {
-	return false;
+	string sql = "UPDATE ResourcePermission set resource='"
+			+ destinationAbsolutePath + "' where resource='"
+			+ sourceAbsolutePath + "'";
+	int count = dbHandler.executeUpdate(sql);
+
+	return count;
 }
 
 }
