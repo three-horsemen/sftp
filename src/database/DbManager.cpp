@@ -18,6 +18,19 @@ DbManager::DbManager(DbHandler &dbHandler) :
 	userManager = NULL;
 	permissionManager = NULL;
 
+	try {
+		LOG_DEBUG<< "Creating tables (if not exists)";
+		dbHandler.executeRaw(
+				"CREATE TABLE IF NOT EXISTS User (_id integer auto increment, username text not null unique, password text not null, sessionId text, PRIMARY KEY(_id));");
+		dbHandler.executeRaw(
+				"CREATE TABLE IF NOT EXISTS `ResourcePermission` (`resource` text not null, `owner` text not null, FOREIGN KEY(`owner`) REFERENCES `User`(`username`));");
+		LOG_DEBUG<< "Table ready";
+	} catch (SQLiteException &e) {
+		throw SQLiteException(e.getErrorCode(),
+				string(
+						"Failed to create database: Failed to create tables: ")
+				+ string(e.what()));
+	}
 }
 
 DbManager::~DbManager() {
@@ -53,7 +66,7 @@ PermissionManager& DbManager::getPermissionManager() {
 
 void DbManager::initializeStaticDbManager(std::string dbPath) {
 	if (!DbManager::dbManager) {
-		DbManager::dbManager = new DbManager(*(new DbHandler(dbPath)));
+		DbManager::dbManager = new DbManager(*(new DbHandler(dbPath, true)));
 	}
 }
 

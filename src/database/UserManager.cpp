@@ -69,7 +69,7 @@ bool UserManager::isAuthenticationValid(string username, string password) {
 			+ "' and password='" + password + "'";
 
 	/* Execute SQL statement */
-	dbHandler.executeQuery(sql, isAuthenticationValidCallback, failure);
+	dbHandler.query(sql, isAuthenticationValidCallback, failure);
 	int rowCount = dbHandler.getRowCount(sql);
 	return !failure;
 }

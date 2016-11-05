@@ -18,6 +18,10 @@ SQLiteException::SQLiteException(int rc, string errorMessage) :
 SQLiteException::~SQLiteException() {
 }
 
+int SQLiteException::getErrorCode() {
+	return rc;
+}
+
 string SQLiteException::getErrorMessage() {
 	return errorMessageStr;
 }

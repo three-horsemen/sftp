@@ -45,7 +45,7 @@ int DbHandler::pragmaCallback(void* data, int argc, char** argv,
 	return 0;
 }
 
-DbHandler::DbHandler(std::string dbPath) {
+DbHandler::DbHandler(std::string dbPath, bool foreignKeysEnabled = true) {
 	int rc;
 	rc = sqlite3_open(dbPath.c_str(), &db);
 	if (rc != SQLITE_OK) {
@@ -55,23 +55,35 @@ DbHandler::DbHandler(std::string dbPath) {
 	}
 	LOG_DEBUG<< "Successfully opened database: "<<dbPath;
 
-	LOG_DEBUG<< "Enabling foreign_keys";
-	sqlite3_stmt * stmt;
-	sqlite3_prepare(db, "PRAGMA foreign_keys = ON;", -1, &stmt, NULL);
-	int rc2 = sqlite3_step(stmt);
-	const char* errorMessage = sqlite3_errmsg(db);
-	throwExceptionIfNeeded(rc2,
-			string("Failed to create database: Enable foreign_keys failed: ")
-					+ string(errorMessage));
-	LOG_DEBUG<< "Enabled foreign_keys";
-
+	if (foreignKeysEnabled) {
+		try {
+			LOG_DEBUG<< "Enabling foreign_keys";
+			executeRaw("PRAGMA foreign_keys = ON;");
+			LOG_DEBUG<< "Enabled foreign_keys";
+		} catch (SQLiteException &e) {
+			throwExceptionIfNeeded(e.getErrorCode(),
+					string(
+							"Failed to create database: Enable foreign_keys failed: ")
+					+ string(e.what()));
+		}
+	}
 }
 
 DbHandler::~DbHandler() {
 	sqlite3_close(db);
 }
 
-void DbHandler::executeQuery(std::string sql,
+void DbHandler::executeRaw(std::string sql) {
+	LOG_DEBUG<< "Executing raw statement: "<<sql;
+	sqlite3_stmt * stmt;
+	sqlite3_prepare(db, sql.c_str(), -1, &stmt, NULL);
+	int rc = sqlite3_step(stmt);
+	const char* errorMessage = sqlite3_errmsg(db);
+	throwExceptionIfNeeded(rc, string(errorMessage));
+	LOG_DEBUG<< "Raw statement execution success";
+}
+
+void DbHandler::query(std::string sql,
 		int (*callback)(void*, int, char**, char**), bool &success) {
 	char* errorMessage = NULL;
 	LOG_DEBUG<<"Executing SQL: "+sql;

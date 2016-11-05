@@ -27,6 +27,7 @@ public:
 	SQLiteException(int, string);
 	virtual ~SQLiteException();
 
+	int getErrorCode();
 	string getErrorMessage();
 	const char* what() const throw ();
 

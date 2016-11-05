@@ -32,11 +32,12 @@ class DbHandler {
 	static int pragmaCallback(void*, int, char**, char**);
 	char* generateSQLiteError(string);
 public:
-	DbHandler(std::string);
+	DbHandler(std::string, bool);
 	virtual ~DbHandler();
 
-	void executeQuery(std::string sql,
-			int (*callback)(void*, int, char**, char**), bool &success);
+	void executeRaw(std::string sql);
+	void query(std::string sql, int (*callback)(void*, int, char**, char**),
+			bool &success);
 	int getRowCount(std::string sql);
 	int executeUpdate(std::string sql);
 	int executeInsert(std::string sql);
