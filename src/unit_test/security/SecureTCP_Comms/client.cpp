@@ -5,7 +5,7 @@
 int main()
 {
 	{
-		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8889", HOST_MODE_CLIENT);
+		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8081", HOST_MODE_CLIENT);
 		std::string buffer;
 		while(buffer!="quit" && clientSecureDataSocket.getValidity() == true)
 		{

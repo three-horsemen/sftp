@@ -1,6 +1,5 @@
 #include "security/securesocket.hpp"
-#include "shared/logger.hpp"
-using namespace std;
+
 
 const int DHKeyContainer::goodPrimePThreshold = 20;
 const int DHKeyContainer::goodPrimeQThreshold = 20;
@@ -190,10 +189,9 @@ int SecureSocket::initSecureSocket()
     setSocketDescriptor(socket(PF_INET,SOCK_STREAM,0));
     if(getSocketDescriptor() < 0)
     {
-        throw SecureSocketException(*this, "The socket failed to create. socket():");
+        throw SecureSocketException(SOCK_CREATE_EXC);
         //perror("The socket failed to create. socket():");
         setValidity(false);
-
     }
     else
     {
@@ -203,7 +201,7 @@ int SecureSocket::initSecureSocket()
     int force_reuse_socket_port__yes = 1;
     if (setsockopt(getSocketDescriptor(), SOL_SOCKET, SO_REUSEADDR, &force_reuse_socket_port__yes, sizeof(force_reuse_socket_port__yes)) == -1)
     {
-        throw SecureSocketException(*this, "The socket couldn't be reused. setsockopt():");
+        throw SecureSocketException(SOCK_REUSE_EXC);
         //perror("The socket couldn't be reused. setsockopt():");
         setValidity(false);
     }
@@ -212,14 +210,13 @@ int SecureSocket::initSecureSocket()
         //cout << "The socket is being used successfully." << endl;
         setValidity(true);
     }
-
     return getSocketDescriptor();
 }
 int SecureSocket::destroySecureSocket()
 {
     int result = close(getSocketDescriptor());
     if(result < 0)
-        throw SecureSocketException(*this, "The socket could not be closed.");
+        throw SecureSocketException(SOCK_CLOSE_EXC);
     setValidity(false);
     return result;
 }
@@ -284,12 +281,12 @@ SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targ
         else if(hostMode == HOST_MODE_SERVER)
             performDHExchange_asServer();
         else
-            throw SecureDataSocketException(*this, "Incorrect host mode selected.");
+            throw SecureSocketException(DATA_SOCK_BADHOST);
     }
-    catch(SecureDataSocketException e)
+    catch(SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketException(*this, "Could not create a secure data socket.");
+        throw SecureSocketException(DATA_SOCK_EXC);
     }
 }
 DHKeyContainer SecureDataSocket::getKeyContainer()
@@ -317,7 +314,7 @@ int SecureDataSocket::connectSecureSocket()
         {
             setValidity(false);
             //perror("Something went wrong with connect(): ");
-            throw SecureDataSocketConnectException(*this, "Something went wrong with connect()");
+            throw SecureSocketException(DATA_SOCK_CONN_EXC);
         }
         else
         {
@@ -327,7 +324,7 @@ int SecureDataSocket::connectSecureSocket()
     }
     else
     {
-        throw SecureDataSocketException(*this, "During connectSecureSocket(), getValidity() was false.");
+        throw SecureSocketException(DATA_SOCK_INVALID_EXC);
     }
     return result;
 }
@@ -343,6 +340,7 @@ int SecureDataSocket::readSecureSocket()
         if(len <= 0)
         {
             setValidity(false);
+            throw SecureSocketException(DATA_SOCK_READ_EMPTY_EXC);
             //printf("Perhaps, the client was disconnected forcefully by the server?\n");
         }
         setBuffer(charArray_to_string(buffer_char, strlen(buffer_char)));
@@ -350,7 +348,7 @@ int SecureDataSocket::readSecureSocket()
     else
     {
         //printf("%s\n", "While trying to read, the socket was invalid.");
-        throw SecureDataSocketException(*this, "During readSecureSocket(), getValidity() was false.");
+        throw SecureSocketException(DATA_SOCK_INVALID_EXC);
     }
     return len;
 }
@@ -360,19 +358,20 @@ int SecureDataSocket::writeSecureSocket()
     if(getValidity() == true)
     {
         if(getBuffer().length() <= 0)
-            throw SecureDataSocketException(*this, "The buffer is empty.");
+            throw SecureSocketException(DATA_SOCK_WRITE_EMPTYBUFFER_EXC, "The buffer is empty.");
         char* buffer_char = string_to_charArray(getBuffer());
         len = write(getSocketDescriptor(), buffer_char, strlen(buffer_char));
         if(len <= 0)
         {
             setValidity(false);
+            throw SecureSocketException(DATA_SOCK_WRITE_EMPTY_EXC, "Perhaps, the server went offline?");
             //printf("Perhaps, the server went offline?\n");
         }
         free(buffer_char);
     }
     else
     {
-        throw SecureDataSocketException(*this, "During writeSecureSocket(), getValidity() was false.");
+        throw SecureSocketException(DATA_SOCK_INVALID_EXC, "During writeSecureSocket(), getValidity() was false.");
     }
     return len;
 }
@@ -380,32 +379,38 @@ int SecureDataSocket::writeSecureSocket()
 void SecureDataSocket::setAndEncryptBuffer(std::string message)
 {
     if(getKeyContainer().getValidity() == false)
-        throw SecureDataSocketDHException(*this, "The key container was found invalid, while trying to encrypt the buffer.");
+        throw SecureSocketException(DH_CONT_INVALID_EXC, "The key container was found invalid, while trying to encrypt the buffer.");
+/*
     if(message.length() <= 0)
-        throw SecureDataSocketException(*this, "The message length is zero.");
+        throw SecureDataSocketIOException(*this, "The message length to write is zero.");
+*/
     try
     {
         setBuffer(encrypt(message, string_to_int(getKeyContainer().getSharedSecret())));
     }
-    catch(SecureSocketException& e)
+    catch(SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketException(*this, "Could not set and encrypt the buffer.");
+        throw SecureSocketException(DATA_SOCK_ENCR_EXC, "Could not set and encrypt the buffer.");
     }
 }
 
 std::string SecureDataSocket::getAndDecryptBuffer()
 {
     if(getKeyContainer().getValidity() == false)
-        throw SecureDataSocketDHException(*this, "The key container was found invalid, while trying to decrypt the buffer.");
+        throw SecureSocketException(DH_CONT_INVALID_EXC, "The key container was found invalid, while trying to decrypt the buffer.");
     try
     {
+        /*
+        if(getBuffer().length() <= 0)
+            throw SecureDataSocketIOException(*this, "The read message length was zero.");
+        */
         return (decrypt(getBuffer(), string_to_int(getKeyContainer().getSharedSecret())));
     }
-    catch(SecureSocketException& e)
+    catch(SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketException(*this, "Could not get and decrypt the buffer.");
+        throw SecureSocketException(DATA_SOCK_DECR_EXC, "Could not get and decrypt the buffer.");
     }
 }
 
@@ -416,10 +421,10 @@ void SecureDataSocket::encryptAndSendSecureSocket(std::string message)
         setAndEncryptBuffer(message);
         writeSecureSocket();
     }
-    catch(SecureSocketException& e)
+    catch(SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketException(*this, "Could not encrypt and send the message.");
+        throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the message.");
     }
 }
 
@@ -430,10 +435,10 @@ void SecureDataSocket::encryptAndSendSecureSocket()
         setAndEncryptBuffer(getBuffer());
         writeSecureSocket();
     }
-    catch(SecureSocketException& e)
+    catch(SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketException(*this, "Could not encrypt and send the existing buffer.");
+        throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the existing buffer.");
     }
 }
 
@@ -446,10 +451,10 @@ std::string SecureDataSocket::decryptAndReceiveSecureSocket()
         std::string message = getAndDecryptBuffer();
         return message;
     }
-    catch(SecureSocketException& e)
+    catch(SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketException(*this, "Could not receive and decrypt the message.");
+        throw SecureSocketException(DATA_SOCK_DECRRECV_EXC, "Could not receive and decrypt the message.");
     }
 }
 
@@ -464,7 +469,7 @@ int SecureDataSocket::performDHExchange_asClient()
             this->writeSecureSocket();
             if(this->getValidity() == false)
             {
-                throw SecureDataSocketIOException(*this, "Hello transmission failed.");
+                throw SecureSocketException(DH_HELLOSEND_EXC, "Hello transmission failed.");
                 //return -2;
             }
             bool passFlag = false;
@@ -476,7 +481,7 @@ int SecureDataSocket::performDHExchange_asClient()
                 if(this->getValidity() == false)
                 {
                     //return -1;
-                    throw SecureDataSocketIOException(*this, "Failed to read keys and public key from server.");
+                    throw SecureSocketException(DH_KEYRECV_EXC, "Failed to read keys and public key from server.");
                 }
                 // cout << "Read the primes and the server public key." << endl;
                 //Format checking.
@@ -503,13 +508,11 @@ int SecureDataSocket::performDHExchange_asClient()
                 this->writeSecureSocket();
                 if(this->getValidity() == false)
                 {
-                    throw SecureDataSocketIOException(*this, "Failed to send public key to server.");
+                    throw SecureSocketException(DH_KEYSEND_EXC, "Failed to send public key to server.");
                     // return -1;
                 }
                 // cout << "Sent the client public key." << endl;
                 if((this->keyContainer.isGoodPrimeQ() &&
-                    this->keyContainer.isGoodPrimeP() &&
-                    this->keyContainer.isGoodRemotePublic() &&
                     this->keyContainer.isGoodLocalPublic() &&
                     this->keyContainer.isGoodLocalPrivate() &&
                     this->getValidity()) == false)
@@ -538,13 +541,13 @@ int SecureDataSocket::performDHExchange_asClient()
         }
         else
         {
-            throw SecureDataSocketException(*this, "During performDHExchange_asClient(), getValidity() was false.");
+            throw SecureSocketException(DATA_SOCK_INVALID_EXC, "During performDHExchange_asClient(), getValidity() was false.");
         }
     }
-    catch (SecureSocketException& e)
+    catch (SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketDHException(*this, "DH key exchanged failed for the client.");
+        throw SecureSocketException(DH_PROC_EXC, "DH key exchanged failed for the client.");
     }
 }
 int SecureDataSocket::performDHExchange_asServer()
@@ -558,12 +561,14 @@ int SecureDataSocket::performDHExchange_asServer()
             this->readSecureSocket();
             if(this->getValidity() == false)
             {
-                return -3;
+                throw SecureSocketException(DATA_SOCK_INVALID_EXC, "Could not receive message.");
+                //return -3;
             }
             if(this->getBuffer() != "hello_exchangeDH")
             {
                 this->setValidity(false);
-                return -2;
+                throw SecureSocketException(DH_HELLORECV_EXC, "Hello reception failed.");
+                //return -2;
             }
             // cout << "Found a hello_exchangeDH" << endl;
             bool passFlag = false;
@@ -607,7 +612,7 @@ int SecureDataSocket::performDHExchange_asServer()
                 if(this->getValidity() == false)
                 {
                     //return -1;
-                    throw SecureDataSocketIOException(*this, "Could not send primes and public key to client.");
+                    throw SecureSocketException(DATA_SOCK_INVALID_EXC, "Could not send primes and public key to client.");
                 }
                 // cout << "Sent the primes and the server key pair." << endl;
                 //Third, receive the client's public key.
@@ -615,7 +620,7 @@ int SecureDataSocket::performDHExchange_asServer()
                 if(this->getValidity() == false)
                 {
                     // return -1;
-                    throw SecureDataSocketIOException(*this, "Could not read client public key.");
+                    throw SecureSocketException(DATA_SOCK_INVALID_EXC, "Could not read client public key.");
                 }
                 // cout << "Read the client's public key." << endl;
                 this->keyContainer.setRemotePublic(this->getBuffer());
@@ -648,13 +653,13 @@ int SecureDataSocket::performDHExchange_asServer()
         }
         else
         {
-            throw SecureDataSocketException(*this, "During performDHExchange_asServer(), getValidity() was false.");
+            throw SecureSocketException(DATA_SOCK_INVALID_EXC, "During performDHExchange_asServer(), getValidity() was false.");
         }
     }
-    catch (SecureSocketException& e)
+    catch (SecureSocketException e)
     {
         cout << e.what();
-        throw SecureDataSocketDHException(*this, "DH key exchanged failed for the server.");
+        throw SecureSocketException(DH_PROC_EXC, "DH key exchanged failed for the server.");
     }
 }
 
@@ -670,10 +675,10 @@ SecureListenSocket::SecureListenSocket(std::string serverIPAddress, std::string 
     	bindSecureSocket();
     	listenSecureSocket();
     }
-    catch(SecureListenSocketException e)
+    catch(SecureSocketException e)
     {
         cout << e.what();
-        throw SecureListenSocketException(*this, "Could not activate the listen socket.");
+        throw SecureSocketException(LISTEN_SOCK_EXC, "Could not activate the listen socket.");
     }
 }
 int SecureListenSocket::bindSecureSocket()
@@ -688,11 +693,11 @@ int SecureListenSocket::bindSecureSocket()
         servAddr.sin_port = htons(atoi(string_to_charArray(getSourcePortNumber())));
         result = bind(getSocketDescriptor(),(struct sockaddr*)&servAddr,sizeof(servAddr));
         if(result < 0)
-            throw SecureListenSocketBindException(*this, "Could not bind the secure socket.");
+            throw SecureSocketException(LISTEN_SOCK_BIND_EXC, "Could not bind the secure socket.");
     }
     else
     {
-        throw SecureListenSocketException(*this, "During bindSecureSocket(), getValidity() was false.");
+        throw SecureSocketException(LISTEN_SOCK_INVALID_EXC, "During bindSecureSocket(), getValidity() was false.");
     }
     return result;
 }
@@ -703,35 +708,49 @@ int SecureListenSocket::listenSecureSocket()
     {
         result = listen(getSocketDescriptor(),queueSize);
         if(result < 0)
-            throw SecureListenSocketListenException(*this, "Could not make the secure socket to listen.");
+            throw SecureSocketException(LISTEN_SOCK_LISTEN_EXC, "Could not make the secure socket to listen.");
     }
     else
     {
-        throw SecureListenSocketException(*this, "During listenSecureSocket(), getValidity() was false.");
+        throw SecureSocketException(LISTEN_SOCK_INVALID_EXC, "During listenSecureSocket(), getValidity() was false.");
     }
     return result;
 }
 SecureDataSocket SecureListenSocket::acceptSecureSocket()
 {
-    SecureDataSocket newSecureDataSocket;
-    newSecureDataSocket.setValidity(false);
     if(getValidity() == true)
     {
         struct sockaddr_in clientAddr;
         socklen_t clientAddrLen = sizeof(clientAddr);
         int s = accept(getSocketDescriptor(), (struct sockaddr *)&clientAddr, &clientAddrLen);
         if(s < 0)
-            throw SecureListenSocketAcceptException(*this, "Accepted a bad connection, or failed to accept altogether.");
+            throw SecureSocketException(LISTEN_SOCK_ACCEPT_EXC, "Accepted a bad connection, or failed to accept altogether.");
+        SecureDataSocket newSecureDataSocket;
+        std::cout << "Creating a new data socket." << endl;
+        newSecureDataSocket.setValidity(false);
         newSecureDataSocket.setSocketDescriptor(s);
         newSecureDataSocket.setSourceIPAddress(this->getSourceIPAddress());
         newSecureDataSocket.setSourcePortNumber(this->getSourcePortNumber());
         newSecureDataSocket.setTargetIPAddress(newSecureDataSocket.getTargetAddrFromSockDesc());
         newSecureDataSocket.setTargetPortNumber(newSecureDataSocket.getTargetPortFromSockDesc());
         newSecureDataSocket.setValidity(true);
+        newSecureDataSocket.performDHExchange_asServer();
+        return newSecureDataSocket;
     }
     else
     {
-        throw SecureListenSocketException(*this, "During acceptSecureSocket(), getValidity() was false.");
+        throw SecureSocketException(LISTEN_SOCK_INVALID_EXC, "During acceptSecureSocket(), getValidity() was false.");
     }
-    return newSecureDataSocket;
+}
+
+int isTimeout(int timeoutSec, SecureDataSocket socket)
+{
+    struct timeval tv;
+    tv.tv_sec = timeoutSec;
+    tv.tv_usec = 0;
+    fd_set sock;
+    FD_ZERO(&sock);
+    FD_SET(socket.getSocketDescriptor(), &sock);
+    int activity = select(socket.getSocketDescriptor() + 1, &sock, NULL, NULL, &tv);
+    return activity;
 }
