@@ -7,8 +7,10 @@
 
 #include <database/DbManager.hpp>
 #include <shared/logger.hpp>
+#include <iostream>
 
 using namespace sftp::db;
+using namespace std;
 
 int main(int argc, char** argv) {
 	if (argc < 2) {
