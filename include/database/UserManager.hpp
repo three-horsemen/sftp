@@ -28,6 +28,11 @@ private:
 	static int isAuthenticationValidCallback(void *data, int argc, char **argv,
 			char **azColName);
 public:
+	static constexpr const char* USERNAME = "USERNAME";
+	static constexpr const char* PASSWORD = "PASSWORD";
+	static constexpr const char* CREDENTIALS_VALID = "VALID";
+	static constexpr const char* CREDENTIALS_INVALID = "INVALID";
+
 	UserManager(DbHandler&);
 	virtual ~UserManager();
 
