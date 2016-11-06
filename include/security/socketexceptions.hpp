@@ -63,6 +63,8 @@ SecureSocketException
 #define DH_PROC_EXC 27
 #define DH_HELLORECV_EXC 28
 #define LISTEN_SOCK_INVALID_EXC 29
+#define DATA_SOCK_READ_TIMEOUT 30
+#define DATA_SOCK_CONNECT_TIMEOUT 31
 
 #include "security/cryptstr.hpp"
 
@@ -76,6 +78,6 @@ public:
 	SecureSocketException(int newErrorCode, std::string newMessage);
 	virtual const char* what() const throw()
 	{
-		return string_to_charArray("Exception: SecureSocketException. " + message + "\n");
+		return string_to_charArray("Exception: SecureSocketException. " + message + " || Error code: " + std::to_string(errorCode) + "\n");
 	}
 };

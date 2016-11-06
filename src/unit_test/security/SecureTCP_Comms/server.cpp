@@ -2,26 +2,35 @@
 //Multithreading functionality is enabled, but not limited.
 //The communications are secured over a Diffie-Hellman key exchange.
 #include "security/securesocket.hpp"
+// #include "shared/logger.hpp"
 #include <boost/thread.hpp>
 #include <iostream>
 using namespace std;
 
-void customthread(SecureDataSocket acceptedSecureDataSocket)
+void customthread(SecureDataSocket &acceptedSecureDataSocket)
 {
-	cout << "Negotiating with new client." << endl;
-	//acceptedSecureDataSocket.performDHExchange_asServer();
-	if(acceptedSecureDataSocket.getValidity() == true)
+	try
 	{
-		cout << "Diffie-Hellman key exchange with client " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!" << endl;
-		do
+		LOG_INFO << "Negotiating with new client.";
+		//acceptedSecureDataSocket.performDHExchange_asServer();
+		if(acceptedSecureDataSocket.getValidity() == true)
 		{
-			std::string message = acceptedSecureDataSocket.receiveAndDecrypt();
-			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " <--$ ";
-			cout << message << " $$$Mesg length: " << message.length() << " &&&Mesg size: " << message.size() << endl;
-			acceptedSecureDataSocket.encryptAndSend(message);
-			cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
-			cout << acceptedSecureDataSocket.getBuffer() << endl;
-		} while(acceptedSecureDataSocket.getAndDecryptBuffer() != "quit" && acceptedSecureDataSocket.getValidity() == true);
+			LOG_INFO << "Diffie-Hellman key exchange with client " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!";
+			do
+			{
+				std::string message = acceptedSecureDataSocket.receiveAndDecrypt();
+				cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " <--$ ";
+				cout << message << endl;
+				// cout << " $$$Mesg length: " << message.length() << " &&&Mesg size: " << message.size() << endl;
+				acceptedSecureDataSocket.encryptAndSend(message);
+				cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
+				cout << acceptedSecureDataSocket.getBuffer() << endl;
+			} while(acceptedSecureDataSocket.getAndDecryptBuffer() != "quit" && acceptedSecureDataSocket.getValidity() == true);
+		}
+	}
+	catch(SecureSocketException &e)
+	{
+		cout << e.what() << endl;
 	}
 	cout << "Closing the connection from " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << endl;
 	acceptedSecureDataSocket.destroySecureSocket();
@@ -35,12 +44,18 @@ int main()
 		cout << "Something went wrong!" << endl;
 		return -1;
 	}
-	while(true)
+	boost::thread_group threads;
+	do
 	{
+		if(threads.size() >= 2)
+			break;
 		cout << "Waiting to accept a connection..." << endl;
-		boost::thread t{customthread, serverSecureListenSocket.acceptSecureSocket()};
-	    //t.join();
-	}
+		threads.add_thread(new boost::thread {customthread, serverSecureListenSocket.acceptSecureSocket()});
+	} while(true);
+	serverSecureListenSocket.destroySecureSocket();
+	cout << "Not accepting any more connections." << endl;
+	LOG_INFO << "Waiting for all threads to join.";
+	threads.join_all();
 	cout << "Server program ending." << endl;
 	return 0;
 }
