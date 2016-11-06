@@ -68,5 +68,5 @@ add_executable(unit_test_permission_manager
 target_link_libraries(unit_test_permission_manager db)
 
 ###Sync Module
-add_executable(timeline_server src/sync/timeline/TimelineServer.cpp)
-target_link_libraries(timeline_server security ${SQLITE3_LIBRARIES})
+# add_executable(timeline_server src/sync/timeline/TimelineServer.cpp)
+# target_link_libraries(timeline_server security ${SQLITE3_LIBRARIES})
