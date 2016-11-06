@@ -8,14 +8,14 @@ char *string_to_charArray (std::string s)
     return d;                            // Return the new string
 }
 
-std::string charArray_to_string (char *s, int len)
+std::string charArray_to_string (const char *s, int len)
 {
     std::string res = "";
     for(int i = 0; i < len && s[i] != '\0'; i++)
         res.push_back(s[i]);
     return res;
 }
-std::string charArray_to_string (char *s)
+std::string charArray_to_string (const char *s)
 {
     int len = strlen(s);
     std::string res = "";

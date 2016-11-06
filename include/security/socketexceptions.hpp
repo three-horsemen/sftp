@@ -71,9 +71,9 @@ SecureSocketException
 class SecureSocketException : public std::exception
 {
 private:
-	int errorCode;
 	std::string message;
 public:
+	const int errorCode;
 	SecureSocketException(int newErrorCode);
 	SecureSocketException(int newErrorCode, std::string newMessage);
 	virtual const char* what() const throw()

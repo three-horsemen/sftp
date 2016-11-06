@@ -356,8 +356,8 @@ SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targ
     }
     catch(SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(DATA_SOCK_EXC);
+        // cout << e.what();
+        throw SecureSocketException(DATA_SOCK_EXC, charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 DHKeyContainer SecureDataSocket::getKeyContainer() const
@@ -521,8 +521,8 @@ void SecureDataSocket::setAndEncryptBuffer(std::string message)
     }
     catch(SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(DATA_SOCK_ENCR_EXC, "Could not set and encrypt the buffer.");
+        // cout << e.what();
+        throw SecureSocketException(DATA_SOCK_ENCR_EXC, "Could not set and encrypt the buffer.\n" + charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 
@@ -554,8 +554,8 @@ void SecureDataSocket::encryptAndSend(std::string message)
     }
     catch(SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the message.");
+        // cout << e.what();
+        throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the message.\n" + charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 
@@ -568,8 +568,8 @@ void SecureDataSocket::encryptAndSend()
     }
     catch(SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the existing buffer.");
+        // cout << e.what();
+        throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the existing buffer.\n" + charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 
@@ -584,8 +584,8 @@ std::string SecureDataSocket::receiveAndDecrypt()
     }
     catch(SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(DATA_SOCK_DECRRECV_EXC, "Could not receive and decrypt the message.");
+        // cout << e.what();
+        throw SecureSocketException(DATA_SOCK_DECRRECV_EXC, "Could not receive and decrypt the message.\n" + charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 
@@ -675,10 +675,10 @@ int SecureDataSocket::performDHExchange_asClient()
             throw SecureSocketException(DATA_SOCK_INVALID_EXC, "During performDHExchange_asClient(), getValidity() was false.");
         }
     }
-    catch (SecureSocketException e)
+    catch (SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(DH_PROC_EXC, "DH key exchanged failed for the client.");
+        // cout << e.what();
+        throw SecureSocketException(DH_PROC_EXC, "DH key exchanged failed for the client.\n" + charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 int SecureDataSocket::performDHExchange_asServer()
@@ -787,10 +787,10 @@ int SecureDataSocket::performDHExchange_asServer()
             throw SecureSocketException(DATA_SOCK_INVALID_EXC, "During performDHExchange_asServer(), getValidity() was false.");
         }
     }
-    catch (SecureSocketException e)
+    catch (SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(DH_PROC_EXC, "DH key exchanged failed for the server.");
+        // cout << e.what();
+        throw SecureSocketException(DH_PROC_EXC, "DH key exchanged failed for the server.\n" + charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 
@@ -812,8 +812,8 @@ SecureListenSocket::SecureListenSocket(std::string serverIPAddress, std::string 
     }
     catch(SecureSocketException &e)
     {
-        cout << e.what();
-        throw SecureSocketException(LISTEN_SOCK_EXC, "Could not activate the listen socket.");
+        // cout << e.what();
+        throw SecureSocketException(LISTEN_SOCK_EXC, "Could not activate the listen socket.\n" + charArray_to_string(e.what()) + "{" + std::to_string(e.errorCode) + "}\n");
     }
 }
 int SecureListenSocket::bindSecureSocket()
