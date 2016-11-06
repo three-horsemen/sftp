@@ -18,15 +18,13 @@ char* DbHandler::generateSQLiteError(string errorMessageStr) {
 
 }
 
-void DbHandler::throwExceptionIfNeeded(int rc, const char* errorMessage) {
-	if (rc != SQLITE_OK && rc != SQLITE_DONE) {
-		if (errorMessage != NULL) {
-			SQLiteException e(rc, errorMessage);
-			throw e;
-		} else {
-			SQLiteException e(rc, "Unspecified error occured");
-			throw e;
-		}
+string DbHandler::convertAndFreeIfNeeded(char* buffer) {
+	if (buffer != NULL) {
+		string s(buffer);
+		sqlite3_free((void*) buffer);
+		return s;
+	} else {
+		return string("");
 	}
 }
 
@@ -84,14 +82,20 @@ void DbHandler::executeRaw(std::string sql) {
 }
 
 void DbHandler::query(std::string sql,
-		int (*callback)(void*, int, char**, char**), bool &success) {
+		int (*callback)(void*, int, char**, char**), void* data) {
 	char* errorMessage = NULL;
 	LOG_DEBUG<<"Executing SQL: "+sql;
-	int rc = sqlite3_exec(db, sql.c_str(), callback, (void*) &success,
+	int rc = sqlite3_exec(db, sql.c_str(), callback, data, &errorMessage);
+	throwExceptionIfNeeded(rc, convertAndFreeIfNeeded(errorMessage));
+}
+
+template<class T> void DbHandler::query(std::string sql,
+		int (*callback)(void*, int, char**, char**), vector<T> &data) {
+	char* errorMessage = NULL;
+	LOG_DEBUG<<"Executing SQL: "+sql;
+	int rc = sqlite3_exec(db, sql.c_str(), callback, (void*) data,
 			&errorMessage);
-	throwExceptionIfNeeded(rc, errorMessage);
-	if (errorMessage == NULL)
-		sqlite3_free((void*) errorMessage);
+	throwExceptionIfNeeded(rc, convertAndFreeIfNeeded(errorMessage));
 }
 
 int DbHandler::rowCountCallback(void* data, int argc, char** argv,
@@ -119,9 +123,7 @@ int DbHandler::getRowCount(std::string sql) {
 	int count = -1;
 	int rc = sqlite3_exec(db, sql.c_str(), rowCountCallback, (void*) &count,
 			&errorMessage);
-	throwExceptionIfNeeded(rc, errorMessage);
-	if (errorMessage != NULL)
-		sqlite3_free((void*) errorMessage);
+	throwExceptionIfNeeded(rc, convertAndFreeIfNeeded(errorMessage));
 	LOG_DEBUG<< "Row count: "<<count;
 	return count;
 }
@@ -131,12 +133,10 @@ int DbHandler::executeUpdate(std::string sql) {
 	int count = -1;
 	sqlite3_stmt * stmt;
 	int rc = sqlite3_prepare(db, sql.c_str(), -1, &stmt, NULL);
-	const char* errorMessage = sqlite3_errmsg(db);
-	throwExceptionIfNeeded(rc, errorMessage);
+	throwExceptionIfNeeded(rc, charArray_to_string(sqlite3_errmsg(db)));
 
 	rc = sqlite3_step(stmt);
-	const char* errorMessage2 = sqlite3_errmsg(db);
-	throwExceptionIfNeeded(rc, errorMessage2);
+	throwExceptionIfNeeded(rc, charArray_to_string(sqlite3_errmsg(db)));
 	count = sqlite3_changes(db);
 	LOG_DEBUG<< "Affected "<<count<<" rows";
 	return count;
@@ -148,14 +148,13 @@ int DbHandler::executeInsert(std::string sql) {
 
 	sqlite3_stmt * stmt;
 	int rc = sqlite3_prepare(db, sql.c_str(), -1, &stmt, NULL);
-	const char* errorMessage = sqlite3_errmsg(db);
-	throwExceptionIfNeeded(rc, errorMessage);
+	throwExceptionIfNeeded(rc, charArray_to_string(sqlite3_errmsg(db)));
 
 	LOG_DEBUG<<"Executing prepared statement";
 	rc = sqlite3_step(stmt);
 	int errorCode = sqlite3_errcode(db);
 	const char* errorMessage2 = sqlite3_errmsg(db);
-	throwExceptionIfNeeded(rc, errorMessage2);
+	throwExceptionIfNeeded(rc, charArray_to_string(sqlite3_errmsg(db)));
 	count = sqlite3_changes(db);
 	LOG_DEBUG<< "Affected "<<count<<" rows";
 	return count;

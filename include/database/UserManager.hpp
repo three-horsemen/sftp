@@ -11,6 +11,8 @@
 #include <sqlite3.h>
 #include <string.h>
 
+#include <boost/algorithm/string.hpp>
+
 #include <shared/logger.hpp>
 #include <database/DbHandler.hpp>
 #include <database/SQLiteException.hpp>
@@ -23,22 +25,20 @@ using namespace std;
 class UserManager {
 private:
 	DbHandler &dbHandler;
-	static int registerUserCallback(void *data, int argc, char **argv,
-			char **azColName);
-	static int isAuthenticationValidCallback(void *data, int argc, char **argv,
-			char **azColName);
 public:
-	static constexpr const char* USERNAME = "USERNAME";
-	static constexpr const char* PASSWORD = "PASSWORD";
-	static constexpr const char* CREDENTIALS_VALID = "VALID";
-	static constexpr const char* CREDENTIALS_INVALID = "INVALID";
-	static constexpr const char* LOGOUT = "LOGOUT";
+	static constexpr const char USERNAME[] = "USERNAME";
+	static constexpr const char PASSWORD[] = "PASSWORD";
+	static constexpr const char CREDENTIALS_VALID[] = "VALID";
+	static constexpr const char CREDENTIALS_INVALID[] = "INVALID";
+	static constexpr const char LOGOUT[] = "logout";
 
 	UserManager(DbHandler&);
 	virtual ~UserManager();
 
 	bool registerUser(string, string);
 	bool isAuthenticationValid(string, string);
+
+	static bool isLogoutCommand(string);
 };
 
 } /* namespace db */

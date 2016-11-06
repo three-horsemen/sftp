@@ -15,7 +15,8 @@ std::string charArray_to_string (char *s, int len)
         res.push_back(s[i]);
     return res;
 }
-std::string charArray_to_string (char *s)
+
+std::string charArray_to_string (const char *s)
 {
     int len = strlen(s);
     std::string res = "";

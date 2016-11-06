@@ -17,14 +17,17 @@ DbManager::DbManager(DbHandler &dbHandler) :
 		dbHandler(dbHandler) {
 	userManager = NULL;
 	permissionManager = NULL;
+	timelineManager = NULL;
 
 	try {
 		LOG_DEBUG<< "Creating tables (if not exists)";
 		dbHandler.executeRaw(
-				"CREATE TABLE IF NOT EXISTS User (_id integer auto increment, username text not null unique, password text not null, sessionId text, PRIMARY KEY(_id));");
+				"CREATE TABLE IF NOT EXISTS User (_id INTEGER PRIMARY KEY AUTOINCREMENT, username text not null unique, password text not null, sessionId text);");
 		dbHandler.executeRaw(
-				"CREATE TABLE IF NOT EXISTS `ResourcePermission` (`resource` text not null, `owner` text not null, FOREIGN KEY(`owner`) REFERENCES `User`(`username`));");
-		LOG_DEBUG<< "Table ready";
+				"CREATE TABLE IF NOT EXISTS `ResourcePermission` (_id INTEGER PRIMARY KEY AUTOINCREMENT, `resource` text not null, `owner` text not null, FOREIGN KEY(`owner`) REFERENCES `User`(`username`));");
+		dbHandler.executeRaw(
+				"CREATE TABLE IF NOT EXISTS `Notification`(`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `recipient` INTEGER NOT NULL, `message` TEXT NOT NULL, sentAt INTEGER NOT NULL, deliveredAt INTEGER DEFAULT 0 CONSTRAINT future_delivery_time CHECK (deliveredAt >= strftime('%s', 'now') OR deliveredAt = 0), FOREIGN KEY (`recipient`) REFERENCES `User`(`_id`));");
+		LOG_DEBUG<< "Tables ready";
 	} catch (SQLiteException &e) {
 		throw SQLiteException(e.getErrorCode(),
 				string(
@@ -61,6 +64,15 @@ PermissionManager& DbManager::getPermissionManager() {
 	} else {
 		permissionManager = new PermissionManager(dbManager->dbHandler);
 		return *permissionManager;
+	}
+}
+
+TimelineManager& DbManager::getTimelineManager() {
+	if (timelineManager) {
+		return *timelineManager;
+	} else {
+		timelineManager = new TimelineManager(dbManager->dbHandler);
+		return *timelineManager;
 	}
 }
 

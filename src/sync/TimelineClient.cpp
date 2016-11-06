@@ -2,6 +2,9 @@
 #include "security/securesocket.hpp"
 
 #include <iostream>
+#include <exception>
+
+#include <boost/algorithm/string.hpp>
 
 #include <database/UserManager.hpp>
 
@@ -9,47 +12,66 @@ using namespace std;
 using namespace sftp::db;
 
 int main() {
-	{
-		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8081",
-		HOST_MODE_CLIENT);
+	SecureDataSocket clientSocket("127.0.0.1", "8081",
+	HOST_MODE_CLIENT);
 
+	string buffer;
+	try {
+
+		buffer = clientSocket.receiveAndDecrypt();
+		if (buffer != UserManager::USERNAME)
+			throw invalid_argument(
+					string("Unknown server response: ") + buffer);
+		string username = "";
+		cout << "Username: ";
+		getline(cin, username);
+		clientSocket.encryptAndSend(username);
+
+		buffer = clientSocket.receiveAndDecrypt();
+		if (buffer != UserManager::PASSWORD)
+			throw invalid_argument(
+					string("Unknown server response: ") + buffer);
+		string password = "";
+		cout << "Password: ";
+		getline(cin, password);
+		clientSocket.encryptAndSend(password);
+		buffer = clientSocket.receiveAndDecrypt();
+		if (buffer == UserManager::CREDENTIALS_VALID) {
+			cout << "Login success (To logout use the 'logout' command)\n";
+		} else {
+			throw invalid_argument("Invalid credentials");
+		}
+
+		cout << "Notifications:\n---\n";
 		try {
-			runtime_error unknownResponseException(
-					string("Unknown server response"));
-
-			string buffer;
-
-			buffer = clientSecureDataSocket.receiveAndDecrypt();
-			if (buffer != UserManager::USERNAME)
-				throw unknownResponseException;
-			string username = "";
-			cout << "Username: ";
-			getline(cin, username);
-			clientSecureDataSocket.encryptAndSend(username);
-
-			buffer = clientSecureDataSocket.receiveAndDecrypt();
-			if (buffer != UserManager::PASSWORD)
-				throw unknownResponseException;
-			string password = "";
-			cout << "Password: ";
-			getline(cin, password);
-			clientSecureDataSocket.encryptAndSend(password);
-			buffer = clientSecureDataSocket.receiveAndDecrypt();
-			if (buffer == UserManager::CREDENTIALS_VALID)
-				cout << "Login success\n";
-			else
-				cout << "Invalid credentials\n";
-		} catch (exception &e) {
-			cout << e.what() << endl;
+			while (clientSocket.getValidity() == true) {
+				string notification = clientSocket.receiveAndDecrypt();
+				cout << notification << endl;
+				clientSocket.encryptAndSend(notification);
+			}
+		} catch (SecureSocketException &e) {
+			throw SecureSocketException(e.errorCode,
+					string("Failed to received notification: ") + e.what());
 		}
 
-		string buffer = "";
-		while (buffer != UserManager::LOGOUT
-				&& clientSecureDataSocket.getValidity() == true) {
-
+		//TODO Handle sending of commands once secure socket timeouts are implemented:
+		while (clientSocket.getValidity() == true) {
+			cout << "$ ";
+			string command;
+			getline(cin, command);
+			if (UserManager::isLogoutCommand(command)) {
+				clientSocket.encryptAndSend(command);
+				throw runtime_error("Logging out...");
+				break;
+			} else {
+				cout << command << ": Command not found" << endl;
+			}
 		}
-		clientSecureDataSocket.destroySecureSocket();
+	} catch (exception &e) {
+		cout << e.what() << endl;
+		clientSocket.destroySecureSocket();
+		return 0;
 	}
-	cout << "Client program ending." << endl;
+	cout << "The server unexpectedly hung up" << endl;
 	return 0;
 }
