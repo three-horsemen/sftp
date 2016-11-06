@@ -10,7 +10,7 @@ ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 find_path(SQLITE3_INCLUDE_DIR NAMES sqlite3.h)
 find_library(SQLITE3_LIBRARY NAMES sqlite3)
 #find_package( SQLite3 COMPONENTS REQUIRED )
-find_package( Boost 1.54 COMPONENTS log log_setup thread system REQUIRED )
+find_package( Boost 1.54 COMPONENTS log log_setup thread system date_time REQUIRED )
 
 include_directories(include ${Boost_INCLUDE_DIRS})
 
@@ -53,7 +53,8 @@ add_library(db
 	src/database/DbManager.cpp
 	src/database/UserManager.cpp
 	src/database/PermissionManager.cpp
-	src/database/UserManager.cpp
+	src/database/TimelineManager.cpp
+	src/database/Notification.cpp
 	)
 target_link_libraries(db shared security ${SQLITE3_LIBRARY})
 

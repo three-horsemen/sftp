@@ -16,6 +16,7 @@
 #include <sqlite3.h>
 
 #include <shared/logger.hpp>
+#include <security/cryptstr.hpp>
 
 #include <database/SQLiteException.hpp>
 
@@ -31,13 +32,16 @@ class DbHandler {
 	void throwExceptionIfNeeded(int rc, string errorMessage);
 	static int pragmaCallback(void*, int, char**, char**);
 	char* generateSQLiteError(string);
+	string convertAndFreeIfNeeded(char*);
 public:
 	DbHandler(std::string, bool);
 	virtual ~DbHandler();
 
 	void executeRaw(std::string sql);
 	void query(std::string sql, int (*callback)(void*, int, char**, char**),
-			bool &success);
+			void* data);
+	template<class T> void query(std::string sql,
+			int (*callback)(void*, int, char**, char**), vector<T> &data);
 	int getRowCount(std::string sql);
 	int executeUpdate(std::string sql);
 	int executeInsert(std::string sql);
