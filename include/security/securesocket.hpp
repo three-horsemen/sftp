@@ -19,7 +19,7 @@ using namespace std;
 
 #define HOST_MODE_SERVER 100
 #define HOST_MODE_CLIENT 101
-
+#define DEFAULT_TIMEOUT_VALUE 5
 class DHKeyContainer
 {
 private:
@@ -76,47 +76,58 @@ private:
 public:
     SecureSocket();
     void setValidity(bool newValidity);
-    bool getValidity();
-    int getSocketDescriptor();
+    bool getValidity() const;
+    int getSocketDescriptor() const;
     void setSocketDescriptor(int newSocketDescriptor);
-    std::string getTargetIPAddress();
+    std::string getTargetIPAddress() const;
     void setTargetIPAddress(std::string newTargetIPAddress);
-    std::string getTargetPortNumber();
+    std::string getTargetPortNumber() const;
     void setTargetPortNumber(std::string newTargetPortNumber);
 
-    std::string getSourceIPAddress();
+    std::string getSourceIPAddress() const;
     void setSourceIPAddress(std::string newSourceIPAddress);
-    std::string getSourcePortNumber();
+    std::string getSourcePortNumber() const;
     void setSourcePortNumber(std::string newSourcePortNumber);
 
-    std::string getBuffer();
+    std::string getBuffer() const;
     void setBuffer(std::string newBuffer);
 
     int initSecureSocket();
     int destroySecureSocket();
 
-    std::string getTargetAddrFromSockDesc();
-    std::string getTargetPortFromSockDesc();
-    std::string getSourceAddrFromSockDesc();
-    std::string getSourcePortFromSockDesc();
+    std::string getTargetAddrFromSockDesc() const;
+    std::string getTargetPortFromSockDesc() const;
+    std::string getSourceAddrFromSockDesc() const;
+    std::string getSourcePortFromSockDesc() const;
 
-    //~SecureSocket();
+    std::string getTargetAddrFromSockDesc(int) const;
+    std::string getTargetPortFromSockDesc(int) const;
+    std::string getSourceAddrFromSockDesc(int) const;
+    std::string getSourcePortFromSockDesc(int) const;
+
+    // ~SecureSocket();
 };
 
 class SecureDataSocket : public SecureSocket
 {
 private:
     DHKeyContainer keyContainer;
+    int timeoutSecValue;
 public:
+    int getTimeoutSecValue() const;
+    void setTimeoutSecValue(int newTimeoutSecValue);
     SecureDataSocket();
+    // SecureDataSocket(const SecureDataSocket&);
+    SecureDataSocket(int socketDescriptor);
     SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode);
-    DHKeyContainer getKeyContainer();
+    DHKeyContainer getKeyContainer() const;
     int connectSecureSocket();
+    int isTimeout(int timeoutSec, int socket);
     int readSecureSocket();
     int writeSecureSocket();
 
     void setAndEncryptBuffer(std::string message);
-    std::string getAndDecryptBuffer();
+    std::string getAndDecryptBuffer() const;
     void encryptAndSend(std::string message);
     void encryptAndSend();
     std::string receiveAndDecrypt();

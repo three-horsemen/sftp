@@ -127,8 +127,12 @@ bool DHKeyContainer::isGoodSharedSecret()
 SecureSocket::SecureSocket()
 {
     setValidity(false);
+    LOG_DEBUG << "Creating a new, empty SecureSocket() #"
+        << getSocketDescriptor() << " assigned to "
+        << getTargetAddrFromSockDesc() << ":"
+        << getTargetPortFromSockDesc();
 }
-bool SecureSocket::getValidity()
+bool SecureSocket::getValidity() const
 {
     return valid;
 }
@@ -136,7 +140,7 @@ void SecureSocket::setValidity(bool newValidity)
 {
     valid = newValidity;
 }
-int SecureSocket::getSocketDescriptor()
+int SecureSocket::getSocketDescriptor() const
 {
     return socketDescriptor;
 }
@@ -144,7 +148,7 @@ void SecureSocket::setSocketDescriptor(int newSocketDescriptor)
 {
     socketDescriptor = newSocketDescriptor;
 }
-string SecureSocket::getTargetIPAddress()
+string SecureSocket::getTargetIPAddress() const
 {
     return targetIPAddress;
 }
@@ -152,7 +156,7 @@ void SecureSocket::setTargetIPAddress(string newTargetIPAddress)
 {
     targetIPAddress = newTargetIPAddress;
 }
-string SecureSocket::getTargetPortNumber()
+string SecureSocket::getTargetPortNumber() const
 {
     return targetPortNumber;
 }
@@ -160,7 +164,7 @@ void SecureSocket::setTargetPortNumber(string newTargetPortNumber)
 {
     targetPortNumber = newTargetPortNumber;
 }
-string SecureSocket::getSourceIPAddress()
+string SecureSocket::getSourceIPAddress() const
 {
     return sourceIPAddress;
 }
@@ -168,7 +172,7 @@ void SecureSocket::setSourceIPAddress(string newSourceIPAddress)
 {
     sourceIPAddress = newSourceIPAddress;
 }
-string SecureSocket::getSourcePortNumber()
+string SecureSocket::getSourcePortNumber() const
 {
     return sourcePortNumber;
 }
@@ -176,7 +180,7 @@ void SecureSocket::setSourcePortNumber(string newSourcePortNumber)
 {
     sourcePortNumber = newSourcePortNumber;
 }
-string SecureSocket::getBuffer()
+string SecureSocket::getBuffer() const
 {
     return buffer;
 }
@@ -186,7 +190,9 @@ void SecureSocket::setBuffer(string newBuffer)
 }
 int SecureSocket::initSecureSocket()
 {
+    LOG_DEBUG << "Attempting to create the socket.";
     setSocketDescriptor(socket(PF_INET,SOCK_STREAM,0));
+    LOG_DEBUG << "Made the socket.";
     if(getSocketDescriptor() < 0)
     {
         throw SecureSocketException(SOCK_CREATE_EXC);
@@ -216,25 +222,25 @@ int SecureSocket::destroySecureSocket()
 {
     int result = close(getSocketDescriptor());
     if(result < 0)
-        throw SecureSocketException(SOCK_CLOSE_EXC);
+        throw SecureSocketException(SOCK_CLOSE_EXC, std::to_string(result));
     setValidity(false);
     return result;
 }
-string SecureSocket::getSourceAddrFromSockDesc()
+string SecureSocket::getSourceAddrFromSockDesc() const
 {
     struct sockaddr tempSockAddr;
     socklen_t tempLen = sizeof(tempSockAddr);
     getsockname(getSocketDescriptor(), &tempSockAddr, &tempLen);
     return charArray_to_string(inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr));
 }
-string SecureSocket::getSourcePortFromSockDesc()
+string SecureSocket::getSourcePortFromSockDesc() const
 {
     struct sockaddr tempSockAddr;
     socklen_t tempLen = sizeof(tempSockAddr);
     getsockname(getSocketDescriptor(), &tempSockAddr, &tempLen);
     return int_to_string(ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port));
 }
-string SecureSocket::getTargetAddrFromSockDesc()
+string SecureSocket::getTargetAddrFromSockDesc() const
 {
     struct sockaddr tempSockAddr;
     socklen_t tempLen = sizeof(tempSockAddr);
@@ -242,7 +248,7 @@ string SecureSocket::getTargetAddrFromSockDesc()
     string result = charArray_to_string(inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr));
     return result;
 }
-string SecureSocket::getTargetPortFromSockDesc()
+string SecureSocket::getTargetPortFromSockDesc() const
 {
     struct sockaddr tempSockAddr;
     socklen_t tempLen = sizeof(tempSockAddr);
@@ -250,28 +256,93 @@ string SecureSocket::getTargetPortFromSockDesc()
     string result = int_to_string(ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port));
     return result;
 }
-/*
-SecureSocket::~SecureSocket()
+
+string SecureSocket::getSourceAddrFromSockDesc(int s) const
 {
-    if(getValidity() == true)
-    {
-        cout << "Closing socket #"
-            << getSocketDescriptor() << " assigned to "
-            << getTargetAddrFromSockDesc() << ":"
-            << getTargetPortFromSockDesc() << endl;
-        destroySecureSocket();
-        setValidity(false);
-    }
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getsockname(s, &tempSockAddr, &tempLen);
+    return charArray_to_string(inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr));
 }
-*/
+string SecureSocket::getSourcePortFromSockDesc(int s) const
+{
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getsockname(s, &tempSockAddr, &tempLen);
+    return int_to_string(ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port));
+}
+string SecureSocket::getTargetAddrFromSockDesc(int s) const
+{
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getpeername(s, &tempSockAddr, &tempLen);
+    string result = charArray_to_string(inet_ntoa(((struct sockaddr_in*)&tempSockAddr)->sin_addr));
+    return result;
+}
+string SecureSocket::getTargetPortFromSockDesc(int s) const
+{
+    struct sockaddr tempSockAddr;
+    socklen_t tempLen = sizeof(tempSockAddr);
+    getpeername(s, &tempSockAddr, &tempLen);
+    string result = int_to_string(ntohs(((struct sockaddr_in*)&tempSockAddr)->sin_port));
+    return result;
+}
+
+// SecureSocket::~SecureSocket()
+// {
+//     if(getValidity() == true)
+//     {
+//         LOG_INFO << "Closing socket #"
+//             << getSocketDescriptor() << " assigned to "
+//             << getTargetAddrFromSockDesc() << ":"
+//             << getTargetPortFromSockDesc();
+//         LOG_INFO << "getValidity: " << getValidity();
+//         destroySecureSocket();
+//         setValidity(false);
+//     }
+// }
+
+
+int SecureDataSocket::getTimeoutSecValue() const
+{
+    return timeoutSecValue;
+}
+void SecureDataSocket::setTimeoutSecValue(int newTimeoutSecValue)
+{
+    timeoutSecValue = newTimeoutSecValue;
+}
 SecureDataSocket::SecureDataSocket()
 {
-    //cout << "Calling the constructor SecureDataSocket() wasn't supposed to happen." << endl;
+    setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
+    LOG_WARNING << "Calling the constructor SecureDataSocket() wasn't supposed to happen.";
+}
+// SecureDataSocket::SecureDataSocket(const SecureDataSocket &secureDataSocket)
+// {
+//     LOG_DEBUG << "Calling the copy constructor.";
+//     setValidity(secureDataSocket.getValidity());
+//     setSocketDescriptor(secureDataSocket.getSocketDescriptor());
+//     setTargetIPAddress(secureDataSocket.getTargetIPAddress());
+//     setTargetPortNumber(secureDataSocket.getTargetPortNumber());
+//     setSourceIPAddress(secureDataSocket.getSourceIPAddress());
+//     setSourcePortNumber(secureDataSocket.getSourcePortNumber());
+//     setBuffer(secureDataSocket.getBuffer());
+// }
+SecureDataSocket::SecureDataSocket(int socketDescriptor)
+{
+    setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
+    setValidity(true);
+    setSocketDescriptor(socketDescriptor);
+    setSourceIPAddress(getSourceAddrFromSockDesc(socketDescriptor));
+    setSourcePortNumber(getSourcePortFromSockDesc(socketDescriptor));
+    setTargetIPAddress(getTargetAddrFromSockDesc(socketDescriptor));
+    setTargetPortNumber(getTargetPortFromSockDesc(socketDescriptor));
+    setValidity(true);
 }
 SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode)
 {
     try
     {
+        setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
         initSecureSocket();
     	setTargetIPAddress(targetIPAddress);
     	setTargetPortNumber(targetPortNumber);
@@ -289,7 +360,7 @@ SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targ
         throw SecureSocketException(DATA_SOCK_EXC);
     }
 }
-DHKeyContainer SecureDataSocket::getKeyContainer()
+DHKeyContainer SecureDataSocket::getKeyContainer() const
 {
     return keyContainer;
 }
@@ -309,6 +380,11 @@ int SecureDataSocket::connectSecureSocket()
         //free(targetIPAddress_charArray);
 
 
+        if(isTimeout(getTimeoutSecValue(), getSocketDescriptor()) <= 0)
+        {
+            // printf("The server has timed out!\n");
+            throw SecureSocketException(DATA_SOCK_CONNECT_TIMEOUT);
+        }
         result = connect(getSocketDescriptor(),(struct sockaddr*)&server_address,sizeof(server_address));
         if(result < 0)
         {
@@ -327,6 +403,21 @@ int SecureDataSocket::connectSecureSocket()
         throw SecureSocketException(DATA_SOCK_INVALID_EXC);
     }
     return result;
+}
+int SecureDataSocket::isTimeout(int timeoutSec, int socket)
+{
+	struct timeval tv;
+    /* Wait up to five seconds. */
+    tv.tv_sec = timeoutSec;
+    tv.tv_usec = 0;
+
+    fd_set sock;
+    FD_ZERO(&sock);
+    FD_SET(socket,&sock);
+    int activity = select(socket+1, &sock, NULL, NULL, &tv);
+    //int activity = select(s, &sock, NULL, NULL, &tv);
+    //printf("\nActivity is %d.\n", activity);
+    return activity;
 }
 int SecureDataSocket::readSecureSocket()
 {
@@ -348,18 +439,25 @@ int SecureDataSocket::readSecureSocket()
         }
         int sizeOfIncomingMessage = atoi(buffer_char);
         int numberOfReadBytes = 0;
-        while(numberOfReadBytes < sizeOfIncomingMessage))
+        int bufferReceiveSize = 255;
+        while(numberOfReadBytes < sizeOfIncomingMessage)
         {
-            len = read(getSocketDescriptor(), buffer_char, sizeof(buffer_char));
+            bzero(buffer_char,256);
+            if(isTimeout(getTimeoutSecValue(), getSocketDescriptor()) <= 0)
+            {
+            	// printf("The server has timed out!\n");
+                throw SecureSocketException(DATA_SOCK_READ_TIMEOUT);
+            }
+            len = read(getSocketDescriptor(), buffer_char, bufferReceiveSize);
             if(len <= 0)
             {
                 break;
             }
             temp_str += charArray_to_string(buffer_char, strlen(buffer_char));
             numberOfReadBytes += len;
-            LOG_DEBUG << "Read byte count: " << (len) << "\n";
+            // LOG_DEBUG << "Read byte count: " << (len) << ". temp_str.size():" << temp_str.size();
         }
-        LOG_DEBUG << "Out of the while-loop.";
+        // LOG_DEBUG << "Out of the while-loop. temp_str.size():" << temp_str.size();
         if(temp_str.size() <= 0)
         {
             setValidity(false);
@@ -378,25 +476,29 @@ int SecureDataSocket::readSecureSocket()
 int SecureDataSocket::writeSecureSocket()
 {
     int len = -2;
+    //Send the length of the message.
+    len = write(getSocketDescriptor(), string_to_charArray(std::to_string(getBuffer().length())), 16);
+
     if(getValidity() == true)
     {
         if(getBuffer().length() <= 0)
             throw SecureSocketException(DATA_SOCK_WRITE_EMPTYBUFFER_EXC, "The buffer is empty.");
-
-        for (unsigned i = 0; i < getBuffer().length(); i += 20)
+        int bufferSendSize = 255;
+        for (unsigned i = 0; i < getBuffer().length(); i += bufferSendSize)
         {
-            char* buffer_char = string_to_charArray(getBuffer().substr(i, 20));
+            char* buffer_char = string_to_charArray(getBuffer().substr(i, bufferSendSize));
             len = write(getSocketDescriptor(), buffer_char, strlen(buffer_char));
+            // sleep(7); //Just for testing the timeout on the reading side.
             if(len <= 0)
             {
                 setValidity(false);
                 throw SecureSocketException(DATA_SOCK_WRITE_EMPTY_EXC, "Perhaps, the server went offline?");
                 //printf("Perhaps, the server went offline?\n");
             }
-            LOG_DEBUG << "Sent byte count: " << (len) << "\n";
+            // LOG_DEBUG << "Sent byte count: " << (len);
             free(buffer_char);
         }
-        LOG_DEBUG << "Out of the for-loop.";
+        // LOG_DEBUG << "Out of the for-loop.";
     }
     else
     {
@@ -424,7 +526,7 @@ void SecureDataSocket::setAndEncryptBuffer(std::string message)
     }
 }
 
-std::string SecureDataSocket::getAndDecryptBuffer()
+std::string SecureDataSocket::getAndDecryptBuffer() const
 {
     if(getKeyContainer().getValidity() == false)
         throw SecureSocketException(DH_CONT_INVALID_EXC, "The key container was found invalid, while trying to decrypt the buffer.");
@@ -693,7 +795,11 @@ int SecureDataSocket::performDHExchange_asServer()
 }
 
 const int SecureListenSocket::queueSize = 16;
-SecureListenSocket::SecureListenSocket(){} //Is this safe? MARK
+SecureListenSocket::SecureListenSocket()
+{
+    setValidity(false);
+    LOG_WARNING << "Created an empty SecureListenSocket()";
+} //Is this safe? MARK
 SecureListenSocket::SecureListenSocket(std::string serverIPAddress, std::string serverPortNumber)
 {
     try
@@ -732,6 +838,7 @@ int SecureListenSocket::bindSecureSocket()
 }
 int SecureListenSocket::listenSecureSocket()
 {
+    LOG_INFO << "Creating a new listen socket.";
     int result = -2;
     if(getValidity() == true)
     {
@@ -754,32 +861,23 @@ SecureDataSocket SecureListenSocket::acceptSecureSocket()
         int s = accept(getSocketDescriptor(), (struct sockaddr *)&clientAddr, &clientAddrLen);
         if(s < 0)
             throw SecureSocketException(LISTEN_SOCK_ACCEPT_EXC, "Accepted a bad connection, or failed to accept altogether.");
-        SecureDataSocket newSecureDataSocket;
-        std::cout << "Creating a new data socket." << endl;
-        newSecureDataSocket.setValidity(false);
-        newSecureDataSocket.setSocketDescriptor(s);
-        newSecureDataSocket.setSourceIPAddress(this->getSourceIPAddress());
-        newSecureDataSocket.setSourcePortNumber(this->getSourcePortNumber());
-        newSecureDataSocket.setTargetIPAddress(newSecureDataSocket.getTargetAddrFromSockDesc());
-        newSecureDataSocket.setTargetPortNumber(newSecureDataSocket.getTargetPortFromSockDesc());
-        newSecureDataSocket.setValidity(true);
+        // SecureDataSocket *newSecureDataSocket = new SecureDataSocket();
+        LOG_TRACE << "MarkAlpha1";
+        LOG_INFO << "Creating a new data socket.";
+        // newSecureDataSocket->setValidity(false);
+        // newSecureDataSocket->setSocketDescriptor(s);
+        // newSecureDataSocket->setSourceIPAddress(this->getSourceIPAddress());
+        // newSecureDataSocket->setSourcePortNumber(this->getSourcePortNumber());
+        // newSecureDataSocket->setTargetIPAddress(newSecureDataSocket->getTargetAddrFromSockDesc());
+        // newSecureDataSocket->setTargetPortNumber(newSecureDataSocket->getTargetPortFromSockDesc());
+        // newSecureDataSocket->setValidity(true);
+        SecureDataSocket newSecureDataSocket(s);
         newSecureDataSocket.performDHExchange_asServer();
+        LOG_INFO << "Created a new valid data socket.";
         return newSecureDataSocket;
     }
     else
     {
         throw SecureSocketException(LISTEN_SOCK_INVALID_EXC, "During acceptSecureSocket(), getValidity() was false.");
     }
-}
-
-int isTimeout(int timeoutSec, SecureDataSocket socket)
-{
-    struct timeval tv;
-    tv.tv_sec = timeoutSec;
-    tv.tv_usec = 0;
-    fd_set sock;
-    FD_ZERO(&sock);
-    FD_SET(socket.getSocketDescriptor(), &sock);
-    int activity = select(socket.getSocketDescriptor() + 1, &sock, NULL, NULL, &tv);
-    return activity;
 }

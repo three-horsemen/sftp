@@ -4,6 +4,7 @@
 
 int main()
 {
+	try
 	{
 		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8081", HOST_MODE_CLIENT);
 		std::string buffer;
@@ -17,6 +18,10 @@ int main()
 			std::cout << clientSecureDataSocket.getAndDecryptBuffer() << std::endl; //The buffer is still in an encrypted state.
 		}
 		clientSecureDataSocket.destroySecureSocket();
+	}
+	catch(SecureSocketException &e)
+	{
+		cout << e.what();
 	}
 	std::cout << "Client program ending." << std::endl;
 	return 0;
