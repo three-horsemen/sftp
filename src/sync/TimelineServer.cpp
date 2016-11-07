@@ -117,11 +117,19 @@ int main() {
 		LOG_ERROR<< "Something went wrong!" << endl;
 		return -1;
 	}
+	boost::thread_group threads;
 	while (true) {
 		LOG_DEBUG<< "Waiting to accept a connection..." << endl;
-		boost::thread t {sftp::timelineServerThread,
-			serverSecureListenSocket.acceptSecureSocket()};
+		// boost::thread t {sftp::timelineServerThread,
+		// 	serverSecureListenSocket.acceptSecureSocket()};
+		threads.add_thread(new boost::thread {
+			sftp::timelineServerThread,
+			serverSecureListenSocket.acceptSecureSocket()});
 	}
-	LOG_DEBUG<<"Timeline server shutting down";
+	serverSecureListenSocket.destroySecureSocket();
+	LOG_DEBUG<<"Not accepting any more connections.";
+	LOG_INFO<<"Waiting for all threads to join.";
+	threads.join_all();
+	LOG_DEBUG<<"Timeline server shutting down.";
 	return 0;
 }
