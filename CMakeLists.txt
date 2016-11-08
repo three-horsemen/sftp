@@ -30,6 +30,7 @@ add_library(security
 	src/security/cryptstr.cpp
 	src/security/encrypt.cpp
 	src/security/rsa.cpp
+		src/security/DHContainer.cpp
 	src/security/securesocket.cpp
 	src/security/socketexceptions.cpp
 	)

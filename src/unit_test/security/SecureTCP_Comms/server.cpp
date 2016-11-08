@@ -2,18 +2,16 @@
 //Multithreading functionality is enabled, but not limited.
 //The communications are secured over a Diffie-Hellman key exchange.
 #include "security/securesocket.hpp"
-// #include "shared/logger.hpp"
 #include <boost/thread.hpp>
-#include <iostream>
+
 using namespace std;
 
-void customthread(SecureDataSocket &acceptedSecureDataSocket)
+void serverThread(SecureDataSocket &acceptedSecureDataSocket)
 {
 	try
 	{
 		LOG_INFO << "Negotiating with new client.";
-		//acceptedSecureDataSocket.performDHExchange_asServer();
-		if(acceptedSecureDataSocket.getValidity() == true)
+		if (acceptedSecureDataSocket.getValidity())
 		{
 			LOG_INFO << "Diffie-Hellman key exchange with client " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!";
 			do
@@ -25,7 +23,8 @@ void customthread(SecureDataSocket &acceptedSecureDataSocket)
 				acceptedSecureDataSocket.encryptAndSend(message);
 				cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
 				cout << acceptedSecureDataSocket.getBuffer() << endl;
-			} while(acceptedSecureDataSocket.getAndDecryptBuffer() != "quit" && acceptedSecureDataSocket.getValidity() == true);
+			} while (acceptedSecureDataSocket.getAndDecryptBuffer() != "quit" &&
+					 acceptedSecureDataSocket.getValidity());
 		}
 	}
 	catch(SecureSocketException &e)
@@ -39,7 +38,7 @@ void customthread(SecureDataSocket &acceptedSecureDataSocket)
 int main()
 {
 	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8081");
-	if(serverSecureListenSocket.getValidity() == false)
+	if (!serverSecureListenSocket.getValidity())
 	{
 		cout << "Something went wrong!" << endl;
 		return -1;
@@ -50,7 +49,7 @@ int main()
 		if(threads.size() >= 2)
 			break;
 		cout << "Waiting to accept a connection..." << endl;
-		threads.add_thread(new boost::thread {customthread, serverSecureListenSocket.acceptSecureSocket()});
+		threads.add_thread(new boost::thread{serverThread, serverSecureListenSocket.acceptSecureSocket()});
 	} while(true);
 	serverSecureListenSocket.destroySecureSocket();
 	cout << "Not accepting any more connections." << endl;

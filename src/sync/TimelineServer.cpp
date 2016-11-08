@@ -8,13 +8,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/chrono.hpp>
 
-#include <iostream>
-
-#include <shared/logger.hpp>
-
 #include <database/DbManager.hpp>
-#include <database/UserManager.hpp>
-#include <database/TimelineManager.hpp>
 
 namespace sftp {
 
@@ -114,12 +108,12 @@ int main() {
 	sftp::DbManager::initializeStaticDbManager("sftp.db");
 	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8081");
 	if (serverSecureListenSocket.getValidity() == false) {
-		LOG_ERROR<< "Something went wrong!" << endl;
+		LOG_ERROR << "Something went wrong!";
 		return -1;
 	}
 	boost::thread_group threads;
 	while (true) {
-		LOG_DEBUG<< "Waiting to accept a connection..." << endl;
+		LOG_DEBUG << "Waiting to accept a connection...";
 		// boost::thread t {sftp::timelineServerThread,
 		// 	serverSecureListenSocket.acceptSecureSocket()};
 		threads.add_thread(new boost::thread {
