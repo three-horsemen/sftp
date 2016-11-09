@@ -18,29 +18,34 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-using namespace std;
-using namespace db;
+		using namespace std;
+		using namespace db;
 
-class TimelineManager {
-private:
-	DbHandler &dbHandler;
-	static int pendingUsersCallback(void*, int, char**, char**);
-public:
-	static constexpr const char* SERVER_ERROR = "SERVER_ERROR";
+		class TimelineManager {
+		private:
+			DbHandler &dbHandler;
 
-	TimelineManager(DbHandler&);
-	virtual ~TimelineManager();
+			static int pendingUsersCallback(void *, int, char **, char **);
 
-	void notifyUser(string, string);
-	void notifyOwners(string, string);
+		public:
+			static constexpr const char *SERVER_ERROR = "SERVER_ERROR";
 
-	vector<Notification> getPendingNotifications(int);
-	void markAsNotified(long _id, long);
-};
+			TimelineManager(DbHandler &);
 
-} /* namespace db */
+			virtual ~TimelineManager();
+
+			void notifyUser(string, string);
+
+			void notifyOwners(string, string);
+
+			vector<Notification> getPendingNotifications(int);
+
+			void markAsNotified(long _id, long);
+		};
+
+	} /* namespace db */
 
 } /* namespace sftp */
 

@@ -1,9 +1,6 @@
 //Client program to keep talking to a server until a "quit" message is sent.
 #include "security/securesocket.hpp"
 
-#include <iostream>
-#include <exception>
-
 #include <boost/algorithm/string.hpp>
 
 #include <database/UserManager.hpp>
@@ -13,7 +10,7 @@ using namespace sftp::db;
 
 int main() {
 	SecureDataSocket clientSocket("127.0.0.1", "8081",
-	HOST_MODE_CLIENT);
+								  HOST_MODE_CLIENT);
 
 	string buffer;
 	try {
@@ -44,25 +41,24 @@ int main() {
 
 		cout << "Notifications:\n---\n";
 		try {
-			while (clientSocket.getValidity() == true) {
+			while (clientSocket.getValidity()) {
 				string notification = clientSocket.receiveAndDecrypt();
 				cout << notification << endl;
 				clientSocket.encryptAndSend(notification);
 			}
 		} catch (SecureSocketException &e) {
 			throw SecureSocketException(e.errorCode,
-					string("Failed to received notification: ") + e.what());
+										string("Failed to received notification: ") + e.what());
 		}
 
 		//TODO Handle sending of commands once secure socket timeouts are implemented:
-		while (clientSocket.getValidity() == true) {
+		while (clientSocket.getValidity()) {
 			cout << "$ ";
 			string command;
 			getline(cin, command);
 			if (UserManager::isLogoutCommand(command)) {
 				clientSocket.encryptAndSend(command);
 				throw runtime_error("Logging out...");
-				break;
 			} else {
 				cout << command << ": Command not found" << endl;
 			}

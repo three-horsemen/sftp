@@ -18,26 +18,32 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-class DbManager {
-private:
-	static DbManager* dbManager;
-	DbHandler dbHandler;
-	UserManager* userManager;
-	TimelineManager* timelineManager;
-	PermissionManager* permissionManager;
-public:
-	DbManager(DbHandler&);
-	virtual ~DbManager();
-	UserManager& getUserManager();
-	PermissionManager& getPermissionManager();
-	TimelineManager& getTimelineManager();
-	static DbManager* getDb();
-	static void initializeStaticDbManager(std::string);
-};
+		class DbManager {
+		private:
+			static DbManager *dbManager;
+			DbHandler dbHandler;
+			UserManager *userManager;
+			TimelineManager *timelineManager;
+			PermissionManager *permissionManager;
+		public:
+			DbManager(DbHandler &);
 
-}
+			virtual ~DbManager();
+
+			UserManager &getUserManager();
+
+			PermissionManager &getPermissionManager();
+
+			TimelineManager &getTimelineManager();
+
+			static DbManager *getDb();
+
+			static void initializeStaticDbManager(std::string);
+		};
+
+	}
 
 } /* namespace manas_nav_common */
 

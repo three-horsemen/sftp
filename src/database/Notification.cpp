@@ -9,28 +9,28 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-Notification::Notification(long _id, string message, long sentAt) :
-		_id(_id), message(message), sentAt(sentAt) {
-}
+		Notification::Notification(long _id, string message, long sentAt) :
+				_id(_id), message(message), sentAt(sentAt) {
+		}
 
-Notification::~Notification() {
-	// TODO Auto-generated destructor stub
-}
+		Notification::~Notification() {
+			// TODO Auto-generated destructor stub
+		}
 
-long Notification::getId() {
-	return _id;
-}
+		long Notification::getId() {
+			return _id;
+		}
 
-string Notification::getMessage() {
-	return message;
-}
+		string Notification::getMessage() {
+			return message;
+		}
 
-long Notification::getSentAt() {
-	return sentAt;
-}
+		long Notification::getSentAt() {
+			return sentAt;
+		}
 
-} /* namespace db */
+	} /* namespace db */
 
 } /* namespace sftp */

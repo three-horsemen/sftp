@@ -15,25 +15,28 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-using namespace std;
+		using namespace std;
 
-class SQLiteException: public exception {
-private:
-	const int rc;
-	const string errorMessageStr;
-public:
-	SQLiteException(int, string);
-	virtual ~SQLiteException();
+		class SQLiteException : public exception {
+		private:
+			const int rc;
+			const string errorMessageStr;
+		public:
+			SQLiteException(int, string);
 
-	int getErrorCode();
-	string getErrorMessage();
-	const char* what() const throw ();
+			virtual ~SQLiteException();
 
-};
+			int getErrorCode();
 
-} /* namespace db */
+			string getErrorMessage();
+
+			const char *what() const throw();
+
+		};
+
+	} /* namespace db */
 
 } /* namespace sftp */
 

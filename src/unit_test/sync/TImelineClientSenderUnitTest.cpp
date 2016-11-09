@@ -1,9 +1,6 @@
-/*
- * UserManagerUnitTest.cpp
- *
- *  Created on: 11-Oct-2016
- *      Author: Reuben John
- */
+//
+// Created by Reuben John on 9/11/16.
+//
 
 #include <database/DbManager.hpp>
 
@@ -20,15 +17,15 @@ int main(int argc, char **argv) {
 	do {
 		cout << "Options:\n"
 			 << "0. Exit\n"
-			 << "1. Send message\n"
-			 << "2. Broadcast message\n";
+			 << "1. Register\n"
+			 << "2. Authenticate\n";
 
 		cin >> ch;
 		if (ch == 0) {
 
 			cout << "Exiting...\n";
 		} else if (ch == 1) {
-			cout << "Destination User ID: ";
+			cout << "username: ";
 			string username;
 			cin >> username;
 			cout << "password: ";

@@ -12,23 +12,26 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-using namespace std;
+		using namespace std;
 
-class Notification {
-	string message;
-	long _id, sentAt;
-public:
-	Notification(long, string, long);
-	virtual ~Notification();
+		class Notification {
+			string message;
+			long _id, sentAt;
+		public:
+			Notification(long, string, long);
 
-	long getId();
-	string getMessage();
-	long getSentAt();
-};
+			virtual ~Notification();
 
-} /* namespace db */
+			long getId();
+
+			string getMessage();
+
+			long getSentAt();
+		};
+
+	} /* namespace db */
 
 } /* namespace sftp */
 
