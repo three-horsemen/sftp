@@ -1,6 +1,7 @@
 #include "security/cryptstr.hpp"
+
 char *string_to_charArray(std::string s) {
-	char *d = (char*) malloc((s.size()) * sizeof(char) + 1); // Space for length plus nul
+	char *d = (char *) malloc((s.size()) * sizeof(char) + 1); // Space for length plus nul
 	if (d == NULL)
 		return NULL;          // No memory
 	strcpy(d, s.c_str());                // Copy the characters
@@ -8,31 +9,20 @@ char *string_to_charArray(std::string s) {
 	return d;                            // Return the new string
 }
 
-std::string charArray_to_string(const char *s, int len) {
-	std::string res = "";
-	for (int i = 0; i < len && s[i] != '\0'; i++)
-		res.push_back(s[i]);
-	return res;
-}
-
 std::string charArray_to_string(const char *s) {
-	int len = strlen(s);
+	size_t len = strlen(s);
 	std::string res = "";
 	for (int i = 0; i < len && s[i] != '\0'; i++)
 		res.push_back(s[i]);
 	return res;
 }
 
-std::string int_to_string(int a) {
+std::string long_to_string(long a) {
 	return std::to_string(a);
 }
 
-int string_to_int(std::string a) {
-	return atoi(a.c_str());
-}
-
 std::vector<std::string> Tokenize(std::string str,
-		const std::string& delimiters) {
+								  const std::string &delimiters) {
 	std::vector<std::string> tokens;
 	// Skip delimiters at beginning.
 	std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
@@ -56,4 +46,13 @@ std::vector<std::string> Tokenize(std::string str,
 	 cout << tokens[i] << endl;
 	 cout << "The original string: " << str << endl;
 	 */
+}
+
+long string_to_long(std::string str) {
+	try {
+		return boost::lexical_cast<long>(str);
+	}
+	catch (const boost::bad_lexical_cast &) {
+		return 0;
+	}
 }

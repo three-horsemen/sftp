@@ -68,16 +68,19 @@
 
 #include "security/cryptstr.hpp"
 
-class SecureSocketException: public std::exception {
+class SecureSocketException : public std::exception {
 private:
 	std::string message;
 public:
 	const int errorCode;
+
 	SecureSocketException(int newErrorCode);
+
 	SecureSocketException(int newErrorCode, std::string newMessage);
-	virtual const char* what() const throw () {
+
+	virtual const char *what() const throw() {
 		return string_to_charArray(
 				"SecureSocketException. " + message + " || Error code: "
-						+ std::to_string(errorCode) + "\n");
+				+ std::to_string(errorCode) + "\n");
 	}
 };

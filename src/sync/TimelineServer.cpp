@@ -109,7 +109,7 @@ namespace sftp {
 int main() {
 	sftp::DbManager::initializeStaticDbManager("sftp.db");
 	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8081");
-	if (!serverSecureListenSocket.getValidity()) {
+	if (!serverSecureListenSocket.getValidity() == false) {
 		LOG_ERROR << "Something went wrong!" << endl;
 		return -1;
 	}
@@ -117,7 +117,7 @@ int main() {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 	while (true) {
-		LOG_DEBUG << "Waiting to accept a connection..." << endl;
+		LOG_DEBUG << "Waiting to accept a connection...\n";
 		// boost::thread t {sftp::timelineServerThread,
 		// 	serverSecureListenSocket.acceptSecureSocket()};
 #pragma clang diagnostic push

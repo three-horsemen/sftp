@@ -1,14 +1,13 @@
 //Client program to keep talking to a server until a "quit" message is sent.
 #include "security/securesocket.hpp"
 #include <iostream>
-
 int main()
 {
 	try
 	{
 		SecureDataSocket clientSecureDataSocket("127.0.0.1", "8081", HOST_MODE_CLIENT);
 		std::string buffer;
-		while(buffer!="quit" && clientSecureDataSocket.getValidity() == true)
+		while (buffer != "quit" && clientSecureDataSocket.getValidity())
 		{
 			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) >>> " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
 			std::getline(std::cin, buffer); //This form accepts whitespaces,
@@ -21,7 +20,7 @@ int main()
 	}
 	catch(SecureSocketException &e)
 	{
-		cout << e.what();
+		LOG_ERROR << e.what();
 	}
 	std::cout << "Client program ending." << std::endl;
 	return 0;
