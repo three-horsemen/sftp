@@ -158,21 +158,6 @@ std::string SecureSocket::getTargetPortFromSockDesc(int s) const {
 	return result;
 }
 
-// SecureSocket::~SecureSocket()
-// {
-//		LOG_DEBUG << "Calling the SecureSocket destructor.";
-//     if(getValidity() == true)
-//     {
-//         LOG_INFO << "Closing socket #"
-//             << getSocketDescriptor() << " assigned to "
-//             << getTargetAddrFromSockDesc() << ":"
-//             << getTargetPortFromSockDesc();
-//         LOG_INFO << "getValidity: " << getValidity();
-//         destroySecureSocket();
-//         setValidity(false);
-//     }
-// }
-
 int SecureDataSocket::getTimeoutSecValue() const {
 	return timeoutSecValue;
 }
@@ -185,18 +170,6 @@ SecureDataSocket::SecureDataSocket() {
 	setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
 	LOG_WARNING << "Calling the constructor SecureDataSocket() wasn't supposed to happen.";
 }
-
-// SecureDataSocket::SecureDataSocket(const SecureDataSocket &secureDataSocket)
-// {
-//     LOG_DEBUG << "Calling the copy constructor.";
-//     setValidity(secureDataSocket.getValidity());
-//     setSocketDescriptor(secureDataSocket.getSocketDescriptor());
-//     setTargetIPAddress(secureDataSocket.getTargetIPAddress());
-//     setTargetPortNumber(secureDataSocket.getTargetPortNumber());
-//     setSourceIPAddress(secureDataSocket.getSourceIPAddress());
-//     setSourcePortNumber(secureDataSocket.getSourcePortNumber());
-//     setBuffer(secureDataSocket.getBuffer());
-// }
 
 SecureDataSocket::SecureDataSocket(int socketDescriptor) {
 	setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
@@ -354,7 +327,7 @@ void SecureDataSocket::setAndEncryptBuffer(std::string message) {
         throw SecureDataSocketIOException(*this, "The message length to write is zero.");
 */
 	try {
-		setBuffer(encrypt(message, (char) string_to_long(getKeyContainer().getSharedSecret())));
+		setBuffer(encrypt_WELL1024(message, generator));
 	}
 	catch (SecureSocketException &e) {
 		throw SecureSocketException(DATA_SOCK_ENCR_EXC,
@@ -363,7 +336,7 @@ void SecureDataSocket::setAndEncryptBuffer(std::string message) {
 	}
 }
 
-std::string SecureDataSocket::getAndDecryptBuffer() const {
+std::string SecureDataSocket::getAndDecryptBuffer() {
 	if (!getKeyContainer().getValidity())
 		throw SecureSocketException(DH_CONT_INVALID_EXC,
 									"The key container was found invalid, while trying to decrypt the buffer.");
@@ -372,7 +345,7 @@ std::string SecureDataSocket::getAndDecryptBuffer() const {
 		if(getBuffer().length() <= 0)
 			throw SecureDataSocketIOException(*this, "The read message length was zero.");
 		*/
-		return (decrypt(getBuffer(), (char) string_to_long(getKeyContainer().getSharedSecret())));
+		return decrypt_WELL1024(getBuffer(), generator);
 	}
 	catch (SecureSocketException &e) {
 		throw SecureSocketException(DATA_SOCK_DECR_EXC, "Could not get and decrypt the buffer.");
@@ -391,23 +364,11 @@ void SecureDataSocket::encryptAndSend(std::string message) {
 	}
 }
 
-/*
-void SecureDataSocket::encryptAndSend() {
-	try {
-		setAndEncryptBuffer(getBuffer());
-		writeSecureSocket();
-	}
-	catch (SecureSocketException &e) {
-		throw SecureSocketException(DATA_SOCK_ENCRSEND_EXC, "Could not encrypt and send the existing buffer.\n" +
-															charArray_to_string(e.what()) + "{" +
-															std::to_string(e.errorCode) + "}\n");
-	}
-}
-*/
 std::string SecureDataSocket::receiveAndDecrypt() {
 	try {
 		readSecureSocket();
 		std::string message = getAndDecryptBuffer();
+		setBuffer(message);
 		return message;
 	}
 	catch (SecureSocketException &e) {
@@ -478,6 +439,8 @@ int SecureDataSocket::performDHExchange_asClient() {
 						)
 												   )
 				);
+				this->generator.InitWELLRNG1024a((unsigned long) string_to_long(this->keyContainer.getSharedSecret()));
+
 				if (!this->keyContainer.isGoodSharedSecret()) {
 					this->keyContainer.setValidity(false);
 					continue;
@@ -574,6 +537,8 @@ int SecureDataSocket::performDHExchange_asServer() {
 						crtModulus(string_to_long(this->keyContainer.getRemotePublic()),
 								   string_to_long(this->keyContainer.getLocalPrivate()),
 								   this->keyContainer.getPrimeP())));
+				this->generator.InitWELLRNG1024a((unsigned long) string_to_long(this->keyContainer.getSharedSecret()));
+
 				if (!this->keyContainer.isGoodSharedSecret()) {
 					this->keyContainer.setValidity(false);
 					continue;
@@ -595,7 +560,7 @@ int SecureDataSocket::performDHExchange_asServer() {
 	}
 }
 
-const int SecureListenSocket::queueSize = 16;
+const unsigned int SecureListenSocket::maxQueueSize = 16;
 
 SecureListenSocket::SecureListenSocket() {
 	setValidity(false);
@@ -637,7 +602,7 @@ int SecureListenSocket::listenSecureSocket() {
 	LOG_INFO << "Creating a new listen socket.";
 	int result;
 	if (getValidity()) {
-		result = listen(getSocketDescriptor(), queueSize);
+		result = listen(getSocketDescriptor(), maxQueueSize);
 		if (result < 0)
 			throw SecureSocketException(LISTEN_SOCK_LISTEN_EXC, "Could not make the secure socket to listen.");
 	} else {

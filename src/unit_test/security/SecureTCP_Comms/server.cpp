@@ -23,7 +23,7 @@ void serverThread(SecureDataSocket &acceptedSecureDataSocket)
 				acceptedSecureDataSocket.encryptAndSend(message);
 				cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
 				cout << acceptedSecureDataSocket.getBuffer() << endl;
-			} while (acceptedSecureDataSocket.getAndDecryptBuffer() != "quit" &&
+			} while (acceptedSecureDataSocket.getBuffer() != "quit" &&
 					 acceptedSecureDataSocket.getValidity());
 		}
 	}

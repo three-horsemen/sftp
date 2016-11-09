@@ -30,6 +30,7 @@ add_library(security
 	src/security/cryptstr.cpp
 	src/security/encrypt.cpp
 	src/security/rsa.cpp
+		src/security/WELL1024a.cpp
 		src/security/DHContainer.cpp
 	src/security/securesocket.cpp
 	src/security/socketexceptions.cpp
@@ -41,6 +42,12 @@ target_link_libraries(unit_test_encrypt security)
 
 add_executable(unit_test_rsa src/unit_test/security/rsa.cpp)
 target_link_libraries(unit_test_rsa security)
+
+add_executable(unit_test_aes src/unit_test/security/aes.cpp)
+target_link_libraries(unit_test_aes security)
+
+add_executable(unit_test_well src/unit_test/security/well.cpp)
+target_link_libraries(unit_test_well security)
 
 add_executable(unit_test_SecureTCP_client src/unit_test/security/SecureTCP_Comms/client.cpp)
 target_link_libraries(unit_test_SecureTCP_client security)
