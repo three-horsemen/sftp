@@ -13,13 +13,13 @@
 using namespace std;
 
 class Command {
-private:
+protected:
   std::string rawCommand;
   UserSessionDetail userSessionDetail;
   std::string commandOutput;
 public:
   Command();
-  Command(std::string commandInput, UserSessionDetail newUser);
+  Command(std::string commandInput, UserSessionDetail& newUser);
   std::string getRawCommand();
   std::string getCommandOutput();
   void setCommandOutput(std::string commandResult);
@@ -30,8 +30,8 @@ class ChangeDirectoryCommand : public Command {
 private:
   std::string pathSpecified;
 public:
-  ChangeDirectoryCommand(std::string commandInput, UserSessionDetail newUser);
-  void executeChangeDirectoryCommand();
+  ChangeDirectoryCommand(std::string commandInput, UserSessionDetail& newUser);
+  UserSessionDetail executeChangeDirectoryCommand();
   std::string getPathSpecified();
   void setPathSpecified();
 };
@@ -55,6 +55,17 @@ public:
   MakeDirectoryCommand(std::string commandInput, UserSessionDetail newUser);
   void executeMakeDirectoryCommand();
   void executeMakeDirectoryCommandUtil(std::string pathToNewDirectory);
+  void setPathSpecified();
+  std::string getPathSpecified();
+};
+
+class RemoveCommand : public Command {
+private:
+  std::string pathSpecified;
+public:
+  RemoveCommand(std::string commandInput, UserSessionDetail newUser);
+  void executeRemoveCommand();
+  void executeRemoveCommandUtil(std::string pathSpecified);
   void setPathSpecified();
   std::string getPathSpecified();
 };

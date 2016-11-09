@@ -1,10 +1,10 @@
-#include "ui/Command.hpp"
+  #include "ui/Command.hpp"
 
 Command::Command() {
   rawCommand = string("");
 }
 
-Command::Command(std::string commandInput, UserSessionDetail newUser) {
+Command::Command(std::string commandInput, UserSessionDetail& newUser) {
   userSessionDetail = newUser;
   rawCommand = commandInput;
   //interpretCommandType(rawCommand);
@@ -28,22 +28,25 @@ UserSessionDetail Command::getUserSessionDetail() {
 
 /***** Change directory command *****/
 
-ChangeDirectoryCommand::ChangeDirectoryCommand(std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
+ChangeDirectoryCommand::ChangeDirectoryCommand(std::string commandInput, UserSessionDetail& newUser) : Command(commandInput, newUser) {
   setPathSpecified();
-  executeChangeDirectoryCommand();
+  userSessionDetail = executeChangeDirectoryCommand();
 }
 
 void ChangeDirectoryCommand::setPathSpecified() {
   pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
 }
 
-void ChangeDirectoryCommand::executeChangeDirectoryCommand() {
+UserSessionDetail ChangeDirectoryCommand::executeChangeDirectoryCommand() {
   //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
   std::string newWorkingDirectory = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
   if(CommandPathUtil::specifiedPathExists(newWorkingDirectory) && CommandPathUtil::specifiedPathIsDirectory(newWorkingDirectory)) {
     //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
-      getUserSessionDetail().setPresentWorkingDirectory(newWorkingDirectory);
-      setCommandOutput(string("Working directory successfully changed to: ") + newWorkingDirectory);
+      userSessionDetail.setPresentWorkingDirectory(newWorkingDirectory);
+      //getUserSessionDetail().setPresentWorkingDirectory(newWorkingDirectory);
+
+      setCommandOutput(string("Working directory successfully changed to: ") + getUserSessionDetail().getPresentWorkingDirectory());
+      return getUserSessionDetail();
       //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
     //}
 
@@ -169,5 +172,45 @@ void MakeDirectoryCommand::setPathSpecified() {
 }
 
 std::string MakeDirectoryCommand::getPathSpecified() {
+  return pathSpecified;
+}
+
+/*****Remove directory command*****/
+
+RemoveCommand::RemoveCommand(std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
+  setPathSpecified();
+  executeRemoveCommand();
+}
+
+void RemoveCommand::executeRemoveCommand() {
+  //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
+  std::string pathForRemoval = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
+  if(CommandPathUtil::specifiedPathExists(pathForRemoval)) {
+    //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
+      executeRemoveCommandUtil(pathForRemoval);
+      //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
+    //}
+    //else {
+    //  setCommandOutput(string("Error: Access Denied"));
+      //>>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error:access denied <reuben>
+  //  }
+  }
+  else {
+    setCommandOutput(string("Error: Invalid path (Path does not exist, or leads to a file, not directory)"));
+    //>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error: invalid path <reuben>
+  }
+}
+
+
+void RemoveCommand::executeRemoveCommandUtil(std::string pathSpecified) {
+  boost::filesystem::path p = pathSpecified.c_str();
+  boost::filesystem::remove_all(p);
+}
+
+void RemoveCommand::setPathSpecified() {
+  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
+}
+
+std::string RemoveCommand::getPathSpecified() {
   return pathSpecified;
 }

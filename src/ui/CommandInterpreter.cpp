@@ -12,7 +12,7 @@ bool CommandInterpreter::interpretIfOnServerExecution(std::string rawCommand) {
   else return false;
 }
 
-Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSessionDetail newUser, bool isCurrentlyOnClientSide) {
+Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSessionDetail& newUser, bool isCurrentlyOnClientSide) {
   boost::trim_all(rawCommand);
   if((rawCommand[rawCommand.size()-1]=='/') || (rawCommand[rawCommand.size()-1]=='\\')) {
     rawCommand = rawCommand.substr(0, rawCommand.size()-1);
@@ -25,7 +25,10 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
     return newCommand;
   }
   if(rawCommand.compare(0,2,"cd")==0) {
-    return ChangeDirectoryCommand(rawCommand, newUser);
+    //return ChangeDirectoryCommand(rawCommand, newUser);
+    ChangeDirectoryCommand c_temp = ChangeDirectoryCommand(rawCommand, newUser);
+    //cout << endl <<  c_temp.getUserSessionDetail().getPresentWorkingDirectory() << " HAHAHA" << endl;
+    return c_temp;
   }
   else if(rawCommand.compare(0,2,"ls")==0) {
     return ListDirectoryContentsCommand(rawCommand, newUser);
@@ -33,16 +36,17 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   else if(rawCommand.compare(0,5,"mkdir")==0){
     return MakeDirectoryCommand(rawCommand, newUser);
   }
+  else if(rawCommand.compare(0,2,"rm")){
+    return RemoveCommand(rawCommand, newUser);
+  }
 /*  else if(rawCommand.compare(0,2,"cp")){
     return CopyFilesAndDirectoriesCommand(rawCommand, newUser);
-  }
-  else if(rawCommand.compare(0,2,"rm")){
-    return RemoveFilesAndDirectoriesCommand(rawCommand, newUser);
   }
   else if(rawCommand.compare(0,5,"chown")){
     return ChangeFileOwnerAndGroupCommand(rawCommand, newUser);
   }*/
   else {
     std::cout<<"\nError: Invalid command. Please enter one of 'cd', 'ls', 'mkdir', 'cp', 'rm' or 'chown'.";
+    return NULL;
   }
 }
