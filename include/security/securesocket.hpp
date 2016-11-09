@@ -4,234 +4,141 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <exception>
 #include "security/cryptmath.hpp"
 #include "security/cryptstr.hpp"
 #include "security/encrypt.hpp"
-//#include "shared/socketexceptions.hpp"
-#include <exception>
+#include "security/socketexceptions.hpp"
+#include "security/DHContainer.hpp"
+#include "shared/logger.hpp"
 
 #define HOST_MODE_SERVER 100
 #define HOST_MODE_CLIENT 101
+#define DEFAULT_TIMEOUT_VALUE 5
 
-class DHKeyContainer
-{
+class SecureSocket {
 private:
-    static const int goodPrimePThreshold;
-    static const int goodPrimeQThreshold;
-    static const std::string goodLocalPrivateThreshold;
-    static const std::string goodLocalPublicThreshold;
-    static const std::string goodRemotePublicThreshold;
-    static const std::string goodSharedSecretThreshold;
+	bool valid;
+	int socketDescriptor;
+	std::string targetIPAddress;
+	std::string targetPortNumber;
 
-    bool valid;
-    int primeP;
-    int primeQ;
-    std::string localPrivate;
-    std::string localPublic;
-    std::string remotePublic;
-    std::string sharedSecret;
+	std::string sourceIPAddress;
+	std::string sourcePortNumber;
+
+	std::string buffer;
 public:
-    DHKeyContainer();
-    bool isGoodPrimeP();
-    bool isGoodPrimeQ();
-    bool isGoodLocalPrivate();
-    bool isGoodLocalPublic();
-    bool isGoodRemotePublic();
-    bool isGoodSharedSecret();
-    void setValidity(bool newValidity);
-    bool getValidity();
-    int getPrimeP();
-    void setPrimeP(int p);
-    int getPrimeQ();
-    void setPrimeQ(int q);
-    std::string getLocalPrivate();
-    void setLocalPrivate(std::string newLocalPrivate);
-    std::string getLocalPublic();
-    void setLocalPublic(std::string newLocalPublic);
-    std::string getRemotePublic();
-    void setRemotePublic(std::string newRemotePublic);
-    std::string getSharedSecret();
-    void setSharedSecret(std::string newSharedSecret);
+	SecureSocket();
+
+	void setValidity(bool newValidity);
+
+	bool getValidity() const;
+
+	int getSocketDescriptor() const;
+
+	void setSocketDescriptor(int newSocketDescriptor);
+
+	std::string getTargetIPAddress() const;
+
+	void setTargetIPAddress(std::string newTargetIPAddress);
+
+	std::string getTargetPortNumber() const;
+
+	void setTargetPortNumber(std::string newTargetPortNumber);
+
+	std::string getSourceIPAddress() const;
+
+	void setSourceIPAddress(std::string newSourceIPAddress);
+
+	std::string getSourcePortNumber() const;
+
+	void setSourcePortNumber(std::string newSourcePortNumber);
+
+	std::string getBuffer() const;
+
+	void setBuffer(std::string newBuffer);
+
+	int initSecureSocket();
+
+	int destroySecureSocket();
+
+	std::string getTargetAddrFromSockDesc() const;
+
+	std::string getTargetPortFromSockDesc() const;
+
+	std::string getSourceAddrFromSockDesc() const;
+
+	std::string getSourcePortFromSockDesc() const;
+
+	std::string getTargetAddrFromSockDesc(int) const;
+
+	std::string getTargetPortFromSockDesc(int) const;
+
+	std::string getSourceAddrFromSockDesc(int) const;
+
+	std::string getSourcePortFromSockDesc(int) const;
+
+	// ~SecureSocket();
 };
 
-class SecureSocket
-{
+class SecureDataSocket : public SecureSocket {
 private:
-    bool valid;
-    int socketDescriptor;
-    std::string targetIPAddress;
-    std::string targetPortNumber;
-
-    std::string sourceIPAddress;
-    std::string sourcePortNumber;
-
-    std::string buffer;
+	DHKeyContainer keyContainer;
+	int timeoutSecValue;
 public:
-    SecureSocket();
-    void setValidity(bool newValidity);
-    bool getValidity();
-    int getSocketDescriptor();
-    void setSocketDescriptor(int newSocketDescriptor);
-    std::string getTargetIPAddress();
-    void setTargetIPAddress(std::string newTargetIPAddress);
-    std::string getTargetPortNumber();
-    void setTargetPortNumber(std::string newTargetPortNumber);
+	int getTimeoutSecValue() const;
 
-    std::string getSourceIPAddress();
-    void setSourceIPAddress(std::string newSourceIPAddress);
-    std::string getSourcePortNumber();
-    void setSourcePortNumber(std::string newSourcePortNumber);
+	void setTimeoutSecValue(int newTimeoutSecValue);
 
-    std::string getBuffer();
-    void setBuffer(std::string newBuffer);
+	SecureDataSocket();
 
-    int initSecureSocket();
-    int destroySecureSocket();
+	// SecureDataSocket(const SecureDataSocket&);
+	SecureDataSocket(int socketDescriptor);
 
-    std::string getTargetAddrFromSockDesc();
-    std::string getTargetPortFromSockDesc();
-    std::string getSourceAddrFromSockDesc();
-    std::string getSourcePortFromSockDesc();
+	SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode);
 
-    //~SecureSocket();
+	DHKeyContainer getKeyContainer() const;
+
+	int connectSecureSocket();
+
+	int isTimeout(int timeoutSec, int socket);
+
+	ssize_t readSecureSocket();
+
+	ssize_t writeSecureSocket();
+
+	void setAndEncryptBuffer(std::string message);
+
+	std::string getAndDecryptBuffer() const;
+
+	void encryptAndSend(std::string message);
+
+	void encryptAndSend();
+
+	std::string receiveAndDecrypt();
+
+	int performDHExchange_asClient();
+
+	int performDHExchange_asServer();
 };
 
-class SecureDataSocket : public SecureSocket
-{
+class SecureListenSocket : public SecureSocket {
 private:
-    DHKeyContainer keyContainer;
+	static const int queueSize;
 public:
-    SecureDataSocket();
-    SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode);
-    DHKeyContainer getKeyContainer();
-    int connectSecureSocket();
-    int readSecureSocket();
-    int writeSecureSocket();
+	SecureListenSocket();
 
-    void setAndEncryptBuffer(std::string message);
-    std::string getAndDecryptBuffer();
-    void encryptAndSendSecureSocket(std::string message);
-    void encryptAndSendSecureSocket();
-    std::string decryptAndReceiveSecureSocket();
+	SecureListenSocket(std::string serverIPAddress, std::string serverPortNumber);
 
-    int performDHExchange_asClient();
-    int performDHExchange_asServer();
+	int bindSecureSocket();
+
+	int listenSecureSocket();
+
+	SecureDataSocket acceptSecureSocket();
 };
 
-class SecureListenSocket : public SecureSocket
-{
-private:
-    static const int queueSize;
-public:
-    SecureListenSocket();
-    SecureListenSocket(std::string serverIPAddress, std::string serverPortNumber);
-    int bindSecureSocket();
-    int listenSecureSocket();
-    SecureDataSocket acceptSecureSocket();
-};
-
-
-
-/////Exceptions, defined in socketexceptions.hpp
-
-class SecureSocketException : public std::exception
-{
-private:
-	SecureSocket secureSocket;
-	std::string message;
-public:
-	SecureSocketException(SecureSocket newSecureSocket);
-	SecureSocketException(SecureSocket newSecureSocket, std::string message);
-	std::string getMessage();
-	virtual const char* what() const throw()
-	{
-		return string_to_charArray("Exception: SecureSocketException. " + message + "\n");
-	}
-};
-
-class SecureDataSocketException : public SecureSocketException
-{
-private:
-	SecureDataSocket secureDataSocket;
-public:
-	SecureDataSocketException(SecureDataSocket newSecureDataSocket);
-	SecureDataSocketException(SecureDataSocket newSecureDataSocket, std::string message);
-};
-
-class SecureListenSocketException : public SecureSocketException
-{
-private:
-	SecureListenSocket secureListenSocket;
-public:
-	SecureListenSocketException(SecureListenSocket newSecureListenSocket);
-	SecureListenSocketException(SecureListenSocket newSecureListenSocket, std::string message);
-};
-
-class SecureDataSocketIOException : public SecureDataSocketException
-{
-private:
-public:
-	SecureDataSocketIOException(SecureDataSocket newSecureDataSocket);
-	SecureDataSocketIOException(SecureDataSocket newSecureDataSocket, std::string message);
-};
-
-class SecureDataSocketConnectException : public SecureDataSocketException
-{
-private:
-public:
-	SecureDataSocketConnectException(SecureDataSocket newSecureDataSocket);
-	SecureDataSocketConnectException(SecureDataSocket newSecureDataSocket, std::string message);
-};
-
-class SecureDataSocketDHException : public SecureDataSocketException
-{
-private:
-public:
-	SecureDataSocketDHException(SecureDataSocket newSecureDataSocket);
-	SecureDataSocketDHException(SecureDataSocket newSecureDataSocket, std::string message);
-};
-
-class SecureListenSocketBindException : public SecureListenSocketException
-{
-private:
-public:
-	SecureListenSocketBindException(SecureListenSocket newSecureListenSocket);
-	SecureListenSocketBindException(SecureListenSocket newSecureListenSocket, std::string message);
-};
-
-class SecureListenSocketListenException : public SecureListenSocketException
-{
-private:
-public:
-	SecureListenSocketListenException(SecureListenSocket newSecureListenSocket);
-	SecureListenSocketListenException(SecureListenSocket newSecureListenSocket, std::string message);
-};
-
-class SecureListenSocketAcceptException : public SecureListenSocketException
-{
-private:
-public:
-	SecureListenSocketAcceptException(SecureListenSocket newSecureListenSocket);
-	SecureListenSocketAcceptException(SecureListenSocket newSecureListenSocket, std::string message);
-};
-
-class DHKeyContainerException : public std::exception
-{
-private:
-	DHKeyContainer key_container;
-	std::string message;
-public:
-	DHKeyContainerException(DHKeyContainer new_key_container);
-	DHKeyContainerException(DHKeyContainer new_key_container, std::string newMessage);
-	virtual const char* what() const throw()
-	{
-		return string_to_charArray("Exception: DHKeyContainerException. " + message + "\n");
-	}
-};
-
-#endif /* INCLUDE_SECURITY_SECURESOCKET_HPP_ */
+#endif

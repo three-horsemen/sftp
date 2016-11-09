@@ -6,3 +6,5 @@
 
 #Output files.
 *.out
+
+.idea/

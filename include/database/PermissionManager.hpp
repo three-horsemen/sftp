@@ -1,31 +1,42 @@
 /*
- * PermissionManager.hpp
+ * Db.h
  *
- *  Created on: 04-Oct-2016
+ *  Created on: 11-Oct-2016
  *      Author: reubenjohn
  */
 
-#ifndef INCLUDE_DATABASE_PERMISSIONMANAGER_HPP_
-#define INCLUDE_DATABASE_PERMISSIONMANAGER_HPP_
+#ifndef SRC_DATABASE_PERMISSION_MANAGER_HPP_
+#define SRC_DATABASE_PERMISSION_MANAGER_HPP_
 
+#include <sqlite3.h>
 #include <string>
+#include <string.h>
 
-namespace security {
+#include <shared/logger.hpp>
+#include <database/DbHandler.hpp>
+
+namespace sftp {
+
+namespace db {
 
 using namespace std;
 
 class PermissionManager {
+private:
+	DbHandler &dbHandler;
 public:
-	PermissionManager(SecureDataSocket dataSocket);
+	PermissionManager(DbHandler&);
 	virtual ~PermissionManager();
 
-	bool setOwners(string absolutePath, string newOwners[]);
-	vector<string> getOwners(string absolutePath);
-	bool isResourceAccessible(string absolutePath, string username);
-	bool moveResource(string sourceAbsolutePath,
-			string destinationAbsolutePath);
+	bool setOwner(string, string);
+	bool setOwners(string, string[], unsigned int);
+	bool isResourceAccessible(string, string);
+	int moveResource(string, string);
+
 };
 
-} /* namespace security */
+} /* namespace db */
 
-#endif /* INCLUDE_DATABASE_PERMISSIONMANAGER_HPP_ */
+} /* namespace manas_nav_common */
+
+#endif /* SRC_DATABASE_PERMISSION_MANAGER_HPP_ */

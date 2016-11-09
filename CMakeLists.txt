@@ -8,9 +8,9 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 add_compile_options(-std=c++11)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 find_path(SQLITE3_INCLUDE_DIR NAMES sqlite3.h)
-find_library(SQLITE3_LIBRARY NAMES sqlite)
+find_library(SQLITE3_LIBRARY NAMES sqlite3)
 #find_package( SQLite3 COMPONENTS REQUIRED )
-find_package( Boost 1.54 COMPONENTS log log_setup thread system filesystem REQUIRED )
+find_package( Boost 1.54 COMPONENTS log log_setup thread system date_time filesystem REQUIRED )
 
 include_directories(include ${Boost_INCLUDE_DIRS})
 
@@ -52,6 +52,7 @@ add_library(security
 	src/security/cryptstr.cpp
 	src/security/encrypt.cpp
 	src/security/rsa.cpp
+		src/security/DHContainer.cpp
 	src/security/securesocket.cpp
 	src/security/socketexceptions.cpp
 	)
@@ -69,15 +70,31 @@ add_executable(unit_test_SecureTCP_server src/unit_test/security/SecureTCP_Comms
 target_link_libraries(unit_test_SecureTCP_server security)
 
 
-
 ###DB module
-# add_library(db
-# 	src/database/DbManager.cpp
-# 	src/database/UserManager.cpp
-# 	src/database/PermissionManager.cpp
-# 	)
-# target_link_libraries(db shared security ${SQLITE_LIBRARIES})
+add_library(db
+	src/database/SQLiteException.cpp
+	src/database/DbHandler.cpp
+	src/database/DbManager.cpp
+	src/database/UserManager.cpp
+	src/database/PermissionManager.cpp
+	src/database/TimelineManager.cpp
+	src/database/Notification.cpp
+	)
+target_link_libraries(db shared security ${SQLITE3_LIBRARY})
+
+add_executable(unit_test_user_manager
+	src/unit_test/database/UserManagerUnitTest.cpp
+	)
+target_link_libraries(unit_test_user_manager db)
+
+add_executable(unit_test_permission_manager
+	src/unit_test/database/PermissionManagerUnitTest.cpp
+	)
+target_link_libraries(unit_test_permission_manager db)
 
 ###Sync Module
-add_executable(timeline_server src/sync/timeline/TimelineServer.cpp)
-target_link_libraries(timeline_server security ${SQLITE3_LIBRARIES})
+add_executable(timeline_server src/sync/TimelineServer.cpp)
+target_link_libraries(timeline_server security db)
+
+add_executable(timeline_client src/sync/TimelineClient.cpp)
+target_link_libraries(timeline_client security db)

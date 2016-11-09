@@ -1,71 +1,63 @@
 #include "security/cryptmath.hpp"
 
-int custom_rand(int lim = 100)
-{
+long custom_rand(long lim = 100) {
 	clock_t t = clock();
 	static long a = 1; // could be made the seed value
 	a = (a * t * 32719 + 3) % 32749;
 	return ((a % lim) + 1);
 }
 
-int mpmod(int base, int exponent, int modulus)
-{
-    if ((base < 1) || (exponent < 0) || (modulus < 1))
-    {
-        return(-1);
-    }
-    long result = 1;
-    while (exponent > 0)
-    {
-        if ((exponent % 2) == 1)
-        {
-            result = (result * base) % modulus;
-        }
-        base = (base * base) % modulus;
-        exponent = (int)(exponent / 2);
-    }
-    return (result);
+long crtModulus(long base, long exponent, long modulus) {
+	if ((base < 1) || (exponent < 0) || (modulus < 1)) {
+		return (-1);
+	}
+	long result = 1;
+	while (exponent > 0) {
+		if ((exponent % 2) == 1) {
+			result = (result * base) % modulus;
+		}
+		base = (base * base) % modulus;
+		exponent = exponent / 2;
+	}
+	return (result);
 }
-int is_prime(int num)
-{
-    if((num & 1)==0)
-        return num == 2;
-    else
-    {
-        int i, limit = num/2 + 1;
-        for (i = 3; i <= limit; i+=2){
-            if (num % i == 0)
-                return 0;
-        }
-    }
-    return 1;
+
+int isPrime(long num) {
+	if ((num & 1) == 0)
+		return num == 2;
+	else {
+		long i;
+		long limit = num / 2 + 1;
+		for (i = 3; i <= limit; i += 2) {
+			if (num % i == 0)
+				return 0;
+		}
+	}
+	return 1;
 }
-int next_pr(int num)
-{
-    int c;
-    if(num < 2)
-        c = 2;
-    else if (num == 2)
-        c = 3;
-    else if(num & 1)
-    {
-        num += 2;
-        c = is_prime(num) ? num : next_pr(num);
-    }
-    else
-        c = next_pr(num-1);
-    return c;
+
+long nextPrime(long num) {
+	long c;
+	if (num < 2)
+		c = 2;
+	else if (num == 2)
+		c = 3;
+	else if (num & 1) {
+		num += 2;
+		c = isPrime(num) ? num : nextPrime(num);
+	} else
+		c = nextPrime(num - 1);
+	return c;
 }
-int rand_prime(int upper_limit)
-{
-    if(upper_limit <= 2)
-        return 2;
-	int temp = custom_rand(upper_limit);
-    do
-    {
-        if(is_prime(temp))
-            break;
-        temp--;
-    }while(temp > 2);
-    return temp;
+
+long randomPrime(long upper_limit) {
+	if (upper_limit <= 2)
+		return 2;
+	long temp = custom_rand(upper_limit);
+	do {
+		if (isPrime(temp))
+			break;
+		temp--;
+	} while (temp > 2);
+	return temp;
 }
