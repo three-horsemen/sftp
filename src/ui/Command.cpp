@@ -40,23 +40,29 @@ void ChangeDirectoryCommand::setPathSpecified() {
 UserSessionDetail ChangeDirectoryCommand::executeChangeDirectoryCommand() {
   //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
   std::string newWorkingDirectory = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
-  if(CommandPathUtil::specifiedPathExists(newWorkingDirectory) && CommandPathUtil::specifiedPathIsDirectory(newWorkingDirectory)) {
-    //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
-      userSessionDetail.setPresentWorkingDirectory(newWorkingDirectory);
-      //getUserSessionDetail().setPresentWorkingDirectory(newWorkingDirectory);
+  if(CommandPathUtil::specifiedPathExists(newWorkingDirectory)) {
+    if(CommandPathUtil::specifiedPathIsDirectory(newWorkingDirectory)) {
+      //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
+        userSessionDetail.setPresentWorkingDirectory(newWorkingDirectory);
+        //getUserSessionDetail().setPresentWorkingDirectory(newWorkingDirectory);
 
-      setCommandOutput(string("Working directory successfully changed to: ") + getUserSessionDetail().getPresentWorkingDirectory());
-      return getUserSessionDetail();
-      //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
-    //}
+        setCommandOutput(string("Working directory successfully changed to: ") + getUserSessionDetail().getPresentWorkingDirectory());
+        return getUserSessionDetail();
+        //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
+      //}
 
-    //else {
-    //  setCommandOutput(string("Error: Access Denied"));
-      //>>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error:access denied <reuben>
-    //}
+      //else {
+      //  setCommandOutput(string("Error: Access Denied"));
+        //>>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error:access denied <reuben>
+      //}
+    }
+    else {
+      throw UIException(NOT_A_DIRECTORY);
+      //>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error: not a directory <reuben>
+    }
   }
   else {
-    setCommandOutput(string("Error: Invalid path (Path does not exist, or leads to a file, not directory)"));
+    throw UIException(PATH_DOES_NOT_EXIST);
     //>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error: invalid path <reuben>
   }
 }
@@ -201,10 +207,10 @@ void RemoveCommand::executeRemoveCommand() {
   }
 }
 
-
 void RemoveCommand::executeRemoveCommandUtil(std::string pathSpecified) {
   boost::filesystem::path p = pathSpecified.c_str();
   boost::filesystem::remove_all(p);
+  setCommandOutput(string("Successfully removed: ")+pathSpecified);
 }
 
 void RemoveCommand::setPathSpecified() {
@@ -212,5 +218,45 @@ void RemoveCommand::setPathSpecified() {
 }
 
 std::string RemoveCommand::getPathSpecified() {
+  return pathSpecified;
+}
+
+
+
+/*****Remove directory command*****/
+
+CopyCommand::CopyCommand(std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
+  setPathSpecified();
+  executeCopyCommand();
+}
+
+void CopyCommand::executeCopyCommand() {
+  //>>>>>>>>>>>>>executionCommenced(); //Call function to indicate executing command <<<REUBEN>>>
+  std::string pathForRemoval = CommandPathUtil::convertToAbsolutePath(getPathSpecified(), getUserSessionDetail().getPresentWorkingDirectory());
+  if(CommandPathUtil::specifiedPathExists(pathForRemoval)) {
+    //if(isPermittedUser()) { //isPermittedUser() is <<<REUBEN's Function>>>
+      executeCopyCommandUtil(pathForRemoval);
+      //>>>>>>>>>>>executionComplete();  //Call function to indicate command completed execution <reuben>
+    //}
+    //else {
+    //  setCommandOutput(string("Error: Access Denied"));
+      //>>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error:access denied <reuben>
+  //  }
+  }
+  else {
+    setCommandOutput(string("Error: Invalid path (Path does not exist, or leads to a file, not directory)"));
+    //>>>>>>>>>executionIncomplete();  //Call function to indicate command completed execution with error: invalid path <reuben>
+  }
+}
+
+void CopyCommand::executeCopyCommandUtil(std::string pathSpecified) {
+
+}
+
+void CopyCommand::setPathSpecified() {
+  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
+}
+
+std::string CopyCommand::getPathSpecified() {
   return pathSpecified;
 }

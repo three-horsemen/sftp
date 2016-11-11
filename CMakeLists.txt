@@ -32,6 +32,7 @@ add_library(ui
 	src/ui/CommandInterpreter.cpp
 	src/ui/CommandPathUtil.cpp
 	src/ui/UserSessionDetail.cpp
+	src/ui/UIExceptions.cpp
 	)
 target_link_libraries(ui shared ${Boost_LIBRARIES})
 
@@ -42,7 +43,7 @@ target_link_libraries(unit_test_UserSessionDetail ui)
 #	PRIVATE -lboost_system)
 
 add_executable(unit_test_Command src/unit_test/ui/Command.cpp)
-target_link_libraries(unit_test_Command ui)
+target_link_libraries(unit_test_Command ui security)
 
 
 

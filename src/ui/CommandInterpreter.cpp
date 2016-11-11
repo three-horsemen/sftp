@@ -36,17 +36,17 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   else if(rawCommand.compare(0,5,"mkdir")==0){
     return MakeDirectoryCommand(rawCommand, newUser);
   }
-  else if(rawCommand.compare(0,2,"rm")){
+  else if(rawCommand.compare(0,2,"rm")==0){
     return RemoveCommand(rawCommand, newUser);
   }
-/*  else if(rawCommand.compare(0,2,"cp")){
-    return CopyFilesAndDirectoriesCommand(rawCommand, newUser);
+  else if(rawCommand.compare(0,2,"cp")){
+    return CopyFiles(rawCommand, newUser);
   }
+  /*
   else if(rawCommand.compare(0,5,"chown")){
     return ChangeFileOwnerAndGroupCommand(rawCommand, newUser);
   }*/
   else {
-    std::cout<<"\nError: Invalid command. Please enter one of 'cd', 'ls', 'mkdir', 'cp', 'rm' or 'chown'.";
-    return NULL;
+    throw UIException(INVALID_COMMAND);
   }
 }

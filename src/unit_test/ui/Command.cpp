@@ -1,4 +1,5 @@
 #include "ui/CommandInterpreter.hpp"
+#include "shared/logger.hpp"
 
 int main() {
   cout<<"\nEnter username: ";
@@ -13,7 +14,13 @@ int main() {
   while(true) {
   cout<<endl<<newUser.getUsername()<<"@client-sftp:"<<newCommand.getUserSessionDetail().getPresentWorkingDirectory()<<"$ ";
   std::string rawCommand; getline(cin, rawCommand);
-  newCommand = CommandInterpreter::interpretCommandType(rawCommand, newUser, false); //true for client, false for server
+  try{
+    Command tempCommand = CommandInterpreter::interpretCommandType(rawCommand, newUser, false); //true for client, false for server
+    newCommand = tempCommand;
+  } catch(UIException &e) {
+    LOG_ERROR<<e.what();
+    continue;
+  }
   newUser = newCommand.getUserSessionDetail();
   cout<<newCommand.getCommandOutput();
 }

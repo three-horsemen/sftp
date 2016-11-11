@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <algorithm>
+#include "ui/UIExceptions.hpp"
 #include <vector>
 #define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
@@ -60,6 +61,17 @@ public:
 };
 
 class RemoveCommand : public Command {
+private:
+  std::string pathSpecified;
+public:
+  RemoveCommand(std::string commandInput, UserSessionDetail newUser);
+  void executeRemoveCommand();
+  void executeRemoveCommandUtil(std::string pathSpecified);
+  void setPathSpecified();
+  std::string getPathSpecified();
+};
+
+class CopyCommand : public Command {
 private:
   std::string pathSpecified;
 public:
