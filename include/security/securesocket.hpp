@@ -35,8 +35,6 @@ protected:
 
 	SecureSocket();
 
-	int getSocketDescriptor() const;
-
 	void setSocketDescriptor(int newSocketDescriptor);
 
 	void setTargetIPAddress(std::string newTargetIPAddress);
@@ -63,6 +61,8 @@ public:
 	void setValidity(bool newValidity);
 
 	bool getValidity() const;
+
+	int getSocketDescriptor() const;
 
 	std::string getTargetAddrFromSockDesc() const;
 
