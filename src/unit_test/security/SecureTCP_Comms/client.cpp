@@ -14,7 +14,7 @@ int main()
 			clientSecureDataSocket.encryptAndSend(buffer);
 			buffer = clientSecureDataSocket.receiveAndDecrypt();
 			std::cout << clientSecureDataSocket.getSourceAddrFromSockDesc() << ":" << clientSecureDataSocket.getSourcePortFromSockDesc() << " (Client) <<< " << clientSecureDataSocket.getTargetAddrFromSockDesc() << ":" << clientSecureDataSocket.getTargetPortFromSockDesc() << ": ";
-			std::cout << clientSecureDataSocket.getAndDecryptBuffer() << std::endl; //The buffer is still in an encrypted state.
+			std::cout << clientSecureDataSocket.getBuffer() << std::endl;
 		}
 		clientSecureDataSocket.destroySecureSocket();
 	}

@@ -13,17 +13,18 @@ void serverThread(SecureDataSocket &acceptedSecureDataSocket)
 		LOG_INFO << "Negotiating with new client.";
 		if (acceptedSecureDataSocket.getValidity())
 		{
+			std::string message;
 			LOG_INFO << "Diffie-Hellman key exchange with client " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!";
 			do
 			{
-				std::string message = acceptedSecureDataSocket.receiveAndDecrypt();
+				message = acceptedSecureDataSocket.receiveAndDecrypt();
 				cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " <--$ ";
 				cout << message << endl;
 				// cout << " $$$Mesg length: " << message.length() << " &&&Mesg size: " << message.size() << endl;
 				acceptedSecureDataSocket.encryptAndSend(message);
 				cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
 				cout << acceptedSecureDataSocket.getBuffer() << endl;
-			} while (acceptedSecureDataSocket.getAndDecryptBuffer() != "quit" &&
+			} while (message != "quit" &&
 					 acceptedSecureDataSocket.getValidity());
 		}
 	}
