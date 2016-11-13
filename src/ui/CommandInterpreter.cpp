@@ -12,13 +12,6 @@ bool CommandInterpreter::interpretIfOnServerExecution(std::string rawCommand) {
   else return false;
 }
 
-bool CommandInterpreter::isOfType(std::string rawCommand, std::string type) {
-  if(rawCommand.compare(0,type.size(),type)==0)
-    return true;
-  else
-    return false;
-}
-
 Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSessionDetail& newUser, bool isCurrentlyOnClientSide) {
   boost::trim_all(rawCommand);
   if((rawCommand[rawCommand.size()-1]=='/') || (rawCommand[rawCommand.size()-1]=='\\')) {
@@ -26,14 +19,12 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   }
   if(isCurrentlyOnClientSide && interpretIfOnServerExecution(rawCommand)) {
     //Send to server /* SOORYA */
-    newUser.getSecureDataSocket().encryptAndSend(rawCommand);
-    std::string commandOutput = newUser.getSecureDataSocket().receiveAndDecrypt();
     //receive the output in a string 'outputFromServer' /* SOORYA */
+
+    newUser.getSecureDataSocket().encryptAndSend(rawCommand);
+    std::string outputFromServer = newUser.getSecureDataSocket().receiveAndDecrypt();
     Command newCommand(rawCommand, newUser);
-    newCommand.setCommandOutput(commandOutput);
-    if(isOfType(string("cd"))) {
-      newUser.setPresentWorkingDirectory(commandOutput);
-    }
+    newCommand.setCommandOutput(string("[DEBUG] from server: ") + outputFromServer);
     return newCommand;
   }
   if(rawCommand.compare(0,2,"cd")==0) {
@@ -48,13 +39,12 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   else if(rawCommand.compare(0,5,"mkdir")==0){
     return MakeDirectoryCommand(rawCommand, newUser);
   }
-  else if(rawCommand.compare(0,2,"rm")==0){
+  else if(rawCommand.compare(0,2,"rm")){
     return RemoveCommand(rawCommand, newUser);
   }
-  /*else if(rawCommand.compare(0,2,"cp")){
-    return CopyFiles(rawCommand, newUser);
+/*  else if(rawCommand.compare(0,2,"cp")){
+    return CopyFilesAndDirectoriesCommand(rawCommand, newUser);
   }
-  /*
   else if(rawCommand.compare(0,5,"chown")){
     return ChangeFileOwnerAndGroupCommand(rawCommand, newUser);
   }*/

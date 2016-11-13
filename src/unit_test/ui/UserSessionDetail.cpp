@@ -7,7 +7,7 @@ int main() {
   cout<<"\nEnter username: "; cin>>username;
   cout<<"Enter password: "; cin>>password;
 
-  UserSessionDetail newUser(username, password);
+  UserSessionDetail newUser(username);
 
   std::cout<<"User session details before logout:";
   newUser.display();

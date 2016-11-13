@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <termios.h>
 #include "ui/CommandInterpreter.hpp"
-
 #define ON_CLIENT true
 #define DATABASE_NAME "SecureFTP"
 #define LOGIN_ATTEMPTS 3
@@ -14,7 +13,8 @@ void displayInBoldAndRed(std::string message) {
 
 void makeJailForUser(UserSessionDetail user) {
   //Make jail for this user at server
-
+  cout<<"\n";
+  user.getSecureDataSocket().encryptAndSend(user.getUsername());
 }
 
 void displayInBoldAndViolet(std::string message) {
@@ -36,20 +36,23 @@ std::string getPassword() {
 int main() {
   int loginAttempts = LOGIN_ATTEMPTS;
   std::string password;
+  SecureDataSocket clientSecureDataSocket("127.0.0.1", "5576", HOST_MODE_CLIENT);
   displayInBoldAndRed( string("\n\t\tWelcome to Secure File Transfer Protocol\n") );
   displayInBoldAndViolet(string("Initializing database...\n")); //DEBUG
-  DbManager::initializeStaticDbManager(DATABASE_NAME);
+  sftp::db::DbManager::initializeStaticDbManager(DATABASE_NAME);
   displayInBoldAndViolet( string("\n1. Register\n2. Authenticate\nPress any other key to exit\nChoice: ")); int choice; cin>>choice;
   if(choice!=1 && choice!=2) {
-    displayInBoldAndRed(string("\n\t\tExiting"));
+    displayInBoldAndRed(string("\n---Exiting---\n"));
     return 0;
   }
+  std::cin.ignore();
   displayInBoldAndViolet(string("Username: ")); std::string userName; getline(cin, userName);
   password = getPassword();
   UserSessionDetail user(userName);
+  user.setSecureDataSocket(clientSecureDataSocket);
   if(choice == 1) {
     while(true) {
-      if(DbManager::getDb()->getUserManager().registerUser(user.getUsername(),password)) {
+      if(sftp::db::DbManager::getDb()->getUserManager().registerUser(user.getUsername(),password)) {
         displayInBoldAndViolet(string("\nSuccessfully registered user."));
         makeJailForUser(user);
         break;
@@ -57,6 +60,7 @@ int main() {
       else {
         displayInBoldAndRed(string("\nUnsuccessful in registering user."));
         cout<<"\n0. Exit\n1. Retry\nChoice: "; int retryOrNot; cin>>retryOrNot;
+        std::cin.ignore();
         if(!retryOrNot) {
           displayInBoldAndRed(string("\n\t\tExiting"));
           return 0;
@@ -69,9 +73,10 @@ int main() {
       }
     }
   }
+
   else if(choice == 2){
     while(true) {
-      if(DbManager::getDb()->getUserManager().isAuthenticationValid(user.getUsername(),password)) {
+      if(sftp::db::DbManager::getDb()->getUserManager().isAuthenticationValid(user.getUsername(),password)) {
         displayInBoldAndViolet(string("\nLogin successful.\n"));
         break;
       } else {
@@ -79,8 +84,9 @@ int main() {
         loginAttempts--;
         if(loginAttempts>0) {
           cout<<"\n0. Exit\n1. Retry";
-          displayInBoldAndRed(string("(attempts left:")+loginAttempts+string(")"));
+          displayInBoldAndRed(string("(attempts left:")+std::to_string(loginAttempts)+string(")"));
           cout<<"\nChoice: "; int retryOrNot; cin>>retryOrNot;
+          std::cin.ignore();
           if(!retryOrNot) {
             displayInBoldAndRed(string("\n\t\tExiting"));
             return 0;
@@ -94,9 +100,10 @@ int main() {
       }
     }
   }
-  SecureDataSocket clientSecureDataSocket("127.0.0.1", "8081", HOST_MODE_CLIENT);
   bool running = true;
   Command command(string("ls"),user);
+  /* Sending username to server */
+  user.getSecureDataSocket().encryptAndSend(user.getUsername());
   while(running) {
     displayInBoldAndViolet(string("\n") + user.getUsername()); displayInBoldAndRed(string("@client-sftp"));
     cout << command.getUserSessionDetail().getPresentWorkingDirectory() << "$ " ;

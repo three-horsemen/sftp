@@ -37,7 +37,7 @@ add_library(ui
 target_link_libraries(ui shared ${Boost_LIBRARIES})
 
 add_executable(unit_test_UserSessionDetail src/unit_test/ui/UserSessionDetail.cpp)
-target_link_libraries(unit_test_UserSessionDetail ui)
+target_link_libraries(unit_test_UserSessionDetail ui security db shared)
 #target_compile_options(unit_test_UserSessionDetail
 #	PRIVATE -lboost_filesystem
 #	PRIVATE -lboost_system)
@@ -48,6 +48,8 @@ target_link_libraries(unit_test_Command ui security)
 add_executable(sftp_client src/ui/Client.cpp)
 target_link_libraries(sftp_client ui security shared db)
 
+add_executable(sftp_server src/ui/Server.cpp)
+target_link_libraries(sftp_server ui security shared db)
 
 
 

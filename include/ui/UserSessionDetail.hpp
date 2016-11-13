@@ -19,7 +19,7 @@ public:
   std::string getLogoutTimestamp();
   void setPresentWorkingDirectory(std::string newWorkingDirectory);
   std::string getPresentWorkingDirectory();
-  void setUsername();
+  void setUsername(std::string uName);
   SecureDataSocket getSecureDataSocket();
   void setSecureDataSocket(SecureDataSocket secureDataSocket);
   std::string getUsername();

@@ -11,7 +11,7 @@ class CommandPathUtil {
 public:
   static std::string getCurrentWorkingDirectory();
   static bool specifiedPathExists(std::string pathSpecified);
-  static std::string getPathSpecified(std::string rawCommand);
+  static std::vector<std::string> getPathSpecified(std::string rawCommand);
   static bool specifiedPathIsDirectory(std::string pathSpecified);
   static std::string findParentToGivenPath(std::string pathToNewDirectory);
   static void reduceToCanonicalForm(vector<std::string>& tokenizedPresentWorkingDirectory);

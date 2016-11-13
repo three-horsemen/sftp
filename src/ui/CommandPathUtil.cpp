@@ -9,7 +9,9 @@ std::vector<std::string> CommandPathUtil::getPathSpecified(std::string rawComman
       break;
     }
     else if(i==rawCommand.size()-1) {
-      return string("");
+      std::vector<std::string> emptyStringVector;
+      emptyStringVector.push_back(string(" "));
+      return emptyStringVector;
     }
   }
   for(pathEndPosition = pathStartPosition ; pathEndPosition<rawCommand.size() && rawCommand[pathEndPosition] != ' ' ; pathEndPosition++);

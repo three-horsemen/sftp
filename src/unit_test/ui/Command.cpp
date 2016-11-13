@@ -7,7 +7,7 @@ int main() {
   cout<<"Enter password: ";
   std::string password; cin>>password;
   cin.ignore(); //IMPORTANT
-  UserSessionDetail newUser(username, password);
+  UserSessionDetail newUser(username);
   Command newCommand;
   cout<<"UI SFTP\nTry out the following commands:\n";
   cout<<"1. List directory contents command: ls [path]\n2. Change working directory: cd [path]\n3. Make a new directory: mkdir [path]\n4. Remove directoy: rm [path]";
