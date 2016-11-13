@@ -32,7 +32,7 @@ int main() {
 			throw invalid_argument(string("Unknown server response: ") + buffer);
 		string password = "";
 		boldAndViolet(string("Password: "));
-		getline(cin, password);
+		password = Utils::getPassword();
 		clientSocket.encryptAndSend(password);
 		buffer = clientSocket.receiveAndDecrypt();
 		if (buffer == UserManager::CREDENTIALS_VALID) {
@@ -46,6 +46,7 @@ int main() {
 			while (clientSocket.getValidity()) {
 				boldAndViolet(string("\n") + user.getUsername());
 				boldAndRed(string("@client-sftp"));
+				cout << user.getPresentWorkingDirectory();
 				std::string rawCommand;
 				getline(cin, rawCommand);
 				if (UserManager::isExitCommand(rawCommand)) {
@@ -84,30 +85,14 @@ int main() {
 						command->execute();
 
 						if (command->getType() == ChangeDirectoryCommand::TYPE) {
-							user.setPresentWorkingDirectory(ChangeDirectoryCommand::getPathSpecified(*command));
+							string newWorkingDirectory = ChangeDirectoryCommand::getPathSpecified(*command);
+							user.setPresentWorkingDirectory(newWorkingDirectory);
 						}
 						cout << command->getOutput();
 					} catch (UIException &e) {
 						boldAndRed(e.what());
 						continue;
 					}
-				}
-
-				string receivedMessage = clientSocket.receiveAndDecrypt();
-
-				if (receivedMessage == TimelineManager::IS_ALIVE_PROBE) {
-					clientSocket.encryptAndSend(TimelineManager::IS_ALIVE_PROBE);
-					continue;
-				}
-				try {
-					Notification notification = TimelineManager::getDecodedNotification(receivedMessage);
-					cout << receivedMessage << endl;
-					cout << Utils::getFormattedEpochTime(notification.getSentAt()) + ": " + notification.getMessage()
-						 << endl;
-					clientSocket.encryptAndSend(TimelineManager::getEncodedNotification(notification));
-				} catch (invalid_argument &e) {
-					LOG_ERROR << "Discarding corrupted notification: " << e.what();
-					clientSocket.encryptAndSend(TimelineManager::IS_ALIVE_PROBE);
 				}
 			}
 		} catch (SecureSocketException &e) {

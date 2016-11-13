@@ -12,7 +12,7 @@ class ChangeDirectoryCommand : public Command {
 public:
 	static const int TYPE = 2;
 
-	ChangeDirectoryCommand(std::string, std::string);
+	ChangeDirectoryCommand(std::string &, std::string &);
 
 	void execute();
 

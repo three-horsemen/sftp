@@ -4,8 +4,9 @@
 
 #include "ui/command/MakeDirectoryCommand.hpp"
 
-MakeDirectoryCommand::MakeDirectoryCommand(std::string commandInput, std::string pwd) : Command(commandInput) {
-	parts.push_back(CommandPathUtil::convertToAbsolutePath(getPathSpecified(), pwd));
+MakeDirectoryCommand::MakeDirectoryCommand(std::string &commandInput, std::string &pwd) : Command(commandInput) {
+
+	parts.push_back(CommandPathUtil::convertToAbsolutePath(CommandPathUtil::getPathSpecified(rawCommand)[0], pwd));
 }
 
 void MakeDirectoryCommand::execute() {
@@ -42,5 +43,5 @@ void MakeDirectoryCommand::executeMakeDirectoryCommandUtil(std::string pathToNew
 }
 
 std::string MakeDirectoryCommand::getPathSpecified() {
-	return pathSpecified;
+	return parts[0];
 }

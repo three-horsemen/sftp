@@ -44,7 +44,7 @@ std::string UserSessionDetail::getLogoutTimestamp() {
 	return logoutTimestamp;
 }
 
-void UserSessionDetail::setPresentWorkingDirectory(std::string newWorkingDirectory) {
+void UserSessionDetail::setPresentWorkingDirectory(std::string &newWorkingDirectory) {
 	presentWorkingDirectory = newWorkingDirectory;
 }
 
