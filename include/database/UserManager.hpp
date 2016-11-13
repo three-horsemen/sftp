@@ -19,29 +19,36 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-using namespace std;
-class UserManager {
-private:
-	DbHandler &dbHandler;
-public:
-	static constexpr const char USERNAME[] = "USERNAME";
-	static constexpr const char PASSWORD[] = "PASSWORD";
-	static constexpr const char CREDENTIALS_VALID[] = "VALID";
-	static constexpr const char CREDENTIALS_INVALID[] = "INVALID";
-	static constexpr const char LOGOUT[] = "logout";
+		using namespace std;
 
-	UserManager(DbHandler&);
-	virtual ~UserManager();
+		class UserManager {
+		private:
+			DbHandler &dbHandler;
+		public:
+			static constexpr const char USERNAME[] = "USERNAME";
+			static constexpr const char PASSWORD[] = "PASSWORD";
+			static constexpr const char CREDENTIALS_VALID[] = "VALID";
+			static constexpr const char CREDENTIALS_INVALID[] = "INVALID";
+			static constexpr const char LOGOUT[] = "logout";
 
-	bool registerUser(string, string);
-	bool isAuthenticationValid(string, string);
+			UserManager(DbHandler &);
 
-	static bool isLogoutCommand(string);
-};
+			virtual ~UserManager();
 
-} /* namespace db */
+			bool registerUser(string, string);
+
+			bool isAuthenticationValid(string, string);
+
+			long getUserId(string);
+
+			static int getUserIdCallback(void *, int, char **, char **);
+
+			static bool isLogoutCommand(string);
+		};
+
+	} /* namespace db */
 
 } /* namespace manas_nav_common */
 

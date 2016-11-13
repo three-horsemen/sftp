@@ -25,31 +25,41 @@ const int test = 2;
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-class DbHandler {
-	sqlite3 *db;
-	void throwExceptionIfNeeded(int rc, const char* errorMessage);
-	void throwExceptionIfNeeded(int rc, string errorMessage);
-	static int pragmaCallback(void*, int, char**, char**);
-	char* generateSQLiteError(string);
-	string convertAndFreeIfNeeded(char*);
-public:
-	DbHandler(std::string, bool);
-	virtual ~DbHandler();
+		class DbHandler {
+			sqlite3 *db;
 
-	void executeRaw(std::string sql);
-	void query(std::string sql, int (*callback)(void*, int, char**, char**),
-			void* data);
-	template<class T> void query(std::string sql,
-			int (*callback)(void*, int, char**, char**), vector<T> &data);
-	int getRowCount(std::string sql);
-	int executeUpdate(std::string sql);
-	int executeInsert(std::string sql);
-	static int rowCountCallback(void*, int, char**, char**);
-};
+			void throwExceptionIfNeeded(int rc, const char *errorMessage);
 
-} /* namespace db */
+			void throwExceptionIfNeeded(int rc, string errorMessage);
+
+			string convertAndFreeIfNeeded(char *);
+
+		public:
+			DbHandler(std::string, bool, int, long unsigned);
+
+			virtual ~DbHandler();
+
+			void executeRaw(std::string sql);
+
+			void query(std::string sql, int (*callback)(void *, int, char **, char **),
+					   void *data);
+
+			template<class T>
+			void query(std::string sql,
+					   int (*callback)(void *, int, char **, char **), vector<T> &data);
+
+			int getRowCount(std::string sql);
+
+			int executeUpdate(std::string sql);
+
+			int executeInsert(std::string sql);
+
+			static int rowCountCallback(void *, int, char **, char **);
+		};
+
+	} /* namespace db */
 
 } /* namespace manas_nav_common */
 

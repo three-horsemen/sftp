@@ -9,27 +9,27 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-SQLiteException::SQLiteException(int rc, string errorMessage) :
-		rc(rc), errorMessageStr(errorMessage) {
-}
+		SQLiteException::SQLiteException(int rc, string errorMessage) :
+				rc(rc), errorMessageStr(errorMessage) {
+		}
 
-SQLiteException::~SQLiteException() {
-}
+		SQLiteException::~SQLiteException() {
+		}
 
-int SQLiteException::getErrorCode() {
-	return rc;
-}
+		int SQLiteException::getErrorCode() {
+			return rc;
+		}
 
-string SQLiteException::getErrorMessage() {
-	return errorMessageStr;
-}
+		string SQLiteException::getErrorMessage() {
+			return errorMessageStr;
+		}
 
-const char * SQLiteException::what() const throw () {
-	return errorMessageStr.c_str();
-}
+		const char *SQLiteException::what() const throw() {
+			return errorMessageStr.c_str();
+		}
 
-} /* namespace db */
+	} /* namespace db */
 
 } /* namespace sftp */

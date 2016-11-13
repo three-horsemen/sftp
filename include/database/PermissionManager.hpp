@@ -17,25 +17,29 @@
 
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-using namespace std;
+		using namespace std;
 
-class PermissionManager {
-private:
-	DbHandler &dbHandler;
-public:
-	PermissionManager(DbHandler&);
-	virtual ~PermissionManager();
+		class PermissionManager {
+		private:
+			DbHandler &dbHandler;
+		public:
+			PermissionManager(DbHandler &);
 
-	bool setOwner(string, string);
-	bool setOwners(string, string[], unsigned int);
-	bool isResourceAccessible(string, string);
-	int moveResource(string, string);
+			virtual ~PermissionManager();
 
-};
+			bool setOwner(string, string);
 
-} /* namespace db */
+			bool setOwners(string, string[], unsigned int);
+
+			bool isResourceAccessible(string, string);
+
+			int moveResource(string, string);
+
+		};
+
+	} /* namespace db */
 
 } /* namespace manas_nav_common */
 

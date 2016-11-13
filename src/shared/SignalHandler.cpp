@@ -1,5 +1,4 @@
 #include <signal.h>
-#include <errno.h>
 
 #include <shared/logger.hpp>
 
@@ -40,8 +39,12 @@ void SignalHandler::setExitSignal(bool _bExitSignal) {
  * @param[in] _ignored Not used but required by function prototype
  *                     to match required handler.
  */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+
 void SignalHandler::exitSignalHandler(int _ignored) {
-	LOG_INFO<<"Exit signal handled\n";
+#pragma clang diagnostic pop
+	LOG_INFO << "Exit signal handled\n";
 	mbGotExitSignal = true;
 }
 

@@ -8,39 +8,59 @@
 #ifndef SRC_SYNC_TIMELINEMANAGER_HPP_
 #define SRC_SYNC_TIMELINEMANAGER_HPP_
 
+#include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <string.h>
-#include <iostream>
+
+#include <shared/Utils.hpp>
 
 #include <database/DbHandler.hpp>
 #include <database/Notification.hpp>
 
+#include <boost/any.hpp>
+
 namespace sftp {
 
-namespace db {
+	namespace db {
 
-using namespace std;
-using namespace db;
+		using namespace std;
+		using namespace db;
 
-class TimelineManager {
-private:
-	DbHandler &dbHandler;
-	static int pendingUsersCallback(void*, int, char**, char**);
-public:
-	static constexpr const char* SERVER_ERROR = "SERVER_ERROR";
+		class TimelineManager {
+		private:
+			DbHandler &dbHandler;
 
-	TimelineManager(DbHandler&);
-	virtual ~TimelineManager();
+			static int pendingUsersCallback(void *, int, char **, char **);
 
-	void notifyUser(string, string);
-	void notifyOwners(string, string);
+		public:
+			static constexpr const char *SERVER_ERROR = "SERVER_ERROR";
+			static constexpr const char *NOTIFICATION_PREFIX = "NOTIFICATION";
+			static constexpr const char *IS_ALIVE_PROBE = "IS_ALIVE";
 
-	vector<Notification> getPendingNotifications(int);
-	void markAsNotified(long _id, long);
-};
+			TimelineManager(DbHandler &);
 
-} /* namespace db */
+			virtual ~TimelineManager();
+
+			static int ownerIdCallback(void *, int, char **, char **);
+
+			vector<long> getOwnerIds(string);
+
+			void notifyUser(long, string);
+
+			void notifyOwners(string, string);
+
+			vector<Notification> getPendingNotifications(long);
+
+			void markAsNotified(long _id, long);
+
+			static string getEncodedNotification(Notification &);
+
+			static Notification getDecodedNotification(string &);
+		};
+
+	} /* namespace db */
 
 } /* namespace sftp */
 
