@@ -292,14 +292,15 @@ ssize_t SecureDataSocket::readSecureSocket() {
 ssize_t SecureDataSocket::writeSecureSocket() {
 	ssize_t len;
 	//Send the length of the message.
-	len = send(getSocketDescriptor(), string_to_charArray(std::to_string(getBuffer().length())), 16, MSG_CONFIRM);
+	len = send(getSocketDescriptor(), string_to_charArray(std::to_string(getBuffer().length())), 16,
+			   MSG_CONFIRM | MSG_NOSIGNAL);
 	if (getValidity()) {
 		if (getBuffer().length() <= 0)
 			throw SecureSocketException(DATA_SOCK_WRITE_EMPTYBUFFER_EXC, "The buffer is empty.");
 		unsigned long bufferSendSize = 25;
 		for (unsigned i = 0; i < getBuffer().length(); i += bufferSendSize) {
 			len = send(getSocketDescriptor(), getBuffer().substr(i, bufferSendSize).c_str(),
-					   getBuffer().substr(i, bufferSendSize).size(), MSG_CONFIRM);
+					   getBuffer().substr(i, bufferSendSize).size(), MSG_CONFIRM | MSG_NOSIGNAL);
 			if (len <= 0) {
 				setValidity(false);
 				throw SecureSocketException(DATA_SOCK_WRITE_EMPTY_EXC, "Perhaps, the server went offline?");

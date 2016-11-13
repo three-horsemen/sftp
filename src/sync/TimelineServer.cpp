@@ -57,9 +57,6 @@ namespace sftp {
 						vector<Notification> notifications = timelineManager.getPendingNotifications(uid);
 						if (notifications.size()) {
 							for (unsigned int i = 0; i < notifications.size();) {
-								//string notification =	Utils::getFormattedEpochTime(notifications[i].getSentAt())
-								// + ": " + notifications[i].getMessage();
-
 								string encodedNotification = TimelineManager::getEncodedNotification(notifications[i]);
 								socket.encryptAndSend(encodedNotification);
 
@@ -83,7 +80,7 @@ namespace sftp {
 					/*TODO Enable this section once encryptAndSend is capable of throwing exception
 					 * as opposed to crashing the process when the client is down
 					 */
-					if (false && retryCount >= retryLimit) {
+					if (retryCount >= retryLimit) {
 						//TODO Have a more robust check for whether the connection is alive
 						try {
 							socket.encryptAndSend(TimelineManager::IS_ALIVE_PROBE);
