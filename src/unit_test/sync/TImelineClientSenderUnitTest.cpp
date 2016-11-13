@@ -17,33 +17,50 @@ int main(int argc, char **argv) {
 	do {
 		cout << "Options:\n"
 			 << "0. Exit\n"
-			 << "1. Register\n"
-			 << "2. Authenticate\n";
+			 << "1. Notify User\n"
+			 << "2. Notify Owners\n";
 
 		cin >> ch;
 		if (ch == 0) {
-
 			cout << "Exiting...\n";
 		} else if (ch == 1) {
-			cout << "username: ";
-			string username;
-			cin >> username;
-			cout << "password: ";
-			string password;
-			cin >> password;
-			DbManager::getDb()->getUserManager().registerUser(username, password);
-		} else if (ch == 2) {
-			cout << "username: ";
-			string username;
-			cin >> username;
-			cout << "password: ";
-			string password;
-			cin >> password;
-			bool isAuthentic = DbManager::getDb()->getUserManager().isAuthenticationValid(username, password);
-			if (isAuthentic) {
-				cout << "Login was a success\n";
+			cout << "Username or user ID: ";
+			string user;
+			cin >> user;
+			long uid;
+			if (Utils::isNumber(user)) {
+				uid = stoi(user);
 			} else {
-				cout << "Authentication credentials invalid\n";
+				try {
+					UserManager &userManager = DbManager::getDb()->getUserManager();
+					uid = userManager.getUserId(user);
+					if (uid == -1)
+						throw invalid_argument("Invalid username. Aborting operation.");
+				} catch (SQLiteException &e) {
+					LOG_ERROR << e.what();
+					cout << "Failed to determine user: " << e.what() << endl;
+					continue;
+				} catch (invalid_argument &e) {
+					LOG_ERROR << e.what();
+					cout << e.what();
+					continue;
+				}
+			}
+			cout << "Message: ";
+			string message;
+			cin >> message;
+			DbManager::getDb()->getTimelineManager().notifyUser(uid, message);
+		} else if (ch == 2) {
+			cout << "Resource: ";
+			string resource;
+			cin >> resource;
+			cout << "Enter the message: ";
+			string message;
+			cin >> message;
+			try {
+				DbManager::getDb()->getTimelineManager().notifyOwners(resource, message);
+			} catch (invalid_argument &e) {
+				LOG_ERROR << e.what();
 			}
 		} else {
 			cout << "Unknown choice\n";

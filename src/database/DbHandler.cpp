@@ -28,7 +28,8 @@ namespace sftp {
 			}
 		}
 
-		DbHandler::DbHandler(std::string dbPath, bool foreignKeysEnabled = true) {
+		DbHandler::DbHandler(std::string dbPath, bool foreignKeysEnabled, int config, unsigned long timeout) {
+			sqlite3_config(config);
 			int rc;
 			rc = sqlite3_open(dbPath.c_str(), &db);
 			if (rc != SQLITE_OK) {
@@ -146,15 +147,13 @@ namespace sftp {
 
 			LOG_DEBUG << "Executing prepared statement";
 			rc = sqlite3_step(stmt);
-			int errorCode = sqlite3_errcode(db);
-			const char *errorMessage2 = sqlite3_errmsg(db);
 			throwExceptionIfNeeded(rc, charArray_to_string(sqlite3_errmsg(db)));
 			count = sqlite3_changes(db);
 			LOG_DEBUG << "Affected " << count << " rows";
 			return count;
 		}
-
 	}
+
 /* namespace db */
 
 } /* namespace manas_nav_common */

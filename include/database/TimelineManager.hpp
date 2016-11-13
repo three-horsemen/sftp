@@ -8,13 +8,18 @@
 #ifndef SRC_SYNC_TIMELINEMANAGER_HPP_
 #define SRC_SYNC_TIMELINEMANAGER_HPP_
 
+#include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <string.h>
-#include <iostream>
+
+#include <shared/Utils.hpp>
 
 #include <database/DbHandler.hpp>
 #include <database/Notification.hpp>
+
+#include <boost/any.hpp>
 
 namespace sftp {
 
@@ -31,18 +36,28 @@ namespace sftp {
 
 		public:
 			static constexpr const char *SERVER_ERROR = "SERVER_ERROR";
+			static constexpr const char *NOTIFICATION_PREFIX = "NOTIFICATION";
+			static constexpr const char *IS_ALIVE_PROBE = "IS_ALIVE";
 
 			TimelineManager(DbHandler &);
 
 			virtual ~TimelineManager();
 
-			void notifyUser(string, string);
+			static int ownerIdCallback(void *, int, char **, char **);
+
+			vector<long> getOwnerIds(string);
+
+			void notifyUser(long, string);
 
 			void notifyOwners(string, string);
 
-			vector<Notification> getPendingNotifications(int);
+			vector<Notification> getPendingNotifications(long);
 
 			void markAsNotified(long _id, long);
+
+			static string getEncodedNotification(Notification &);
+
+			static Notification getDecodedNotification(string &);
 		};
 
 	} /* namespace db */

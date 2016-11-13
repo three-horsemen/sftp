@@ -78,7 +78,7 @@ namespace sftp {
 
 		void DbManager::initializeStaticDbManager(std::string dbPath) {
 			if (!DbManager::dbManager) {
-				DbManager::dbManager = new DbManager(*(new DbHandler(dbPath, true)));
+				DbManager::dbManager = new DbManager(*(new DbHandler(dbPath, true, SQLITE_CONFIG_SERIALIZED, 5000)));
 			}
 		}
 

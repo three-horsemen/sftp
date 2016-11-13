@@ -11,7 +11,7 @@ namespace sftp {
 
 	namespace db {
 
-		Notification::Notification(long _id, string message, long sentAt) :
+		Notification::Notification(long _id, long sentAt, string message) :
 				_id(_id), message(message), sentAt(sentAt) {
 		}
 

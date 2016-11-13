@@ -20,6 +20,7 @@ include_directories(include ${Boost_INCLUDE_DIRS})
 add_library(shared
 	src/shared/logger.cpp
 	src/shared/SignalHandler.cpp
+		src/shared/Utils.cpp include/shared/Utils.hpp
 	)
 target_link_libraries(shared ${Boost_LIBRARIES} pthread)
 

@@ -41,6 +41,10 @@ namespace sftp {
 
 			bool isAuthenticationValid(string, string);
 
+			long getUserId(string);
+
+			static int getUserIdCallback(void *, int, char **, char **);
+
 			static bool isLogoutCommand(string);
 		};
 

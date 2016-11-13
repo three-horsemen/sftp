@@ -9,6 +9,7 @@
 #define INCLUDE_DATABASE_NOTIFICATION_HPP_
 
 #include <string>
+#include <shared/Utils.hpp>
 
 namespace sftp {
 
@@ -20,7 +21,7 @@ namespace sftp {
 			string message;
 			long _id, sentAt;
 		public:
-			Notification(long, string, long);
+			Notification(long, long, string);
 
 			virtual ~Notification();
 

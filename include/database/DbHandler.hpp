@@ -36,7 +36,7 @@ namespace sftp {
 			string convertAndFreeIfNeeded(char *);
 
 		public:
-			DbHandler(std::string, bool);
+			DbHandler(std::string, bool, int, long unsigned);
 
 			virtual ~DbHandler();
 

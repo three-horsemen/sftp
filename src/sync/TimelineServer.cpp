@@ -4,18 +4,18 @@
 #include "security/securesocket.hpp"
 
 #include <boost/thread.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/chrono.hpp>
 
 #include <database/DbManager.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#define retryLimit 10
 
 namespace sftp {
 
 	using namespace std;
 	using namespace db;
 
-	const boost::thread::attributes timelineServerThread(SecureDataSocket socket) {
+	const boost::thread::attributes timelineServerThread(SecureDataSocket &socket) {
 		LOG_INFO << "Negotiating with new client " << socket.getSocketDescriptor();
 		try {
 			if (!socket.getValidity()) {
@@ -38,9 +38,8 @@ namespace sftp {
 				throw SecureSocketException(e.errorCode, string("Could not receive password(") + e.what() + ")");
 			}
 
-			bool isAuthentic =
-					DbManager::getDb()->getUserManager().isAuthenticationValid(
-							username, password);
+			UserManager userManager = DbManager::getDb()->getUserManager();
+			bool isAuthentic = userManager.isAuthenticationValid(username, password);
 			if (isAuthentic) {
 				socket.encryptAndSend(UserManager::CREDENTIALS_VALID);
 				LOG_INFO << socket.getSocketDescriptor() << ": Login sucess";
@@ -49,41 +48,59 @@ namespace sftp {
 				LOG_WARNING << socket.getSocketDescriptor() << ": Invalid credentials";
 			}
 
+			long uid = userManager.getUserId(username);
+			TimelineManager timelineManager = DbManager::getDb()->getTimelineManager();
 			do {
 				try {
-					vector<Notification> notifications = DbManager::getDb()->getTimelineManager().getPendingNotifications(
-							1);
+					unsigned retryCount;
+					for (retryCount = 0; retryCount < retryLimit; retryCount++) {
+						vector<Notification> notifications = timelineManager.getPendingNotifications(uid);
+						if (notifications.size()) {
+							for (unsigned int i = 0; i < notifications.size();) {
+								//string notification =	Utils::getFormattedEpochTime(notifications[i].getSentAt())
+								// + ": " + notifications[i].getMessage();
 
-					for (unsigned int i = 0; i < notifications.size();) {
-						std::time_t tt = static_cast<time_t>(notifications[i].getSentAt() / 1000);
-						boost::posix_time::ptime sentAt = boost::posix_time::from_time_t(tt);
-						string notification =
-								boost::posix_time::to_iso_string(sentAt) + ": " + notifications[i].getMessage();
-						socket.encryptAndSend(notification);
+								string encodedNotification = TimelineManager::getEncodedNotification(notifications[i]);
+								socket.encryptAndSend(encodedNotification);
 
-						string echo = socket.receiveAndDecrypt();
-						if (notification == echo) {
-							struct timeval tp;
-							gettimeofday(&tp, NULL);
-							long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-							DbManager::getDb()->getTimelineManager().markAsNotified(notifications[i].getId(), ms);
-							i++;
+								string echo = socket.receiveAndDecrypt();
+								if (encodedNotification == echo) {
+									struct timeval tp;
+									gettimeofday(&tp, NULL);
+									long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+									timelineManager.markAsNotified(notifications[i].getId(), ms);
+									i++;
+								} else {
+									LOG_WARNING << "Received mismatching echo";
+								}
+							}
+							break;
+						} else {
+							boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+							continue;
 						}
 					}
-					boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-				} catch (SecureSocketException &e) {
-					LOG_ERROR << "Could not received next command: " << e.what();
-				}
-			} while (socket.getValidity());
-
-			//TODO Handle reception of commands once secure socket timeouts are implemented:
-			do {
-				try {
-					string command = socket.receiveAndDecrypt();
-					LOG_DEBUG << "Received command: " << command;
-					if (UserManager::isLogoutCommand(command)) {
-						LOG_INFO << socket.getSocketDescriptor() << ": Client logged out";
-						break;
+					/*TODO Enable this section once encryptAndSend is capable of throwing exception
+					 * as opposed to crashing the process when the client is down
+					 */
+					if (false && retryCount >= retryLimit) {
+						//TODO Have a more robust check for whether the connection is alive
+						try {
+							socket.encryptAndSend(TimelineManager::IS_ALIVE_PROBE);
+							string echo = socket.receiveAndDecrypt();
+							if (string(TimelineManager::IS_ALIVE_PROBE) != echo) {
+								LOG_WARNING << "Closing connection to client: Received mismatching probe echo";
+								socket.destroySecureSocket();
+							}
+						} catch (SecureSocketException &e) {
+							LOG_ERROR << "Closing connection to client: " << e.what();
+							if (e.errorCode == DATA_SOCK_WRITE_EMPTY_EXC) {
+								socket.destroySecureSocket();
+							} else {
+								throw e;
+							}
+						}
+						continue;
 					}
 				} catch (SecureSocketException &e) {
 					LOG_ERROR << "Could not received next command: " << e.what();
@@ -109,7 +126,7 @@ namespace sftp {
 int main() {
 	sftp::DbManager::initializeStaticDbManager("sftp.db");
 	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8081");
-	if (!serverSecureListenSocket.getValidity() == false) {
+	if (!serverSecureListenSocket.getValidity()) {
 		LOG_ERROR << "Something went wrong!" << endl;
 		return -1;
 	}

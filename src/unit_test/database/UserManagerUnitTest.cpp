@@ -20,15 +20,15 @@ int main(int argc, char **argv) {
 	do {
 		cout << "Options:\n"
 			 << "0. Exit\n"
-			 << "1. Send message\n"
-			 << "2. Broadcast message\n";
+			 << "1. Register user\n"
+			 << "2. Validate authentication\n";
 
 		cin >> ch;
 		if (ch == 0) {
 
 			cout << "Exiting...\n";
 		} else if (ch == 1) {
-			cout << "Destination User ID: ";
+			cout << "username: ";
 			string username;
 			cin >> username;
 			cout << "password: ";

@@ -54,6 +54,27 @@ namespace sftp {
 			return rowCount == 1;
 		}
 
+		int UserManager::getUserIdCallback(void *data, int argc, char **argv, char **colNames) {
+			if (argc == 1 && strcmp(colNames[0], "_id") == 0) {
+				long uid = stoi(argv[0]);
+				LOG_DEBUG << "Received userId: " << uid;
+				*((long *) data) = uid;
+				return 0;
+			} else {
+				return 1;
+			}
+		}
+
+		long UserManager::getUserId(string username) {
+
+			//TODO Prevent SQL injection
+			string sql = "SELECT _id from User where username='" + username + "';";
+
+			long uid = -1;
+			dbHandler.query(sql, getUserIdCallback, (void *) &uid);
+			return uid;
+		}
+
 		bool UserManager::isLogoutCommand(string request) {
 			return boost::equals(request, UserManager::LOGOUT);
 		}

@@ -1,9 +1,8 @@
 //Client program to keep talking to a server until a "quit" message is sent.
 #include "security/securesocket.hpp"
 
-#include <boost/algorithm/string.hpp>
-
 #include <database/UserManager.hpp>
+#include <database/TimelineManager.hpp>
 
 using namespace std;
 using namespace sftp::db;
@@ -26,8 +25,7 @@ int main() {
 
 		buffer = clientSocket.receiveAndDecrypt();
 		if (buffer != UserManager::PASSWORD)
-			throw invalid_argument(
-					string("Unknown server response: ") + buffer);
+			throw invalid_argument(string("Unknown server response: ") + buffer);
 		string password = "";
 		cout << "Password: ";
 		getline(cin, password);
@@ -42,13 +40,25 @@ int main() {
 		cout << "Notifications:\n---\n";
 		try {
 			while (clientSocket.getValidity()) {
-				string notification = clientSocket.receiveAndDecrypt();
-				cout << notification << endl;
-				clientSocket.encryptAndSend(notification);
+				string receivedMessage = clientSocket.receiveAndDecrypt();
+
+				if (receivedMessage == TimelineManager::IS_ALIVE_PROBE) {
+					clientSocket.encryptAndSend(TimelineManager::IS_ALIVE_PROBE);
+					continue;
+				}
+				try {
+					Notification notification = TimelineManager::getDecodedNotification(receivedMessage);
+					cout << receivedMessage << endl;
+					cout << Utils::getFormattedEpochTime(notification.getSentAt()) + ": " + notification.getMessage()
+						 << endl;
+					clientSocket.encryptAndSend(TimelineManager::getEncodedNotification(notification));
+				} catch (invalid_argument &e) {
+					LOG_ERROR << "Discarding corrupted notification: " << e.what();
+					clientSocket.encryptAndSend(TimelineManager::IS_ALIVE_PROBE);
+				}
 			}
 		} catch (SecureSocketException &e) {
-			throw SecureSocketException(e.errorCode,
-										string("Failed to received notification: ") + e.what());
+			throw SecureSocketException(e.errorCode, string("Failed to received notification: ") + e.what());
 		}
 
 		//TODO Handle sending of commands once secure socket timeouts are implemented:
