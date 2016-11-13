@@ -56,3 +56,12 @@ long string_to_long(std::string str) {
 		return 0;
 	}
 }
+
+unsigned long long string_to_unsigned_long_long(std::string str) {
+	try {
+		return boost::lexical_cast<unsigned long long>(str);
+	}
+	catch (const boost::bad_lexical_cast &) {
+		return 0;
+	}
+}

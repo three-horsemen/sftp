@@ -164,13 +164,19 @@ void SecureDataSocket::setTimeoutSecValue(int newTimeoutSecValue) {
 	timeoutSecValue = newTimeoutSecValue;
 }
 
+void SecureDataSocket::setBufferSendSize(unsigned long newBufferSendSize) {
+	bufferSendSize = newBufferSendSize;
+}
+
 SecureDataSocket::SecureDataSocket() {
 	setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
+	setBufferSendSize(DEFAULT_BUFFER_SEND_SIZE);
 	LOG_WARNING << "Calling the constructor SecureDataSocket() wasn't supposed to happen.";
 }
 
 SecureDataSocket::SecureDataSocket(int socketDescriptor) {
 	setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
+	setBufferSendSize(DEFAULT_BUFFER_SEND_SIZE);
 	setValidity(true);
 	setSocketDescriptor(socketDescriptor);
 	setSourceIPAddress(getSourceAddrFromSockDesc(socketDescriptor));
@@ -183,6 +189,7 @@ SecureDataSocket::SecureDataSocket(int socketDescriptor) {
 SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode) {
 	try {
 		setTimeoutSecValue(DEFAULT_TIMEOUT_VALUE);
+		setBufferSendSize(DEFAULT_BUFFER_SEND_SIZE);
 		initSecureSocket();
 		setTargetIPAddress(targetIPAddress);
 		setTargetPortNumber(targetPortNumber);
@@ -198,6 +205,10 @@ SecureDataSocket::SecureDataSocket(std::string targetIPAddress, std::string targ
 		throw SecureSocketException(DATA_SOCK_EXC,
 									"Couldn't construct the SecureDataSocket. " + charArray_to_string(e.what()));
 	}
+}
+
+unsigned long SecureDataSocket::getBufferSendSize() const {
+	return bufferSendSize;
 }
 
 DHKeyContainer SecureDataSocket::getKeyContainer() const {
@@ -297,13 +308,12 @@ ssize_t SecureDataSocket::writeSecureSocket() {
 	if (getValidity()) {
 		if (getBuffer().length() <= 0)
 			throw SecureSocketException(DATA_SOCK_WRITE_EMPTYBUFFER_EXC, "The buffer is empty.");
-		unsigned long bufferSendSize = 25;
-		for (unsigned i = 0; i < getBuffer().length(); i += bufferSendSize) {
-			len = send(getSocketDescriptor(), getBuffer().substr(i, bufferSendSize).c_str(),
-					   getBuffer().substr(i, bufferSendSize).size(), MSG_CONFIRM | MSG_NOSIGNAL);
+		for (unsigned i = 0; i < getBuffer().length(); i += getBufferSendSize()) {
+			len = send(getSocketDescriptor(), getBuffer().substr(i, getBufferSendSize()).c_str(),
+					   getBuffer().substr(i, getBufferSendSize()).size(), MSG_CONFIRM | MSG_NOSIGNAL);
 			if (len <= 0) {
 				setValidity(false);
-				throw SecureSocketException(DATA_SOCK_WRITE_EMPTY_EXC, "Perhaps, the server went offline?");
+				throw SecureSocketException(DATA_SOCK_WRITE_EMPTY_EXC, "Perhaps, the receiver went offline?");
 			}
 		}
 	} else {
@@ -386,7 +396,7 @@ int SecureDataSocket::performDHExchange_asClient() {
 				if (!this->getValidity()) {
 					throw SecureSocketException(DH_KEYRECV_EXC, "Failed to read keys and public key from server.");
 				}
-//				LOG_DEBUG << "Read the primes and the server public key.";
+				LOG_DEBUG << "Read the primes and the server public key.";
 				//Format checking.
 				int index = 0;
 				if (this->getBuffer()[index] != '<') return -1;
@@ -413,7 +423,7 @@ int SecureDataSocket::performDHExchange_asClient() {
 				if (!this->getValidity()) {
 					throw SecureSocketException(DH_KEYSEND_EXC, "Failed to send public key to server.");
 				}
-//				LOG_DEBUG << "Sent the client public key.";
+				LOG_DEBUG << "Sent the client public key.";
 				if (!(this->keyContainer.isGoodPrimeQ() &&
 					  this->keyContainer.isGoodLocalPublic() &&
 					  this->keyContainer.isGoodLocalPrivate() &&

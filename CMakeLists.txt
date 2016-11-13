@@ -86,6 +86,11 @@ target_link_libraries(unit_test_SecureTCP_client security)
 add_executable(unit_test_SecureTCP_server src/unit_test/security/SecureTCP_Comms/server.cpp)
 target_link_libraries(unit_test_SecureTCP_server security)
 
+add_executable(unit_test_file_client src/unit_test/security/SecureTCP_FileTransfers/file_client.cpp)
+target_link_libraries(unit_test_file_client security)
+add_executable(unit_test_file_server src/unit_test/security/SecureTCP_FileTransfers/file_server.cpp)
+target_link_libraries(unit_test_file_server security)
+
 
 ###DB module
 add_library(db
