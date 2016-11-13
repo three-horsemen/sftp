@@ -33,6 +33,7 @@ add_library(ui
 	src/ui/CommandPathUtil.cpp
 	src/ui/UserSessionDetail.cpp
 	src/ui/UIExceptions.cpp
+	src/ui/ServerUtil.cpp
 	)
 target_link_libraries(ui shared ${Boost_LIBRARIES})
 
@@ -51,6 +52,8 @@ target_link_libraries(sftp_client ui security shared db)
 add_executable(sftp_server src/ui/Server.cpp)
 target_link_libraries(sftp_server ui security shared db)
 
+add_executable(unit_test_ServerUtil src/unit_test/ui/ServerUtil.cpp)
+target_link_libraries(unit_test_ServerUtil ui security shared db)
 
 
 ###Security module

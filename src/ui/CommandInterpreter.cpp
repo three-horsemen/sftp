@@ -20,7 +20,7 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   if(isCurrentlyOnClientSide && interpretIfOnServerExecution(rawCommand)) {
     //Send to server /* SOORYA */
     //receive the output in a string 'outputFromServer' /* SOORYA */
-
+    LOG_INFO << "Sending to server!";
     newUser.getSecureDataSocket().encryptAndSend(rawCommand);
     std::string outputFromServer = newUser.getSecureDataSocket().receiveAndDecrypt();
     Command newCommand(rawCommand, newUser);
@@ -39,7 +39,7 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   else if(rawCommand.compare(0,5,"mkdir")==0){
     return MakeDirectoryCommand(rawCommand, newUser);
   }
-  else if(rawCommand.compare(0,2,"rm")){
+  else if(rawCommand.compare(0,2,"rm")==0){
     return RemoveCommand(rawCommand, newUser);
   }
 /*  else if(rawCommand.compare(0,2,"cp")){

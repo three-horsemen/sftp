@@ -36,7 +36,7 @@ std::string getPassword() {
 int main() {
   int loginAttempts = LOGIN_ATTEMPTS;
   std::string password;
-  SecureDataSocket clientSecureDataSocket("127.0.0.1", "5576", HOST_MODE_CLIENT);
+  SecureDataSocket clientSecureDataSocket("127.0.0.1", "6476", HOST_MODE_CLIENT);
   displayInBoldAndRed( string("\n\t\tWelcome to Secure File Transfer Protocol\n") );
   displayInBoldAndViolet(string("Initializing database...\n")); //DEBUG
   sftp::db::DbManager::initializeStaticDbManager(DATABASE_NAME);

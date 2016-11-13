@@ -43,6 +43,7 @@ void serverThread(SecureDataSocket &acceptedSecureDataSocket)
         //cout << " $$$Mesg length: " << message.length() << " &&&Mesg size: " << message.size() << endl;
 
 				rawCommand = acceptedSecureDataSocket.receiveAndDecrypt();
+				rawCommand = CommandPathUtil::convertToAbsolutePath(rawCommand, JAIL_PATH);
         Command command = CommandInterpreter::interpretCommandType(rawCommand, user, ON_SERVER);
 				acceptedSecureDataSocket.encryptAndSend(command.getCommandOutput());
 
@@ -63,7 +64,7 @@ void serverThread(SecureDataSocket &acceptedSecureDataSocket)
 
 int main()
 {
-	SecureListenSocket serverSecureListenSocket("127.0.0.1", "5576");
+	SecureListenSocket serverSecureListenSocket("127.0.0.1", "6476");
 	if (!serverSecureListenSocket.getValidity())
 	{
 		cout << "Something went wrong!" << endl;
