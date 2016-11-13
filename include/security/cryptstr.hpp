@@ -7,6 +7,8 @@ char *string_to_charArray(std::string s);
 
 std::string charArray_to_string(const char *s);
 
+std::string charArray_to_string(const char *s, ssize_t len);
+
 std::string long_to_string(long a);
 
 long string_to_long(std::string a);

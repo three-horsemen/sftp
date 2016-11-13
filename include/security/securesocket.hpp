@@ -14,6 +14,7 @@
 #include "security/encrypt.hpp"
 #include "security/socketexceptions.hpp"
 #include "security/DHContainer.hpp"
+#include "security/WELL1024a.hpp"
 #include "shared/logger.hpp"
 
 #define HOST_MODE_SERVER 100
@@ -26,53 +27,27 @@ private:
 	int socketDescriptor;
 	std::string targetIPAddress;
 	std::string targetPortNumber;
-
 	std::string sourceIPAddress;
 	std::string sourcePortNumber;
-
 	std::string buffer;
-public:
+
+protected:
+
 	SecureSocket();
-
-	void setValidity(bool newValidity);
-
-	bool getValidity() const;
-
-	int getSocketDescriptor() const;
 
 	void setSocketDescriptor(int newSocketDescriptor);
 
-	std::string getTargetIPAddress() const;
-
 	void setTargetIPAddress(std::string newTargetIPAddress);
-
-	std::string getTargetPortNumber() const;
 
 	void setTargetPortNumber(std::string newTargetPortNumber);
 
-	std::string getSourceIPAddress() const;
-
 	void setSourceIPAddress(std::string newSourceIPAddress);
 
-	std::string getSourcePortNumber() const;
-
 	void setSourcePortNumber(std::string newSourcePortNumber);
-
-	std::string getBuffer() const;
 
 	void setBuffer(std::string newBuffer);
 
 	int initSecureSocket();
-
-	int destroySecureSocket();
-
-	std::string getTargetAddrFromSockDesc() const;
-
-	std::string getTargetPortFromSockDesc() const;
-
-	std::string getSourceAddrFromSockDesc() const;
-
-	std::string getSourcePortFromSockDesc() const;
 
 	std::string getTargetAddrFromSockDesc(int) const;
 
@@ -82,24 +57,43 @@ public:
 
 	std::string getSourcePortFromSockDesc(int) const;
 
-	// ~SecureSocket();
+public:
+	void setValidity(bool newValidity);
+
+	bool getValidity() const;
+
+	int getSocketDescriptor() const;
+
+	std::string getTargetAddrFromSockDesc() const;
+
+	std::string getTargetPortFromSockDesc() const;
+
+	std::string getSourceAddrFromSockDesc() const;
+
+	std::string getSourcePortFromSockDesc() const;
+
+	std::string getTargetIPAddress() const;
+
+	std::string getTargetPortNumber() const;
+
+	std::string getSourceIPAddress() const;
+
+	std::string getSourcePortNumber() const;
+
+	std::string getBuffer() const;
+
+	int destroySecureSocket();
 };
 
 class SecureDataSocket : public SecureSocket {
 private:
 	DHKeyContainer keyContainer;
+	WELL1024_PRNG generator;
 	int timeoutSecValue;
-public:
+
 	int getTimeoutSecValue() const;
 
 	void setTimeoutSecValue(int newTimeoutSecValue);
-
-	SecureDataSocket();
-
-	// SecureDataSocket(const SecureDataSocket&);
-	SecureDataSocket(int socketDescriptor);
-
-	SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode);
 
 	DHKeyContainer getKeyContainer() const;
 
@@ -113,11 +107,16 @@ public:
 
 	void setAndEncryptBuffer(std::string message);
 
-	std::string getAndDecryptBuffer() const;
+	std::string getAndDecryptBuffer();
+
+public:
+	SecureDataSocket();
+
+	SecureDataSocket(int socketDescriptor);
+
+	SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode);
 
 	void encryptAndSend(std::string message);
-
-	void encryptAndSend();
 
 	std::string receiveAndDecrypt();
 
@@ -128,7 +127,7 @@ public:
 
 class SecureListenSocket : public SecureSocket {
 private:
-	static const int queueSize;
+	static const unsigned int maxQueueSize;
 public:
 	SecureListenSocket();
 

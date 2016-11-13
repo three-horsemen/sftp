@@ -3,18 +3,18 @@
 char *string_to_charArray(std::string s) {
 	char *d = (char *) malloc((s.size()) * sizeof(char) + 1); // Space for length plus nul
 	if (d == NULL)
-		return NULL;          // No memory
-	strcpy(d, s.c_str());                // Copy the characters
+		return NULL;                    // No memory
+	strcpy(d, s.c_str());               // Copy the characters
 	d[s.size()] = '\0';
-	return d;                            // Return the new string
+	return d;                           // Return the new string
 }
 
 std::string charArray_to_string(const char *s) {
-	size_t len = strlen(s);
-	std::string res = "";
-	for (int i = 0; i < len && s[i] != '\0'; i++)
-		res.push_back(s[i]);
-	return res;
+	return std::string(s);
+}
+
+std::string charArray_to_string(const char *s, ssize_t len) {
+	return std::string(s, (unsigned long) len);
 }
 
 std::string long_to_string(long a) {
