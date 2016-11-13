@@ -20,6 +20,7 @@
 #define HOST_MODE_SERVER 100
 #define HOST_MODE_CLIENT 101
 #define DEFAULT_TIMEOUT_VALUE 5
+#define DEFAULT_BUFFER_SEND_SIZE 25
 
 class SecureSocket {
 private:
@@ -90,10 +91,13 @@ private:
 	DHKeyContainer keyContainer;
 	WELL1024_PRNG generator;
 	int timeoutSecValue;
+	unsigned long bufferSendSize;
 
 	int getTimeoutSecValue() const;
 
 	void setTimeoutSecValue(int newTimeoutSecValue);
+
+	void setBufferSendSize(unsigned long newBufferSendSize);
 
 	DHKeyContainer getKeyContainer() const;
 
@@ -115,6 +119,8 @@ public:
 	SecureDataSocket(int socketDescriptor);
 
 	SecureDataSocket(std::string targetIPAddress, std::string targetPortNumber, int hostMode);
+
+	unsigned long getBufferSendSize() const;
 
 	void encryptAndSend(std::string message);
 
