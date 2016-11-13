@@ -20,7 +20,8 @@
 
 #include <database/SQLiteException.hpp>
 
-#define test 2
+// #define test 2
+const int test = 2;
 
 namespace sftp {
 

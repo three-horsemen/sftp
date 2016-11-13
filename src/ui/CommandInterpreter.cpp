@@ -1,5 +1,4 @@
 #include "ui/CommandInterpreter.hpp"
-#include "ui/CommandPathUtil.hpp"
 
 bool CommandInterpreter::interpretIfOnServerExecution(std::string rawCommand) {
   vector<std::string> tokenizedSourcePath;
@@ -13,6 +12,13 @@ bool CommandInterpreter::interpretIfOnServerExecution(std::string rawCommand) {
   else return false;
 }
 
+bool CommandInterpreter::isOfType(std::string rawCommand, std::string type) {
+  if(rawCommand.compare(0,type.size(),type)==0)
+    return true;
+  else
+    return false;
+}
+
 Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSessionDetail& newUser, bool isCurrentlyOnClientSide) {
   boost::trim_all(rawCommand);
   if((rawCommand[rawCommand.size()-1]=='/') || (rawCommand[rawCommand.size()-1]=='\\')) {
@@ -20,12 +26,14 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   }
   if(isCurrentlyOnClientSide && interpretIfOnServerExecution(rawCommand)) {
     //Send to server /* SOORYA */
-    if(interpretIfOnServerExecution(CommandPathUtil::interpretIfOnServerExecution((CommandPathUtil::getPathSpecified(rawCommand))[0]))) {
-      newUser.getSecureDataSocket().encryptAndSend(rawCommand);
-    }
+    newUser.getSecureDataSocket().encryptAndSend(rawCommand);
+    std::string commandOutput = newUser.getSecureDataSocket().receiveAndDecrypt();
     //receive the output in a string 'outputFromServer' /* SOORYA */
     Command newCommand(rawCommand, newUser);
-    //newCommand.setCommandOutput(outputFromServer);
+    newCommand.setCommandOutput(commandOutput);
+    if(isOfType(string("cd"))) {
+      newUser.setPresentWorkingDirectory(commandOutput);
+    }
     return newCommand;
   }
   if(rawCommand.compare(0,2,"cd")==0) {
