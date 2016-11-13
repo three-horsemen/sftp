@@ -10,9 +10,8 @@
 
 class RemoveCommand : public Command {
 private:
-	std::string pathSpecified;
 public:
-	RemoveCommand(std::string commandInput, string pwd);
+	RemoveCommand(std::string &, string &);
 
 	void execute();
 

@@ -4,7 +4,7 @@
 
 #include "ui/command/ChangeDirectoryCommand.hpp"
 
-ChangeDirectoryCommand::ChangeDirectoryCommand(std::string commandInput, std::string pwd) : Command(commandInput) {
+ChangeDirectoryCommand::ChangeDirectoryCommand(std::string &commandInput, std::string &pwd) : Command(commandInput) {
 	parts.push_back(
 			CommandPathUtil::convertToAbsolutePath(CommandPathUtil::getPathSpecified(Command::getRawCommand())[0],
 												   pwd));
@@ -27,7 +27,7 @@ void ChangeDirectoryCommand::execute() {
 }
 
 std::string ChangeDirectoryCommand::getPathSpecified(Command &command) {
-	command.getParts()[0];
+	return command.getParts()[0];
 }
 
 int ChangeDirectoryCommand::getType() {

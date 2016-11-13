@@ -29,7 +29,7 @@ public:
 
 	std::string getLogoutTimestamp();
 
-	void setPresentWorkingDirectory(std::string newWorkingDirectory);
+	void setPresentWorkingDirectory(std::string &newWorkingDirectory);
 
 	std::string getPresentWorkingDirectory();
 

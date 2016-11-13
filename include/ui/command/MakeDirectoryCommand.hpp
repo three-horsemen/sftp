@@ -11,9 +11,8 @@
 
 class MakeDirectoryCommand : public Command {
 private:
-	std::string pathSpecified;
 public:
-	MakeDirectoryCommand(std::string commandInput, std::string pwd);
+	MakeDirectoryCommand(std::string &, std::string &);
 
 	void execute();
 

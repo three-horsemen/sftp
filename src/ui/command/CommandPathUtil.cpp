@@ -2,8 +2,8 @@
 
 std::vector<std::string> CommandPathUtil::getPathSpecified(std::string rawCommand) {
 	//Finds pathSpecified
-	int pathStartPosition, pathEndPosition;
-	for (int i = 0; i < rawCommand.size(); i++) {
+	unsigned long pathStartPosition = 0, pathEndPosition;
+	for (long i = 0; i < rawCommand.size(); i++) {
 		if (rawCommand[i] == ' ' && rawCommand[i + 1] != '-' && rawCommand[i + 1] != ' ') {
 			pathStartPosition = i + 1;
 			break;
@@ -25,11 +25,7 @@ std::vector<std::string> CommandPathUtil::getPathSpecified(std::string rawComman
 
 bool CommandPathUtil::specifiedPathExists(std::string pathSpecified) {
 	struct stat st;
-	if (stat(pathSpecified.c_str(), &st) == 0)
-		return true;
-		//cout<<"PATH IS VALID.";
-	else
-		return false;
+	return stat(pathSpecified.c_str(), &st) == 0;
 	//cout<<"INVALID PATH.";
 }
 
@@ -40,7 +36,7 @@ void CommandPathUtil::reduceToCanonicalForm(vector<std::string> &tokenizedPresen
 			while (i > 0 && tokenizedPresentWorkingDirectory[i].compare(string("..")) == 0) {
 				tokenizedPresentWorkingDirectory.erase(tokenizedPresentWorkingDirectory.begin() + i);
 				tokenizedPresentWorkingDirectory.erase(tokenizedPresentWorkingDirectory.begin() + i - 1);
-				i--;
+				i -= 2;
 			}
 		}
 	}
@@ -90,8 +86,7 @@ std::string CommandPathUtil::findParentToGivenPath(std::string pathToNewDirector
 bool CommandPathUtil::specifiedPathIsDirectory(std::string pathSpecified) {
 	struct stat st;
 	if (stat(pathSpecified.c_str(), &st) == 0) {
-		if (st.st_mode & S_IFDIR) return true;
-		else return false;
+		return (st.st_mode & S_IFDIR) != 0;
 	} else
 		return false;
 }

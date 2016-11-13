@@ -55,6 +55,7 @@ namespace sftp {
 			do {
 				try {
 					//TODO Add logic to respond to commands here
+
 				} catch (SecureSocketException &e) {
 					LOG_ERROR << "Could not received next command: " << e.what();
 				}

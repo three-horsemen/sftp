@@ -4,8 +4,8 @@
 
 #include <ui/command/RemoveCommand.hpp>
 
-RemoveCommand::RemoveCommand(std::string commandInput, string pwd) : Command(commandInput) {
-	parts.push_back(CommandPathUtil::convertToAbsolutePath(getPathSpecified(), pwd));
+RemoveCommand::RemoveCommand(std::string &commandInput, string &pwd) : Command(commandInput) {
+	parts.push_back(CommandPathUtil::convertToAbsolutePath(CommandPathUtil::getPathSpecified(commandInput)[0], pwd));
 }
 
 void RemoveCommand::execute() {
@@ -32,9 +32,9 @@ int RemoveCommand::getType() {
 void RemoveCommand::executeRemoveCommandUtil(std::string pathSpecified) {
 	boost::filesystem::path p = pathSpecified.c_str();
 	boost::filesystem::remove_all(p);
-	output = "Successfully removed: ";
+	output = "Successfully removed: " + pathSpecified;
 }
 
 std::string RemoveCommand::getPathSpecified() {
-	return pathSpecified;
+	return parts[0];
 }
