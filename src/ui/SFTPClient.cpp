@@ -1,6 +1,6 @@
 //Client program to keep talking to a server until a "exit" message is sent.
 #include "security/securesocket.hpp"
-
+#include "security/securefiletransfer.hpp"
 #include <database/UserManager.hpp>
 #include <database/TimelineManager.hpp>
 #include <ui/UserSessionDetail.hpp>
@@ -52,6 +52,32 @@ int main() {
 					clientSocket.encryptAndSend(rawCommand);
 					throw runtime_error("Logging out...");
 				} else {
+
+					/*
+					 * Soorya's logic to send a file across the network,
+					 * if at all it is of the form:
+					 * send <filename>
+					 */
+
+					std::string rawCommandCopy = rawCommand;
+					vector<std::string> brokenRawCommand = Tokenize(rawCommandCopy, " ");
+					if (brokenRawCommand.size() == 3) {
+						if (brokenRawCommand[0] == "send") {
+							cout << "Entered the send if." << endl;
+							clientSocket.encryptAndSend("MODE_SENDTOSERVER");
+							clientSocket.receiveAndDecrypt();
+
+							cout << "Sending the target path." << endl;
+							clientSocket.encryptAndSend(brokenRawCommand[2]);
+							clientSocket.receiveAndDecrypt();
+
+							cout << "Sending the file." << endl;
+							sendFileOverSecureDataSocket(clientSocket, brokenRawCommand[1]);
+						}
+					}
+
+					//End of Soorya's send logic.
+
 					try {
 						Command *command = CommandInterpreter::getInterpretedCommand(rawCommand,
 																					 user.getPresentWorkingDirectory());

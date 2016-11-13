@@ -6,7 +6,7 @@
 #define SFTP_UserSessionDetail_HPP
 
 #include <string>
-
+#include <iostream>
 #include <ui/CommandPathUtil.hpp>
 #include <security/securesocket.hpp>
 

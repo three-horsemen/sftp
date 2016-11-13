@@ -61,8 +61,8 @@ std::string UserSessionDetail::getUsername() {
 }
 
 void UserSessionDetail::display() {
-	cout << "\nUsername: " << username;
-	cout << "\nLogin time: " << loginTimestamp;
-	cout << "\nPresent working directory: " << presentWorkingDirectory;
-	cout << "\nLogout time: " << logoutTimestamp;
+	std::cout << "\nUsername: " << username;
+	std::cout << "\nLogin time: " << loginTimestamp;
+	std::cout << "\nPresent working directory: " << presentWorkingDirectory;
+	std::cout << "\nLogout time: " << logoutTimestamp;
 }

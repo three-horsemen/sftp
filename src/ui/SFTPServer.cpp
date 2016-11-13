@@ -5,7 +5,7 @@
 //Multithreading functionality is enabled, but not limited.
 //The communications are secured over a Diffie-Hellman key exchange.
 #include "security/securesocket.hpp"
-
+#include "security/securefiletransfer.hpp"
 #include <boost/thread.hpp>
 
 #include <database/DbManager.hpp>
@@ -55,6 +55,16 @@ namespace sftp {
 			do {
 				try {
 					//TODO Add logic to respond to commands here
+					std::string receivedTask = socket.receiveAndDecrypt();
+					socket.encryptAndSend(receivedTask);
+					cout << "Task received." << endl;
+					if (receivedTask == "MODE_SENDTOSERVER") {
+						cout << "Entered send mode." << endl;
+						std::string targetDirectory = socket.receiveAndDecrypt();
+						socket.encryptAndSend(targetDirectory);
+						cout << "About to receive the file." << endl;
+						receiveFileOverSecureDataSocket(socket, targetDirectory);
+					}
 				} catch (SecureSocketException &e) {
 					LOG_ERROR << "Could not received next command: " << e.what();
 				}
