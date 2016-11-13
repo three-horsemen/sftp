@@ -7,7 +7,7 @@ UserSessionDetail::UserSessionDetail() {
   logoutTimestamp = string("");
 }
 
-UserSessionDetail::UserSessionDetail(std::string uName, std::string password){
+UserSessionDetail::UserSessionDetail(std::string uName){
   username = uName;
   //Call function to check if credentials are valid.
   presentWorkingDirectory = CommandPathUtil::getCurrentWorkingDirectory();
@@ -49,8 +49,20 @@ std::string UserSessionDetail::getPresentWorkingDirectory() {
   return presentWorkingDirectory;
 }
 
+void UserSessionDetail::setUsername(std::string uName) {
+  username = uName;
+}
+
 std::string UserSessionDetail::getUsername() {
   return username;
+}
+
+SecureDataSocket UserSessionDetail::getSecureDataSocket() {
+  return secureDataSocket;
+}
+
+void UserSessionDetail::setSecureDataSocket(SecureDataSocket secureDataSocketNew) {
+  secureDataSocket = secureDataSocketNew;
 }
 
 void UserSessionDetail::display() {

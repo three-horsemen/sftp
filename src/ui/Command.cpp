@@ -34,7 +34,7 @@ ChangeDirectoryCommand::ChangeDirectoryCommand(std::string commandInput, UserSes
 }
 
 void ChangeDirectoryCommand::setPathSpecified() {
-  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
+  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand())[0];
 }
 
 UserSessionDetail ChangeDirectoryCommand::executeChangeDirectoryCommand() {
@@ -129,7 +129,7 @@ std::string ListDirectoryContentsCommand::getPathSpecified () {
 }
 
 void ListDirectoryContentsCommand::setPathSpecified () {
-  pathSpecified = CommandPathUtil::getPathSpecified (Command::getRawCommand());
+  pathSpecified = CommandPathUtil::getPathSpecified (Command::getRawCommand())[0];
 }
 
 
@@ -174,7 +174,7 @@ void MakeDirectoryCommand::executeMakeDirectoryCommandUtil(std::string pathToNew
 }
 
 void MakeDirectoryCommand::setPathSpecified() {
-  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
+  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand())[0];
 }
 
 std::string MakeDirectoryCommand::getPathSpecified() {
@@ -214,7 +214,7 @@ void RemoveCommand::executeRemoveCommandUtil(std::string pathSpecified) {
 }
 
 void RemoveCommand::setPathSpecified() {
-  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
+  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand())[0];
 }
 
 std::string RemoveCommand::getPathSpecified() {
@@ -224,7 +224,7 @@ std::string RemoveCommand::getPathSpecified() {
 
 
 /*****Remove directory command*****/
-
+/*
 CopyCommand::CopyCommand(std::string commandInput, UserSessionDetail newUser) : Command(commandInput, newUser) {
   setPathSpecified();
   executeCopyCommand();
@@ -254,9 +254,10 @@ void CopyCommand::executeCopyCommandUtil(std::string pathSpecified) {
 }
 
 void CopyCommand::setPathSpecified() {
-  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand());
+  pathSpecified = CommandPathUtil::getPathSpecified(Command::getRawCommand())[0];
 }
 
 std::string CopyCommand::getPathSpecified() {
   return pathSpecified;
 }
+*/

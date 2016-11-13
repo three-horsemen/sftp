@@ -12,7 +12,7 @@ int main() {
   cout<<"UI SFTP\nTry out the following commands:\n";
   cout<<"1. List directory contents command: ls [path]\n2. Change working directory: cd [path]\n3. Make a new directory: mkdir [path]\n4. Remove directoy: rm [path]";
   while(true) {
-  cout<<endl<<newUser.getUsername()<<"@client-sftp:"<<newCommand.getUserSessionDetail().getPresentWorkingDirectory()<<"$ ";
+  cout<<endl<<newUser.getUsername()<<"\033[1;31m@client-sftp\033[0m"<<newCommand.getUserSessionDetail().getPresentWorkingDirectory()<<"$ ";
   std::string rawCommand; getline(cin, rawCommand);
   try{
     Command tempCommand = CommandInterpreter::interpretCommandType(rawCommand, newUser, false); //true for client, false for server

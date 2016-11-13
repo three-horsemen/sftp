@@ -45,6 +45,10 @@ target_link_libraries(unit_test_UserSessionDetail ui)
 add_executable(unit_test_Command src/unit_test/ui/Command.cpp)
 target_link_libraries(unit_test_Command ui security)
 
+add_executable(sftp_client src/ui/Client.cpp)
+target_link_libraries(sftp_client ui security shared db)
+
+
 
 
 ###Security module

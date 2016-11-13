@@ -1,4 +1,5 @@
 #include "ui/CommandInterpreter.hpp"
+#include "ui/CommandPathUtil.hpp"
 
 bool CommandInterpreter::interpretIfOnServerExecution(std::string rawCommand) {
   vector<std::string> tokenizedSourcePath;
@@ -19,6 +20,9 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   }
   if(isCurrentlyOnClientSide && interpretIfOnServerExecution(rawCommand)) {
     //Send to server /* SOORYA */
+    if(interpretIfOnServerExecution(CommandPathUtil::interpretIfOnServerExecution((CommandPathUtil::getPathSpecified(rawCommand))[0]))) {
+      newUser.getSecureDataSocket().encryptAndSend(rawCommand);
+    }
     //receive the output in a string 'outputFromServer' /* SOORYA */
     Command newCommand(rawCommand, newUser);
     //newCommand.setCommandOutput(outputFromServer);
@@ -39,7 +43,7 @@ Command CommandInterpreter::interpretCommandType(std::string rawCommand, UserSes
   else if(rawCommand.compare(0,2,"rm")==0){
     return RemoveCommand(rawCommand, newUser);
   }
-  else if(rawCommand.compare(0,2,"cp")){
+  /*else if(rawCommand.compare(0,2,"cp")){
     return CopyFiles(rawCommand, newUser);
   }
   /*

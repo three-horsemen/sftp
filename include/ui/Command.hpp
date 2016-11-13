@@ -4,14 +4,15 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <algorithm>
-#include "ui/UIExceptions.hpp"
 #include <vector>
+#include "shared/logger.hpp"
+#include "ui/UIExceptions.hpp"
+#include "database/DbManager.hpp"
+#include "ui/UserSessionDetail.hpp"
 #define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
 #undef BOOST_NO_CXX11_SCOPED_ENUMS                                    /***used for  MakeDirectoryCommand***/
 #include <boost/algorithm/string/trim_all.hpp>
-#include "ui/UserSessionDetail.hpp"
-using namespace std;
 
 class Command {
 protected:
@@ -70,7 +71,7 @@ public:
   void setPathSpecified();
   std::string getPathSpecified();
 };
-
+/*
 class CopyCommand : public Command {
 private:
   std::string pathSpecified;
@@ -81,3 +82,4 @@ public:
   void setPathSpecified();
   std::string getPathSpecified();
 };
+*/

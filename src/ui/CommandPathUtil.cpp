@@ -1,6 +1,6 @@
 #include "ui/CommandPathUtil.hpp"
 
-std::string CommandPathUtil::getPathSpecified(std::string rawCommand) {
+std::vector<std::string> CommandPathUtil::getPathSpecified(std::string rawCommand) {
   //Finds pathSpecified
   int pathStartPosition, pathEndPosition;
   for(int i=0;i<rawCommand.size();i++) {
@@ -13,25 +13,12 @@ std::string CommandPathUtil::getPathSpecified(std::string rawCommand) {
     }
   }
   for(pathEndPosition = pathStartPosition ; pathEndPosition<rawCommand.size() && rawCommand[pathEndPosition] != ' ' ; pathEndPosition++);
-  pathEndPosition--;
-  return rawCommand.substr(pathStartPosition,pathEndPosition);
-}
-
-std::string CommandPathUtil::getPathSpecified(std::string rawCommand, int fromThisPosition) {
-  //Finds pathSpecified
-  int pathStartPosition, pathEndPosition;
-  for(int i=fromThisPosition;i<rawCommand.size();i++) {
-    if(rawCommand[i]==' '&&rawCommand[i+1]!='-'&&rawCommand[i+1]!=' ') {
-      pathStartPosition = i+1;
-      break;
-    }
-    else if(i==rawCommand.size()-1) {
-      return string("");
-    }
-  }
-  for(pathEndPosition=pathStartPosition;pathEndPosition<rawCommand.size()&&rawCommand[pathEndPosition]!=' ';pathEndPosition++);
-  pathEndPosition--;
-  return rawCommand.substr(pathStartPosition,pathEndPosition);
+  pathEndPosition-=3;
+  std::vector<std::string> paths;
+  paths.push_back(rawCommand.substr(pathStartPosition,pathEndPosition));
+  if((rawCommand.size() - (pathEndPosition+2))>3)
+    paths.push_back(rawCommand.substr(pathEndPosition+2, rawCommand.size()));
+  return paths;
 }
 
 bool CommandPathUtil::specifiedPathExists(std::string pathSpecified) {
