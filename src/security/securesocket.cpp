@@ -392,6 +392,10 @@ int SecureDataSocket::performDHExchange_asClient() {
 			do {
 				//Second, receive the server's primes and public key.
 				//Expected format: <primeP#primeQ@serverPublic>
+				if (isTimeout(getTimeoutSecValue(), getSocketDescriptor()) <= 0) {
+					LOG_WARNING << "The server has timed out!";
+					throw SecureSocketException(DATA_SOCK_READ_TIMEOUT, "The server timed out during the DHExchange.");
+				}
 				this->readSecureSocket();
 				if (!this->getValidity()) {
 					throw SecureSocketException(DH_KEYRECV_EXC, "Failed to read keys and public key from server.");
@@ -433,6 +437,7 @@ int SecureDataSocket::performDHExchange_asClient() {
 				}
 
 				//Finally, calculate the shared secret.
+				LOG_DEBUG << "Calculating the shared secret.";
 				this->keyContainer.setSharedSecret(long_to_string(
 						crtModulus(string_to_long(this->keyContainer.getRemotePublic()),
 								   string_to_long(this->keyContainer.getLocalPrivate()),

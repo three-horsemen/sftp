@@ -65,6 +65,7 @@ add_library(security
 		src/security/WELL1024a.cpp
 		src/security/DHContainer.cpp
 	src/security/securesocket.cpp
+		src/security/securefiletransfer.cpp
 	src/security/socketexceptions.cpp
 	)
 target_link_libraries(security shared)
