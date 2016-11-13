@@ -31,7 +31,7 @@ namespace sftp {
 			static constexpr const char PASSWORD[] = "PASSWORD";
 			static constexpr const char CREDENTIALS_VALID[] = "VALID";
 			static constexpr const char CREDENTIALS_INVALID[] = "INVALID";
-			static constexpr const char LOGOUT[] = "logout";
+			static constexpr const char EXIT[] = "exit";
 
 			UserManager(DbHandler &);
 
@@ -45,7 +45,7 @@ namespace sftp {
 
 			static int getUserIdCallback(void *, int, char **, char **);
 
-			static bool isLogoutCommand(string);
+			static bool isExitCommand(string);
 		};
 
 	} /* namespace db */

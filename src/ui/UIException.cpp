@@ -1,3 +1,7 @@
+//
+// Created by reubenjohn on 13/11/16.
+//
+
 #include "ui/UIException.hpp"
 
 UIException::UIException(int newErrorCode) :
@@ -6,7 +10,7 @@ UIException::UIException(int newErrorCode) :
 }
 
 UIException::UIException(int newErrorCode,
-											 std::string newMessage) :
+						 std::string newMessage) :
 		errorCode(newErrorCode) {
 	message = newMessage;
 }

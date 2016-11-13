@@ -1,26 +1,29 @@
-
-//Client program to keep talking to a server until a "quit" message is sent.
+//Client program to keep talking to a server until a "exit" message is sent.
 #include "security/securesocket.hpp"
 
 #include <database/UserManager.hpp>
 #include <database/TimelineManager.hpp>
+#include <ui/UserSessionDetail.hpp>
+#include <ui/CommandInterpreter.hpp>
 
 using namespace std;
 using namespace sftp::db;
 
+#define boldAndRed(str) Utils::displayInBoldAndRed(str)
+#define boldAndViolet(str) Utils::displayInBoldAndViolet(str)
+
 int main() {
-	SecureDataSocket clientSocket("127.0.0.1", "8081",
-								  HOST_MODE_CLIENT);
+	boldAndRed(string("\t\tWelcome to Secure File Transfer Protocol\n"));
+	SecureDataSocket clientSocket("127.0.0.1", "8081", HOST_MODE_CLIENT);
 
 	string buffer;
 	try {
-
 		buffer = clientSocket.receiveAndDecrypt();
 		if (buffer != UserManager::USERNAME)
 			throw invalid_argument(
 					string("Unknown server response: ") + buffer);
 		string username = "";
-		cout << "Username: ";
+		boldAndViolet(string("Username: "));
 		getline(cin, username);
 		clientSocket.encryptAndSend(username);
 
@@ -28,19 +31,42 @@ int main() {
 		if (buffer != UserManager::PASSWORD)
 			throw invalid_argument(string("Unknown server response: ") + buffer);
 		string password = "";
-		cout << "Password: ";
+		boldAndViolet(string("Password: "));
 		getline(cin, password);
 		clientSocket.encryptAndSend(password);
 		buffer = clientSocket.receiveAndDecrypt();
 		if (buffer == UserManager::CREDENTIALS_VALID) {
-			cout << "Login success (To logout use the 'logout' command)\n";
+			boldAndViolet(string("Login success (To logout use the '") + UserManager::EXIT + "' command)");
 		} else {
 			throw invalid_argument("Invalid credentials");
 		}
 
-		cout << "Notifications:\n---\n";
+		UserSessionDetail user(username);
 		try {
 			while (clientSocket.getValidity()) {
+				boldAndViolet(string("\n") + user.getUsername());
+				boldAndRed(string("@client-sftp"));
+				std::string rawCommand;
+				getline(cin, rawCommand);
+				if (UserManager::isExitCommand(rawCommand)) {
+					clientSocket.encryptAndSend(rawCommand);
+					throw runtime_error("Logging out...");
+				} else {
+					try {
+						Command *command = CommandInterpreter::getInterpretedCommand(rawCommand,
+																					 user.getPresentWorkingDirectory());
+						command->execute();
+
+						if (command->getType() == ChangeDirectoryCommand::TYPE) {
+							user.setPresentWorkingDirectory(ChangeDirectoryCommand::getPathSpecified(*command));
+						}
+						cout << command->getOutput();
+					} catch (UIException &e) {
+						boldAndRed(e.what());
+						continue;
+					}
+				}
+
 				string receivedMessage = clientSocket.receiveAndDecrypt();
 
 				if (receivedMessage == TimelineManager::IS_ALIVE_PROBE) {
@@ -67,15 +93,9 @@ int main() {
 			cout << "$ ";
 			string command;
 			getline(cin, command);
-			if (UserManager::isExitCommand(command)) {
-				clientSocket.encryptAndSend(command);
-				throw runtime_error("Logging out...");
-			} else {
-				cout << command << ": Command not found" << endl;
-			}
 		}
 	} catch (exception &e) {
-		cout << e.what() << endl;
+		boldAndRed(string(e.what()) + "\n");
 		clientSocket.destroySecureSocket();
 		return 0;
 	}

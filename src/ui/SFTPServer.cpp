@@ -1,12 +1,14 @@
 //Server program to keep talking to clients until a "quit" message is sent.
 //Multithreading functionality is enabled, but not limited.
 //The communications are secured over a Diffie-Hellman key exchange.
+//Server program to keep talking to clients until a "quit" message is sent.
+//Multithreading functionality is enabled, but not limited.
+//The communications are secured over a Diffie-Hellman key exchange.
 #include "security/securesocket.hpp"
 
 #include <boost/thread.hpp>
 
 #include <database/DbManager.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #define retryLimit 10
 
@@ -52,53 +54,7 @@ namespace sftp {
 			TimelineManager timelineManager = DbManager::getDb()->getTimelineManager();
 			do {
 				try {
-					unsigned retryCount;
-					for (retryCount = 0; retryCount < retryLimit; retryCount++) {
-						vector<Notification> notifications = timelineManager.getPendingNotifications(uid);
-						if (notifications.size()) {
-							for (unsigned int i = 0; i < notifications.size();) {
-								string encodedNotification = TimelineManager::getEncodedNotification(notifications[i]);
-								socket.encryptAndSend(encodedNotification);
-
-								string echo = socket.receiveAndDecrypt();
-								if (encodedNotification == echo) {
-									struct timeval tp;
-									gettimeofday(&tp, NULL);
-									long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-									timelineManager.markAsNotified(notifications[i].getId(), ms);
-									i++;
-								} else {
-									LOG_WARNING << "Received mismatching echo";
-								}
-							}
-							break;
-						} else {
-							boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-							continue;
-						}
-					}
-					/*TODO Enable this section once encryptAndSend is capable of throwing exception
-					 * as opposed to crashing the process when the client is down
-					 */
-					if (retryCount >= retryLimit) {
-						//TODO Have a more robust check for whether the connection is alive
-						try {
-							socket.encryptAndSend(TimelineManager::IS_ALIVE_PROBE);
-							string echo = socket.receiveAndDecrypt();
-							if (string(TimelineManager::IS_ALIVE_PROBE) != echo) {
-								LOG_WARNING << "Closing connection to client: Received mismatching probe echo";
-								socket.destroySecureSocket();
-							}
-						} catch (SecureSocketException &e) {
-							LOG_ERROR << "Closing connection to client: " << e.what();
-							if (e.errorCode == DATA_SOCK_WRITE_EMPTY_EXC) {
-								socket.destroySecureSocket();
-							} else {
-								throw e;
-							}
-						}
-						continue;
-					}
+					//TODO Add logic to respond to commands here
 				} catch (SecureSocketException &e) {
 					LOG_ERROR << "Could not received next command: " << e.what();
 				}
@@ -151,3 +107,87 @@ int main() {
 	return 0;
 	 */
 }
+
+/*
+#include "security/securesocket.hpp"
+#include "ui/CommandInterpreter.hpp"
+#include <boost/thread.hpp>
+
+#define ON_SERVER true
+using namespace std;
+
+#define JAIL_PATH "./jails/"
+
+void createJailIfDoesNotExist(std::string path) {
+	if (CommandPathUtil::specifiedPathExists(CommandPathUtil::findParentToGivenPath(path)) &&
+		CommandPathUtil::specifiedPathIsDirectory(CommandPathUtil::findParentToGivenPath(path))) {
+		boost::filesystem::path dir(path.c_str());
+		boost::filesystem::create_directory(dir);
+		//boost::filesystem::permissions(path, boost::filesystem::others_read | boost::filesystem::owner_read);
+	}
+}
+
+void serverThread(SecureDataSocket &acceptedSecureDataSocket) {
+	try {
+		LOG_INFO << "Negotiating with new client.";
+		if (acceptedSecureDataSocket.getValidity()) {
+			LOG_INFO << "Diffie-Hellman key exchange with client "
+					 << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":"
+					 << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " successful!";
+
+			UserSessionDetail user;
+
+			std::string rawCommand;
+			std::string username = acceptedSecureDataSocket.receiveAndDecrypt();
+			LOG_INFO << "\nRECEIVED USERNAME: " << username;
+			user.setUsername(username);
+			user.setPresentWorkingDirectory(JAIL_PATH + username);
+
+			createJailIfDoesNotExist(user.getPresentWorkingDirectory());
+
+			do {
+
+				//cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " <--$ ";
+				//cout << message << endl;
+				//cout << " $$$Mesg length: " << message.length() << " &&&Mesg size: " << message.size() << endl;
+
+				rawCommand = acceptedSecureDataSocket.receiveAndDecrypt();
+				Command command = CommandInterpreter::getInterpretedCommand(rawCommand, user, ON_SERVER);
+				acceptedSecureDataSocket.encryptAndSend(command.getParts());
+
+				//cout << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":" << acceptedSecureDataSocket.getTargetPortFromSockDesc() << " -->$ ";
+				//cout << acceptedSecureDataSocket.getBuffer() << endl;
+
+			} while (rawCommand != "quit" &&
+					 acceptedSecureDataSocket.getValidity());
+		}
+	}
+	catch (SecureSocketException &e) {
+		cout << e.what() << endl;
+	}
+	cout << "Closing the connection from " << acceptedSecureDataSocket.getTargetAddrFromSockDesc() << ":"
+		 << acceptedSecureDataSocket.getTargetPortFromSockDesc() << endl;
+	acceptedSecureDataSocket.destroySecureSocket();
+}
+
+int main() {
+	SecureListenSocket serverSecureListenSocket("127.0.0.1", "5576");
+	if (!serverSecureListenSocket.getValidity()) {
+		cout << "Something went wrong!" << endl;
+		return -1;
+	}
+	boost::thread_group threads;
+	do {
+		if (threads.size() >= 2)
+			break;
+		cout << "Waiting to accept a connection..." << endl;
+		threads.add_thread(new boost::thread{serverThread, serverSecureListenSocket.acceptSecureSocket()});
+	} while (true);
+	serverSecureListenSocket.destroySecureSocket();
+	cout << "Not accepting any more connections." << endl;
+	LOG_INFO << "Waiting for all threads to join.";
+	threads.join_all();
+	cout << "Server program ending." << endl;
+	return 0;
+}
+*/

@@ -15,7 +15,7 @@ namespace sftp {
 		constexpr const char UserManager::PASSWORD[];
 		constexpr const char UserManager::CREDENTIALS_VALID[];
 		constexpr const char UserManager::CREDENTIALS_INVALID[];
-		constexpr const char UserManager::LOGOUT[];
+		constexpr const char UserManager::EXIT[];
 
 		UserManager::UserManager(DbHandler &dbHandler) :
 				dbHandler(dbHandler) {
@@ -75,8 +75,8 @@ namespace sftp {
 			return uid;
 		}
 
-		bool UserManager::isLogoutCommand(string request) {
-			return boost::equals(request, UserManager::LOGOUT);
+		bool UserManager::isExitCommand(string request) {
+			return boost::equals(request, UserManager::EXIT);
 		}
 
 	}

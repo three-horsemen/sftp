@@ -2,8 +2,6 @@
 // Created by reubenjohn on 9/11/16.
 //
 
-#include <sys/time.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include "shared/Utils.hpp"
 
 long Utils::getCurrentTimeMillis() {
@@ -22,4 +20,27 @@ string Utils::getFormattedEpochTime(long millisFromEpoch) {
 bool Utils::isNumber(const std::string &s) {
 	return !s.empty() && std::find_if(s.begin(),
 									  s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
+}
+
+void Utils::displayInBoldAndRed(std::string message) {
+	string displayMessage = string("\033[1;31m") + message + string("\033[0m");
+	cout << displayMessage;
+}
+
+void Utils::displayInBoldAndViolet(std::string message) {
+	string displayMessage = string("\033[1;36m") + message + string("\033[0m");
+	cout << displayMessage;
+}
+
+std::string Utils::getPassword() {
+	termios oldt;
+	tcgetattr(STDIN_FILENO, &oldt);
+	termios newt = oldt;
+	newt.c_lflag &= ~ECHO;
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+	cout<<"Password: ";
+	std::string password;
+	getline(cin, password);
+	(void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &oldt);
+	return password;
 }
