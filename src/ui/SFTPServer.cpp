@@ -59,17 +59,40 @@ namespace sftp {
 					//TODO Add logic to respond to commands here
 					std::string receivedTask = socket.receiveAndDecrypt();
 					socket.encryptAndSend(receivedTask);
+					vector<std::string> brokenReceivedTask = Tokenize(receivedTask, " ");
 					cout << "Task received." << endl;
-					if (receivedTask == "MODE_SENDTOSERVER") {
+					if (brokenReceivedTask[0] == "send") {
 						cout << "Entered send mode." << endl;
-						std::string targetDirectory = socket.receiveAndDecrypt();
-						socket.encryptAndSend(targetDirectory);
 						cout << "About to receive the file." << endl;
-						receiveFileOverSecureDataSocket(socket, targetDirectory);
+						receivedTask = brokenReceivedTask[1];
+						unsigned long startPositionOfUsefulPath = receivedTask.find("://");
+						unsigned long startPositionOfUsername = receivedTask.find(" ");
+						string jail = string(JAILS);
+						std::string calculatedPath = jail + receivedTask.substr(startPositionOfUsername + 1,
+																				startPositionOfUsefulPath -
+																				(startPositionOfUsername +
+																				 1)) + string("/") +
+													 receivedTask.substr(startPositionOfUsefulPath + 3);
+						receiveDecryptedFileOverSecureDataSocket(socket, calculatedPath, 0);
+					} else if (brokenReceivedTask[0] == "recv") {
+						cout << "Entered recv mode." << endl;
+						cout << "About to send file." << endl;
+						receivedTask = brokenReceivedTask[1];
+						unsigned long startPositionOfUsefulPath = receivedTask.find("://");
+						unsigned long startPositionOfUsername = receivedTask.find(" ");
+						string jail = string(JAILS);
+						std::string calculatedPath = jail + receivedTask.substr(startPositionOfUsername + 1,
+																				startPositionOfUsefulPath -
+																				(startPositionOfUsername +
+																				 1)) + string("/") +
+													 receivedTask.substr(startPositionOfUsefulPath + 3);
+						sendEncryptedFileOverSecureDataSocket(socket, calculatedPath, 0);
+						cout << "Sent the file!" << endl;
+
 					} else if (ListDirectoryContentsCommand::isMatched(receivedTask)) {
 						receivedTask = socket.receiveAndDecrypt();
-						int startPositionOfUsefulPath = receivedTask.find("://");
-						int startPositionOfUsername = receivedTask.find(" ");
+						unsigned long startPositionOfUsefulPath = receivedTask.find("://");
+						unsigned long startPositionOfUsername = receivedTask.find(" ");
 						string jail = string(JAILS);
 						std::string calculatedPath = string("ls ") + receivedTask.substr(startPositionOfUsername + 1,
 																						 startPositionOfUsefulPath -
@@ -81,8 +104,8 @@ namespace sftp {
 						socket.encryptAndSend(command.getOutput());
 					} else if (MakeDirectoryCommand::isMatched(receivedTask)) {
 						receivedTask = socket.receiveAndDecrypt();
-						int startPositionOfUsefulPath = receivedTask.find("://");
-						int startPositionOfUsername = receivedTask.find(" ");
+						unsigned long startPositionOfUsefulPath = receivedTask.find("://");
+						unsigned long startPositionOfUsername = receivedTask.find(" ");
 						string jail = string(JAILS);
 						std::string calculatedPath = string("mkdir ") + receivedTask.substr(startPositionOfUsername + 1,
 																							startPositionOfUsefulPath -
@@ -94,8 +117,8 @@ namespace sftp {
 						socket.encryptAndSend(command.getOutput());
 					} else if (RemoveCommand::isMatched(receivedTask)) {
 						receivedTask = socket.receiveAndDecrypt();
-						int startPositionOfUsefulPath = receivedTask.find("://");
-						int startPositionOfUsername = receivedTask.find(" ");
+						unsigned long startPositionOfUsefulPath = receivedTask.find("://");
+						unsigned long startPositionOfUsername = receivedTask.find(" ");
 						string jail = string(JAILS);
 						std::string calculatedPath = string("rm ") + receivedTask.substr(startPositionOfUsername + 1,
 																						 startPositionOfUsefulPath -

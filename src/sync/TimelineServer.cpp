@@ -6,7 +6,6 @@
 #include <boost/thread.hpp>
 
 #include <database/DbManager.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #define retryLimit 10
 
@@ -122,7 +121,7 @@ namespace sftp {
 
 int main() {
 	sftp::DbManager::initializeStaticDbManager("SecureFTP.db");
-	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8081");
+	SecureListenSocket serverSecureListenSocket("127.0.0.1", "8082");
 	if (!serverSecureListenSocket.getValidity()) {
 		LOG_ERROR << "Something went wrong!" << endl;
 		return -1;

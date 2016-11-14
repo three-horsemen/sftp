@@ -9,7 +9,7 @@ using namespace std;
 using namespace sftp::db;
 
 int main() {
-	SecureDataSocket clientSocket("127.0.0.1", "8081",
+	SecureDataSocket clientSocket("127.0.0.1", "8082",
 								  HOST_MODE_CLIENT);
 
 	string buffer;

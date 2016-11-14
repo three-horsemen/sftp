@@ -36,7 +36,8 @@ namespace sftp {
 		vector<long> TimelineManager::getOwnerIds(string resource) {
 			//TODO Handle SQL injection
 			string sql =
-					"select owner from ResourcePermission where resource = '" + resource + "';";
+					"select _id from User where username in (select owner from ResourcePermission where resource = '" +
+					resource + "');";
 			vector<long> ids;
 			dbHandler.query(sql, ownerIdCallback, (void *) &ids);
 			return ids;
@@ -45,7 +46,7 @@ namespace sftp {
 		int TimelineManager::ownerIdCallback(void *data, int argc, char **argv,
 											 char **colNames) {
 			if (argc != 1) return 1;
-			if (strcmp("owner", colNames[0])) return 2;
+			if (strcmp("_id", colNames[0])) return 2;
 
 			vector<long> *ids = (vector<long> *) data;
 			ids->push_back(atol(argv[0]));
