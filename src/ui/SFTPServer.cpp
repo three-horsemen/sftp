@@ -9,8 +9,10 @@
 #include <boost/thread.hpp>
 
 #include <database/DbManager.hpp>
+#include <ui/command/ListDirectoryContentsCommand.hpp>
 
 #define retryLimit 10
+#define JAILS "/home/reubenjohn/workspace/c_cpp/sftp/build/Debug/jails/"
 
 namespace sftp {
 
@@ -64,6 +66,45 @@ namespace sftp {
 						socket.encryptAndSend(targetDirectory);
 						cout << "About to receive the file." << endl;
 						receiveFileOverSecureDataSocket(socket, targetDirectory);
+					} else if (ListDirectoryContentsCommand::isMatched(receivedTask)) {
+						receivedTask = socket.receiveAndDecrypt();
+						int startPositionOfUsefulPath = receivedTask.find("://");
+						int startPositionOfUsername = receivedTask.find(" ");
+						string jail = string(JAILS);
+						std::string calculatedPath = string("ls ") + receivedTask.substr(startPositionOfUsername + 1,
+																						 startPositionOfUsefulPath -
+																						 (startPositionOfUsername +
+																						  1)) + string("/") +
+													 receivedTask.substr(startPositionOfUsefulPath + 3);
+						ListDirectoryContentsCommand command(calculatedPath, jail);
+						command.execute();
+						socket.encryptAndSend(command.getOutput());
+					} else if (MakeDirectoryCommand::isMatched(receivedTask)) {
+						receivedTask = socket.receiveAndDecrypt();
+						int startPositionOfUsefulPath = receivedTask.find("://");
+						int startPositionOfUsername = receivedTask.find(" ");
+						string jail = string(JAILS);
+						std::string calculatedPath = string("mkdir ") + receivedTask.substr(startPositionOfUsername + 1,
+																							startPositionOfUsefulPath -
+																							(startPositionOfUsername +
+																							 1)) + string("/") +
+													 receivedTask.substr(startPositionOfUsefulPath + 3);
+						MakeDirectoryCommand command(calculatedPath, jail);
+						command.execute();
+						socket.encryptAndSend(command.getOutput());
+					} else if (RemoveCommand::isMatched(receivedTask)) {
+						receivedTask = socket.receiveAndDecrypt();
+						int startPositionOfUsefulPath = receivedTask.find("://");
+						int startPositionOfUsername = receivedTask.find(" ");
+						string jail = string(JAILS);
+						std::string calculatedPath = string("rm ") + receivedTask.substr(startPositionOfUsername + 1,
+																						 startPositionOfUsefulPath -
+																						 (startPositionOfUsername +
+																						  1)) + string("/") +
+													 receivedTask.substr(startPositionOfUsefulPath + 3);
+						RemoveCommand command(calculatedPath, jail);
+						command.execute();
+						socket.encryptAndSend(command.getOutput());
 					}
 				} catch (SecureSocketException &e) {
 					LOG_ERROR << "Could not received next command: " << e.what();

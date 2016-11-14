@@ -84,6 +84,14 @@ int main() {
 																					 user.getPresentWorkingDirectory());
 						command->execute();
 
+						if (command->isServerExecutionPending()) {
+							clientSocket.encryptAndSend(command->getRawCommand());
+							clientSocket.receiveAndDecrypt();
+							clientSocket.encryptAndSend(command->getRawCommand());
+							string output = clientSocket.receiveAndDecrypt();
+							cout << output;
+						}
+
 						if (command->getType() == ChangeDirectoryCommand::TYPE) {
 							string newWorkingDirectory = ChangeDirectoryCommand::getPathSpecified(*command);
 							user.setPresentWorkingDirectory(newWorkingDirectory);

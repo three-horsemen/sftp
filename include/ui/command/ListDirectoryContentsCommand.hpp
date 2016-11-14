@@ -8,15 +8,16 @@
 
 #include <ui/UserSessionDetail.hpp>
 #include <ui/command/Command.hpp>
+#include <ui/CommandInterpreter.hpp>
 
 class ListDirectoryContentsCommand : public Command {
 private:
-	std::string pathSpecified;
-	std::string attributesSpecified;
 public:
 	static const int TYPE = 1;
 
 	ListDirectoryContentsCommand(std::string &, std::string &);
+
+	ListDirectoryContentsCommand(std::string &);
 
 	void execute();
 
@@ -25,6 +26,8 @@ public:
 	void executeListDirectoryContentsCommandUtil(std::string pathToBeListed);
 
 	void setPathSpecified();
+
+	static bool isMatched(string command);
 
 	std::string getPathSpecified();
 };

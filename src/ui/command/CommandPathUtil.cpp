@@ -75,6 +75,15 @@ std::string CommandPathUtil::convertToAbsolutePath(std::string pathSpecified, st
 	}
 }
 
+std::string CommandPathUtil::convertToAbsoluteServerPath(std::string rawCommand, std::string presentWorkingDirectory) {
+	if (rawCommand.find("://") != string::npos) {
+		return rawCommand;
+	} else {
+		string pathSpecified = CommandPathUtil::getPathSpecified(rawCommand)[0];
+		string result = presentWorkingDirectory + pathSpecified;
+	}
+}
+
 std::string CommandPathUtil::findParentToGivenPath(std::string pathToNewDirectory) {
 	std::size_t parentPathEndPosition = pathToNewDirectory.find_last_of("/\\");
 	if (parentPathEndPosition != std::string::npos) {

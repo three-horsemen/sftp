@@ -24,3 +24,7 @@ vector<std::string> Command::getParts() {
 std::string Command::getOutput() {
 	return output;
 }
+
+bool Command::isServerExecutionPending() {
+	return serverExecutionPending;
+}

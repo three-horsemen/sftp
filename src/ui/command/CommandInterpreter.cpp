@@ -9,9 +9,7 @@ bool CommandInterpreter::interpretIfOnServerExecution(std::string rawCommand) {
 	boost::split(tokenizedSourcePath, rawCommand, boost::is_any_of(" "), boost::token_compress_on);
 	if (tokenizedSourcePath.size() > 1) {
 		std::size_t found = tokenizedSourcePath[1].find(string("://"));
-		if (found != std::string::npos)
-			return true;
-		else return false;
+		return found != std::string::npos;
 	} else return false;
 }
 

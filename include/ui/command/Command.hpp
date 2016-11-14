@@ -18,6 +18,7 @@
 
 class Command {
 protected:
+	bool serverExecutionPending;
 	std::string rawCommand, output;
 	vector<std::string> parts;
 public:
@@ -30,6 +31,8 @@ public:
 	vector<std::string> getParts();
 
 	std::string getOutput();
+
+	bool isServerExecutionPending();
 
 	virtual void execute() = 0;
 

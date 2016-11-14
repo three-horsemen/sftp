@@ -23,6 +23,8 @@ public:
 	void setPathSpecified();
 
 	std::string getPathSpecified();
+
+	static bool isMatched(string command);
 };
 
 
