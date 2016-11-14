@@ -61,19 +61,26 @@ int main() {
 					 */
 
 					std::string rawCommandCopy = rawCommand;
+					int hardcodedSymmetricKey = 33;
 					vector<std::string> brokenRawCommand = Tokenize(rawCommandCopy, " ");
 					if (brokenRawCommand.size() == 3) {
 						if (brokenRawCommand[0] == "send") {
 							cout << "Entered the send if." << endl;
-							clientSocket.encryptAndSend("MODE_SENDTOSERVER");
-							clientSocket.receiveAndDecrypt();
-
-							cout << "Sending the target path." << endl;
-							clientSocket.encryptAndSend(brokenRawCommand[2]);
+							clientSocket.encryptAndSend("send " + brokenRawCommand[2]); //Send the target.
 							clientSocket.receiveAndDecrypt();
 
 							cout << "Sending the file." << endl;
-							sendFileOverSecureDataSocket(clientSocket, brokenRawCommand[1]);
+							sendEncryptedFileOverSecureDataSocket(clientSocket, brokenRawCommand[1],
+																  hardcodedSymmetricKey);
+						} else if (brokenRawCommand[0] == "recv") {
+							cout << "Entered the recv if." << endl;
+							clientSocket.encryptAndSend("recv " + brokenRawCommand[1]);
+							clientSocket.receiveAndDecrypt();
+
+							cout << "Receiving the file." << endl;
+							receiveDecryptedFileOverSecureDataSocket(clientSocket, brokenRawCommand[2],
+																	 hardcodedSymmetricKey);
+							cout << "Got the file!" << endl;
 						}
 					}
 

@@ -266,6 +266,7 @@ ssize_t SecureDataSocket::readSecureSocket() {
 
 		//Get to know the size of the string to receive.
 		len = recv(getSocketDescriptor(), buffer_char, 16, MSG_WAITALL);
+		send(getSocketDescriptor(), buffer_char, 16, MSG_CONFIRM | MSG_NOSIGNAL);
 		if (len <= 0) {
 			setValidity(false);
 			LOG_WARNING << "Perhaps, the client was disconnected forcefully by the server?";
@@ -305,6 +306,8 @@ ssize_t SecureDataSocket::writeSecureSocket() {
 	//Send the length of the message.
 	len = send(getSocketDescriptor(), string_to_charArray(std::to_string(getBuffer().length())), 16,
 			   MSG_CONFIRM | MSG_NOSIGNAL);
+	char buffer_char[20];
+	recv(getSocketDescriptor(), buffer_char, 16, MSG_WAITALL);
 	if (getValidity()) {
 		if (getBuffer().length() <= 0)
 			throw SecureSocketException(DATA_SOCK_WRITE_EMPTYBUFFER_EXC, "The buffer is empty.");

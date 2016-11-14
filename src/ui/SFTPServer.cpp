@@ -57,13 +57,19 @@ namespace sftp {
 					//TODO Add logic to respond to commands here
 					std::string receivedTask = socket.receiveAndDecrypt();
 					socket.encryptAndSend(receivedTask);
+					vector<std::string> brokenReceivedTask = Tokenize(receivedTask, " ");
 					cout << "Task received." << endl;
-					if (receivedTask == "MODE_SENDTOSERVER") {
+					if (brokenReceivedTask[0] == "send") {
 						cout << "Entered send mode." << endl;
-						std::string targetDirectory = socket.receiveAndDecrypt();
-						socket.encryptAndSend(targetDirectory);
 						cout << "About to receive the file." << endl;
-						receiveFileOverSecureDataSocket(socket, targetDirectory);
+						std::string targetDirectory = brokenReceivedTask[1];
+						receiveDecryptedFileOverSecureDataSocket(socket, targetDirectory, 0);
+					} else if (brokenReceivedTask[0] == "recv") {
+						cout << "Entered recv mode." << endl;
+						cout << "About to send file." << endl;
+						std::string sourceDirectory = brokenReceivedTask[1];
+						sendEncryptedFileOverSecureDataSocket(socket, sourceDirectory, 0);
+						cout << "Sent the file!" << endl;
 					}
 				} catch (SecureSocketException &e) {
 					LOG_ERROR << "Could not received next command: " << e.what();
