@@ -63,50 +63,49 @@ int main() {
 					std::string rawCommandCopy = rawCommand;
 					int hardcodedSymmetricKey = 33;
 					vector<std::string> brokenRawCommand = Tokenize(rawCommandCopy, " ");
-					if (brokenRawCommand.size() == 3) {
-						if (brokenRawCommand[0] == "send") {
-							cout << "Entered the send if." << endl;
-							clientSocket.encryptAndSend("send " + brokenRawCommand[2]); //Send the target.
-							clientSocket.receiveAndDecrypt();
+					if ((brokenRawCommand[0] == "send") && (brokenRawCommand.size() == 3)) {
+						cout << "Entered the send if." << endl;
+						clientSocket.encryptAndSend("send " + brokenRawCommand[2]); //Send the target.
+						clientSocket.receiveAndDecrypt();
 
-							cout << "Sending the file." << endl;
-							sendEncryptedFileOverSecureDataSocket(clientSocket, brokenRawCommand[1],
-																  hardcodedSymmetricKey);
-						} else if (brokenRawCommand[0] == "recv") {
-							cout << "Entered the recv if." << endl;
-							clientSocket.encryptAndSend("recv " + brokenRawCommand[1]);
-							clientSocket.receiveAndDecrypt();
+						cout << "Sending the file." << endl;
+						sendEncryptedFileOverSecureDataSocket(clientSocket, brokenRawCommand[1],
+															  hardcodedSymmetricKey);
+					} else if ((brokenRawCommand[0] == "recv") && (brokenRawCommand.size() == 3)){
+						cout << "Entered the recv if." << endl;
+						clientSocket.encryptAndSend("recv " + brokenRawCommand[1]);
+						clientSocket.receiveAndDecrypt();
 
-							cout << "Receiving the file." << endl;
-							receiveDecryptedFileOverSecureDataSocket(clientSocket, brokenRawCommand[2],
-																	 hardcodedSymmetricKey);
-							cout << "Got the file!" << endl;
-						}
+						cout << "Receiving the file." << endl;
+						receiveDecryptedFileOverSecureDataSocket(clientSocket, brokenRawCommand[2],
+																 hardcodedSymmetricKey);
+						cout << "Got the file!" << endl;
 					}
 
 					//End of Soorya's send logic.
+					else {
+						try {
+							Command *command = CommandInterpreter::getInterpretedCommand(rawCommand,
+																						 user.getPresentWorkingDirectory());
+							command->execute();
 
-					try {
-						Command *command = CommandInterpreter::getInterpretedCommand(rawCommand,
-																					 user.getPresentWorkingDirectory());
-						command->execute();
+							if (command->isServerExecutionPending()) {
+								clientSocket.encryptAndSend(command->getRawCommand());
+								clientSocket.receiveAndDecrypt();
+								clientSocket.encryptAndSend(command->getRawCommand());
+								string output = clientSocket.receiveAndDecrypt();
+								cout << output;
+							}
 
-						if (command->isServerExecutionPending()) {
-							clientSocket.encryptAndSend(command->getRawCommand());
-							clientSocket.receiveAndDecrypt();
-							clientSocket.encryptAndSend(command->getRawCommand());
-							string output = clientSocket.receiveAndDecrypt();
-							cout << output;
+							if (command->getType() == ChangeDirectoryCommand::TYPE) {
+								string newWorkingDirectory = ChangeDirectoryCommand::getPathSpecified(*command);
+								user.setPresentWorkingDirectory(newWorkingDirectory);
+							}
+							cout << command->getOutput();
+						} catch (UIException &e) {
+							boldAndRed(e.what());
+							continue;
 						}
-
-						if (command->getType() == ChangeDirectoryCommand::TYPE) {
-							string newWorkingDirectory = ChangeDirectoryCommand::getPathSpecified(*command);
-							user.setPresentWorkingDirectory(newWorkingDirectory);
-						}
-						cout << command->getOutput();
-					} catch (UIException &e) {
-						boldAndRed(e.what());
-						continue;
 					}
 				}
 			}
