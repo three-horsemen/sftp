@@ -1,10 +1,15 @@
-Computer Networks Lab - Project Synopsis (Secured FTP)
+A novel implementation of an SFTP model with server-side file privacy
 ===
 
+Video Preview
+---
+[![Video Preview](https://img.youtube.com/vi/XFDfCJqndik/0.jpg)](https://www.youtube.com/watch?v=XFDfCJqndik)
+
+
 Team members:
-	Ayush Soni,
-	Reuben John,
-	Soorya Annadurai
+	[Ayush Soni](https://github.com/Ayush-Soni),
+	[Reuben John](https://github.com/reubenjohn),
+	[Soorya Annadurai](https://github.com/soorya-annadurai)
 
 Abstract:
 ---
